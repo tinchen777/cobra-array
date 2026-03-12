@@ -10,7 +10,8 @@ from array_api_compat.common._typing import Namespace
 from contextvars import ContextVar
 from typing import (Union, Optional, Dict, Tuple, Any)
 
-from .convert import (as_array, as_array_if_like, np, torch)
+from .convert import (as_array, as_array_if_like)
+from .default import default_array_spec
 from .exceptions import (
     NoArrayInputsError,
     GetArrayNamespaceError,
@@ -152,35 +153,6 @@ def array_spec(
         ) from e
 
 
-# get defaults
-DEFAULT_DTYPE = float
-DEFAULT_DEVICE = "cpu"
-DEFAULT_TORCH_NAMESPACE = api.array_namespace(torch.empty(0)) if torch is not None else None
-DEFAULT_NUMPY_NAMESPACE = api.array_namespace(np.empty(0)) if np is not None else None
-
-
-def default_array_spec() -> Tuple[Namespace, Tuple[Any, Any]]:
-    """
-    Try to get a suitable `array namespace` from the available array libraries in order of `PyTorch` > `NumPy`, and return it along with the default `dtype` and `device`.
-
-    Returns
-    -------
-        Tuple[Namespace, Tuple[DTypeT, DeviceT]
-            A tuple containing the default `array namespace` and a tuple of the default `dtype` and default `device`.
-
-    Raises
-    ------
-        MissingDependencyError
-            If all default array libraries (`NumPy` and `PyTorch`) are missing.
-    """
-    default_xp = DEFAULT_TORCH_NAMESPACE or DEFAULT_NUMPY_NAMESPACE
-    if default_xp is None:
-        raise MissingDependencyError(
-            "Missing all default array libraries (`PyTorch` > `NumPy`)."
-        )
-    return default_xp, (DEFAULT_DTYPE, DEFAULT_DEVICE)
-
-
 # initial namespace context variable
 _xp_var = ContextVar("xp")
 
@@ -188,7 +160,7 @@ _xp_var = ContextVar("xp")
 def context_array_spec() -> Tuple[Namespace, Tuple[Any, Any]]:
     """
     Get the `array namespace`, `dtype` and `device` associated with the most recent :func:`unify_array_args`-decorated function call in the current context.
-    If there is no such function call in the current context, return the default `array namespace`, `dtype` and `device` from :func:`default_array_spec`.
+    If there is no such function call in the current context, return the default `array namespace`, `dtype` and `device` from :func:`default.default_array_spec`.
 
     Returns
     -------
@@ -197,7 +169,7 @@ def context_array_spec() -> Tuple[Namespace, Tuple[Any, Any]]:
 
     Raises
     ------
-        Refer to :func:`default_array_spec` for possible exceptions.
+        Refer to :func:`default.default_array_spec` for possible exceptions.
     """
     try:
         return _xp_var.get()
@@ -208,7 +180,7 @@ def context_array_spec() -> Tuple[Namespace, Tuple[Any, Any]]:
 def context_namespace() -> Namespace:
     """
     Get the `array namespace` associated with the most recent :func:`unify_array_args`-decorated function call in the current context.
-    If there is no such function call in the current context, return the default `array namespace` from :func:`default_array_spec`.
+    If there is no such function call in the current context, return the default `array namespace` from :func:`default.default_array_spec`.
 
     Returns
     -------
@@ -217,7 +189,7 @@ def context_namespace() -> Namespace:
 
     Raises
     ------
-        Refer to :func:`default_array_spec` for possible exceptions.
+        Refer to :func:`default.default_array_spec` for possible exceptions.
     """
     return context_array_spec()[0]
 

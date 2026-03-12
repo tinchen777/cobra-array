@@ -9,7 +9,7 @@ Functions
 ---------
 - :func:`to_numpy`: Convert an object to a `NumPy array`.
 - :func:`to_tensor`: Convert an object to a `PyTorch tensor`.
-- :func:`to_list`: Convert an object to a `list`.
+- :func:`to_list`: Convert an object to a built-in `list`.
 - :func:`as_array`: Convert an object to an array in the specified `array namespace`.
 - :func:`as_array_if_like`: Convert an array-like object to an array in the specified `array namespace`, otherwise return the object itself.
 """
