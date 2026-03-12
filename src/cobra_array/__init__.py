@@ -1,12 +1,12 @@
-# src/repo_name/__init__.py
+# src/cobra_array/__init__.py
 """
-repo-name
+cobra-array
 ----
 
 
 """
 
-
+from ._core import api
 
 
 __author__ = "Zhen Tian"

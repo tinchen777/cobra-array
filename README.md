@@ -1,15 +1,15 @@
 <div align="center">
 
-<h2 id="title">🐱‍🐉 repo-name 🐱‍🐉</h2>
+<h2 id="title">🐱‍🐉 cobra-array 🐱‍🐉</h2>
 
 
-[![PyPI version](https://img.shields.io/pypi/v/repo-name.svg)](https://pypi.org/project/repo-name/)
-![Python](https://img.shields.io/pypi/pyversions/repo-name?color=brightgreen)
-[![codecov](https://codecov.io/gh/user_name/repo-name/branch/main/graph/badge.svg)](https://codecov.io/gh/user_name/repo-name)
-![License](https://img.shields.io/github/license/user_name/repo-name.svg)
+[![PyPI version](https://img.shields.io/pypi/v/cobra-array.svg)](https://pypi.org/project/cobra-array/)
+![Python](https://img.shields.io/pypi/pyversions/cobra-array?color=brightgreen)
+[![codecov](https://codecov.io/gh/tinchen777/cobra-array/branch/main/graph/badge.svg)](https://codecov.io/gh/tinchen777/cobra-array)
+![License](https://img.shields.io/github/license/tinchen777/cobra-array.svg)
 
-[![Tests](https://github.com/user_name/repo-name/actions/workflows/test.yml/badge.svg)](https://github.com/user_name/repo-name/actions/workflows/test.yml)
-![Github stars](https://img.shields.io/github/stars/user_name/repo-name.svg)
+[![Tests](https://github.com/tinchen777/cobra-array/actions/workflows/test.yml/badge.svg)](https://github.com/tinchen777/cobra-array/actions/workflows/test.yml)
+![Github stars](https://img.shields.io/github/stars/tinchen777/cobra-array.svg)
 
 </div>
 
@@ -33,7 +33,7 @@ XXX
 This installs the core package with minimal dependencies.
 
 ```bash
-pip install repo-name
+pip install cobra-array
 ```
 
 ### Install with Optional Dependencies
@@ -41,7 +41,7 @@ pip install repo-name
 XXX support.
 
 ```bash
-pip install repo-name[XXX]
+pip install cobra-array[XXX]
 ```
 
 ## Quick Start
@@ -57,5 +57,5 @@ See LICENSE in the repository.
 
 ## Links
 
-- [Homepage/Repo](https://github.com/user_name/repo-name.git)
-- [Issues](https://github.com/user_name/repo-name.git/issues)
+- [Homepage/Repo](https://github.com/tinchen777/cobra-array.git)
+- [Issues](https://github.com/tinchen777/cobra-array.git/issues)

@@ -216,6 +216,7 @@ test.py
 
 # Locally
 
-# pypi_upload.sh
-# history/
-# dist/
+pypi_upload.sh
+.draft/
+history/
+dist/
