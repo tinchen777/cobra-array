@@ -228,6 +228,10 @@ def unify_array_args(
 
         unify_device : bool, default to `True`
             Whether to unify the `device` of all array arguments to that of the reference array.
+
+    Raises
+    ------
+        Refer to :func:`default.default_array_spec`, :func:`convert.as_array_if_like` for possible exceptions.
     """
     def decorator(func):
         @wraps(func)
@@ -301,7 +305,7 @@ def as_context_array(
 
     Raises
     ------
-        Refer to :func:`as_array` for possible exceptions.
+        Refer to :func:`convert.as_array`, :func:`context_array_spec` for possible exceptions.
     """
     xp, (dtype, device) = context_array_spec()
     return as_array(

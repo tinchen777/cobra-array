@@ -34,6 +34,18 @@ class ArrayConversionError(CobraArrayError):
     """Raised when an error occurs during array conversion in an `array namespace`."""
 
 
+class NumPyConversionError(CobraArrayError):
+    """Raised when an error occurs during array conversion in `NumPy`."""
+
+
+class TorchConversionError(CobraArrayError):
+    """Raised when an error occurs during array conversion in `PyTorch`."""
+
+
+class CUDAUnavailableError(CobraArrayError):
+    """Raised when CUDA is not available but a CUDA device is specified."""
+
+
 class NotArrayAPIObjectError(CobraArrayError, ValueError):
     """Raised when an array is not an array API compatible array object."""
 

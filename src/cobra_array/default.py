@@ -14,22 +14,22 @@ Attributes
 Functions
 ---------
 - :func:`default_array_spec`: Get the default array specification.
+- :func:`as_default_array`: Convert an array-like object to an array in the default context.
 """
 
 from __future__ import annotations
-import array_api_compat as api
 from array_api_compat.common._typing import Namespace
 from typing import (Tuple, Any)
 
-from .convert import (np, torch)
+from .convert import (as_array, np, torch)
 from .exceptions import MissingDependencyError
 
 
 # get defaults
 DEFAULT_DTYPE = float
 DEFAULT_DEVICE = "cpu"
-DEFAULT_TORCH_NAMESPACE = api.array_namespace(torch.empty(0)) if torch is not None else None
-DEFAULT_NUMPY_NAMESPACE = api.array_namespace(np.empty(0)) if np is not None else None
+DEFAULT_TORCH_NAMESPACE = torch
+DEFAULT_NUMPY_NAMESPACE = np
 
 
 def default_array_spec() -> Tuple[Namespace, Tuple[Any, Any]]:
@@ -54,4 +54,43 @@ def default_array_spec() -> Tuple[Namespace, Tuple[Any, Any]]:
     return default_xp, (DEFAULT_DTYPE, DEFAULT_DEVICE)
 
 
+def as_default_array(
+    obj: object,
+    /,
+    unify_dtype: bool = True,
+    unify_device: bool = True,
+    copy: bool = False
+):
+    """
+    Convert an array-like object to an array in default `array namespace` with the default `dtype` and `device` if specified.
 
+    Parameters
+    ----------
+        obj : object
+            The object to be converted to an array.
+
+        unify_dtype : bool, default to `True`
+            Whether to unify the `dtype` of the converted array to that of the default context.
+
+        unify_device : bool, default to `True`
+            Whether to unify the `device` of the converted array to that of the default context.
+
+        copy : bool, default to `False`
+            Whether to return a copy of the array if it is already in the default context namespace.
+
+    Returns
+    -------
+        ArrayLike
+        The converted array representation of the object in the default context `array namespace`, with the default `dtype` and `device` if specified.
+
+    Raises
+    ------
+        Refer to :func:`convert.as_array`, :func:`default.default_array_spec` for possible exceptions.
+    """
+    xp, (dtype, device) = default_array_spec()
+    return as_array(
+        obj, xp,
+        dtype if unify_dtype else None,
+        device if unify_device else None,
+        copy
+    )

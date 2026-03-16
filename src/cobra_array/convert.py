@@ -26,7 +26,10 @@ from .exceptions import (
     MissingDependencyError,
     ConvertNoneTypeError,
     UnsupportedNameSpaceError,
-    ArrayConversionError
+    ArrayConversionError,
+    NumPyConversionError,
+    TorchConversionError,
+    CUDAUnavailableError
 )
 from .types import (_T, _T_Str, DTypeT, DeviceT, ArrayLike, ArrayLibraryName)
 
@@ -59,7 +62,7 @@ except ImportError:
 def warn(msg: str, category: Any, stack: int = 2):
     if _WARN_AVAILABLE:
         return warning(msg, stack=stack)
-    return warnings.warn(msg, category=category, stacklevel=stack)
+    return warnings.warn(msg, category=category, stacklevel=stack+1)
 
 
 def to_numpy(
@@ -97,6 +100,8 @@ def to_numpy(
     ------
         MissingDependencyError
             If `NumPy` is not installed when calling this function.
+        NumPyConversionError
+            If an error occurs during conversion to a `NumPy array`.
     """
     if np is None:
         raise MissingDependencyError("Dependency `NumPy` is required for `to_numpy()`.")
@@ -107,10 +112,14 @@ def to_numpy(
     elif isinstance(obj, abc.Set):
         # as set
         obj = list(obj)
-
-    if copy:
-        return np.array(obj, dtype=dtype, copy=True)
-    return np.asarray(obj, dtype=dtype)
+    try:
+        if copy:
+            return np.array(obj, dtype=dtype, copy=True)
+        return np.asarray(obj, dtype=dtype)
+    except Exception as e:
+        raise NumPyConversionError(
+            "An error occurred during conversion to NumPy array."
+        ) from e
 
 
 def to_tensor(
@@ -137,7 +146,7 @@ def to_tensor(
 
         device : Optional[T_Device], default to `None`
             The device on which the resulting `PyTorch tensor` will be allocated.
-            - `None`: Use the default device (usually `CPU`).
+            - `None`: Use the default device (usually `"cpu"`).
 
         copy : bool, default to `True`
             Control whether to create a copy of the object when converting to a `PyTorch tensor`.
@@ -155,11 +164,19 @@ def to_tensor(
             If `PyTorch` is not installed when calling this function.
         ConvertNoneTypeError
             If `None` is passed as the object to be converted.
+        CUDAUnavailableError
+            If a non-CPU device is specified but CUDA is not available.
+        TorchConversionError
+            If an error occurs during conversion to a `PyTorch tensor`.
     """
     if obj is None:
         raise ConvertNoneTypeError("Can not convert `NoneType` to a PyTorch tensor.")
     if torch is None:
         raise MissingDependencyError("Dependency `PyTorch` is required for `to_tensor()`.")
+    if device is not None and device != "cpu" and not torch.cuda.is_available():
+        raise CUDAUnavailableError(
+            f"Parameter `device` of `to_tensor()` specifies a non-CPU device {device!r} but CUDA is not available."
+        )
 
     if isinstance(obj, torch.Tensor):
         # as torch.Tensor
@@ -168,10 +185,14 @@ def to_tensor(
     if isinstance(obj, abc.Set):
         # as set
         obj = list(obj)
-
-    if copy:
-        return torch.tensor(obj, dtype=dtype, device=device)
-    return torch.as_tensor(obj, dtype=dtype, device=device)  # type: ignore
+    try:
+        if copy:
+            return torch.tensor(obj, dtype=dtype, device=device)
+        return torch.as_tensor(obj, dtype=dtype, device=device)  # type: ignore
+    except Exception as e:
+        raise TorchConversionError(
+            "An error occurred during conversion to PyTorch tensor."
+        ) from e
 
 
 @overload
@@ -279,25 +300,30 @@ def as_array(
         ArrayConversionError
             If an error occurs during array conversion in the specified `array namespace`.
     """
-    if xp == "numpy" or api.is_numpy_namespace(xp):
-        # as NumPy array
-        if device is not None and device != "cpu":
-            warn(
-                "NumPy array does not support setting a non-CPU device. "
-                f"Parameter `device` is ignored, got {device!r}.",
-                category=ParameterIgnoredWarning,
-                stack=3
-            )
-        return to_numpy(obj, dtype=dtype, copy=copy)
-
-    if xp == "torch" or api.is_torch_namespace(xp):
-        # as PyTorch tensor
-        return to_tensor(obj, dtype=dtype, device=device, copy=copy)
+    if getattr(xp, "__name__", None) is not None:
+        if api.is_numpy_namespace(xp):
+            xp = "numpy"
+        elif api.is_torch_namespace(xp):
+            xp = "torch"
 
     if isinstance(xp, str):
+        if xp == "numpy":
+            # as NumPy array
+            if device is not None and device != "cpu":
+                warn(
+                    "NumPy array does not support setting a non-CPU device. "
+                    f"Parameter `device` is ignored, got {device!r}.",
+                    category=ParameterIgnoredWarning
+                )
+            return to_numpy(obj, dtype=dtype, copy=copy)
+        if xp == "torch":
+            # as PyTorch tensor
+            return to_tensor(obj, dtype=dtype, device=device, copy=copy)
+        # as unsupported array namespace name
         raise UnsupportedNameSpaceError(
             "Parameter `xp` of `as_array()` must be one of the supported "
-            f"array namespace names ('numpy', 'torch'), got {xp!r}.")
+            f"array namespace names ('numpy', 'torch'), got {xp!r}."
+        )
     # as other namespace object
     try:
         return xp.asarray(obj, dtype=dtype, device=device, copy=copy)
