@@ -16,3 +16,13 @@ DeviceT = TypeVar("DeviceT", bound=Any)
 ArrayLike = Any
 
 ArrayLibraryName = Literal["numpy", "torch"]
+
+
+# TODO
+class ArrayLike(Protocol):
+
+    shape: tuple
+    dtype: Any
+
+
+ArrayT = TypeVar("ArrayT", bound=ArrayLike)

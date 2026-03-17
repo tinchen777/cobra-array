@@ -314,3 +314,11 @@ def as_context_array(
         device if unify_device else None,
         copy
     )
+
+
+# TODO
+with cobra_array.context(xp="torch"):
+    x = as_array([1,2,3])
+
+# TODO
+typing 
