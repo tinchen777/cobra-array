@@ -1,4 +1,3 @@
-# src/cobra_array/convert.py
 # -*- coding: utf-8 -*-
 # Python version: 3.9
 # @TianZhen

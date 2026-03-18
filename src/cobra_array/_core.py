@@ -346,7 +346,8 @@ def unify_array_args(
     api_version: Optional[str] = None,
     use_compat: Optional[bool] = None,
     unify_dtype: bool = False,
-    unify_device: bool = True
+    unify_device: bool = True,
+    strict: bool = True
 ):
     """
     **Decorator** to unify array arguments of a function to the same `array namespace`, `dtype` and `device` determined by the provided array arguments and the reference array.
@@ -375,6 +376,11 @@ def unify_array_args(
         unify_device : bool, default to `True`
             Whether to unify the `device` of all array arguments to that of the reference array.
 
+        strict : bool, default to `True`
+            Whether to raise exceptions when failing to determine the `array namespace`.
+            - `True`: Raise exceptions when failing to determine the `array namespace` from the provided inputs or the reference array;
+            - `False`: Fall back to the default `array namespace` if an error occurs. If all default array libraries are missing, just run the function without conversion.
+
     Raises
     ------
         Refer to :func:`default.default_array_spec`, :func:`as_context_array_if_like` for possible exceptions.
@@ -390,7 +396,9 @@ def unify_array_args(
                     api_version=api_version,
                     use_compat=use_compat
                 )
-            except Exception:
+            except Exception as e:
+                if strict:
+                    raise e
                 try:
                     # fall back to the default namespace
                     arr_spec = default_array_spec()

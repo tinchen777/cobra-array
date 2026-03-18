@@ -2,7 +2,7 @@ import sys
 # sys.path.insert(0, "/data/tianzhen/my_packages/cobra-array/src")
 sys.path.insert(0, "/Users/apple/Develop/Python_WorkSpace/my_packages/cobra-array/src")
 
-from cobra_array._wrap import CompatArray
+from cobra_array.compat._wrap import CompatArray
 import numpy as np
 import torch
 import time

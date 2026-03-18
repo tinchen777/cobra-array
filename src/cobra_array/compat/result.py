@@ -13,9 +13,9 @@ Classes
 from __future__ import annotations
 from typing import (Any, Optional, Set, List)
 
-from ._core import array_spec
-from .convert import (to_numpy, to_tensor, to_list)
-from .types import (DeviceT)
+from .._core import array_spec
+from ..convert import (to_numpy, to_tensor, to_list)
+from ..types import (DeviceT)
 
 
 class ArrayResult:

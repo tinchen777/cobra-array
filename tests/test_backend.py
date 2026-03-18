@@ -5,6 +5,7 @@ sys.path.insert(0, "/data/tianzhen/my_packages/cobra-array/src")
 from cobra_array._core import array_spec, unify_array_args, context_namespace, as_context_array
 import numpy as np
 import torch
+import array_api_compat as api
 
 
 def test_array_namespace():
@@ -23,19 +24,35 @@ def test_array_namespace():
 
 
 def test_unify_array_args():
-    a = torch.tensor([[1, 2], [3, 4], [5, 6]])
+    a = torch.tensor([[1, 2], [3, 4], [5, 6], [7, 8]])
     b = np.array([[1, 2, 3], [4, 5, 6]])
+    bb = np.array(1)
+    aa = torch.tensor(1)
     c = [[1, 2], [3, 4], [5, 6]]
     d = "hello"
     e = iter(a)
     f = torch.tensor([[1, 2], [3, 4], [5, 6]])
+    
+    
+    print(a.dtype)
+    print(b.dtype)
+    
 
-    @unify_array_args(unify_device=False)
+    @unify_array_args(1, unify_device=False, filter_array_like=True)
     def func(*args, **kwargs):
         print(args)
         print(kwargs)
         xp = context_namespace()
         print(xp.__name__)
+        
+        # print(a.size, b.size)
+        print(len(aa))
+        
+        # print(xp.shape(a))
+        # print(api.device(b))
+
+        
+        
 
         new = [1, 2, 3]
         new = as_context_array(new)
@@ -43,6 +60,7 @@ def test_unify_array_args():
 
         a1 = xp.mean(args[0], axis=1)
         print(a1)
+        # raise ValueError("Test unify_array_args")
 
     func(c, b, a)
 
