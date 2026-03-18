@@ -1,8 +1,8 @@
 import sys
-# sys.path.insert(0, "/data/tianzhen/my_packages/cobra-array/src")
-sys.path.insert(0, "/Users/apple/Develop/Python_WorkSpace/my_packages/cobra-array/src")
+sys.path.insert(0, "/data/tianzhen/my_packages/cobra-array/src")
+# sys.path.insert(0, "/Users/apple/Develop/Python_WorkSpace/my_packages/cobra-array/src")
 
-from cobra_array.convert import to_numpy, to_tensor, to_list, as_array
+from cobra_array.convert import to_numpy, to_tensor, to_list, as_array, as_array_if_like
 import numpy as np
 import torch
 import time
@@ -40,12 +40,17 @@ def test_to_2():
     a1 = to_numpy(a)
     print(a1, type(a1), a1.dtype)
 
-    # b1 = to_tensor(b)
-    # print(b1, type(b1), b1.dtype)
+    b1 = to_tensor(b)
+    print(b1, type(b1), b1.dtype)
 
-    c1 = as_array(a, "torch", device="CPU")
+    c1 = as_array(a, "torch", device="cpu")
     print(c1, type(c1), c1.dtype)
+    c1.device
+
+    a = as_array_if_like(10, "numpy")
+    print(a)
 
 
 if __name__ == "__main__":
+    test_to()
     test_to_2()

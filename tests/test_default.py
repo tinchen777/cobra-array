@@ -1,6 +1,6 @@
 import sys
-# sys.path.insert(0, "/data/tianzhen/my_packages/cobra-array/src")
-sys.path.insert(0, "/Users/apple/Develop/Python_WorkSpace/my_packages/cobra-array/src")
+sys.path.insert(0, "/data/tianzhen/my_packages/cobra-array/src")
+# sys.path.insert(0, "/Users/apple/Develop/Python_WorkSpace/my_packages/cobra-array/src")
 
 from cobra_array.default import default_array_spec, as_default_array
 import numpy as np

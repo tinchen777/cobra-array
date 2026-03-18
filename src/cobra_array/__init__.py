@@ -17,23 +17,23 @@ Functions
 # FIXME
 """
 
-from ._core import (
-    api,
-    array_spec,
-    context_array_spec,
-    context_namespace,
-    unify_array_args,
-    as_context_array
-)
+# from ._core import (
+#     api,
+#     array_spec,
+#     context_array_spec,
+#     context_namespace,
+#     unify_array_args,
+#     as_context_array
+# )
 
-__author__ = "Zhen Tian"
-__version__ = "0.1.0"
+# __author__ = "Zhen Tian"
+# __version__ = "0.1.0"
 
-__all__ = [
-    "api",
-    "array_spec",
-    "context_array_spec",
-    "context_namespace",
-    "unify_array_args",
-    "as_context_array"
-]
+# __all__ = [
+#     "api",
+#     "array_spec",
+#     "context_array_spec",
+#     "context_namespace",
+#     "unify_array_args",
+#     "as_context_array"
+# ]

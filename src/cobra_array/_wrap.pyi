@@ -3,17 +3,16 @@
 # Python version: 3.9
 # @TianZhen
 
-from __future__ import annotations
 from 
 from typing import (List, Optional, Any, Iterable, Sequence, TYPE_CHECKING)
 
-if TYPE_CHECKING:
-    import torch
-    from numpy.typing import NDArray
-    from array_api_compat.common._typing import Namespace
-    
 
-    from .types import DeviceT
+import torch
+from numpy.typing import NDArray
+from array_api_compat.common._typing import Namespace
+
+
+from .types import DeviceT
 
 
 Axis = int | tuple[int, ...] | None

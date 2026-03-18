@@ -10,6 +10,7 @@ Functions
 - :func:`to_numpy`: Convert an object to a `NumPy array`.
 - :func:`to_tensor`: Convert an object to a `PyTorch tensor`.
 - :func:`to_list`: Convert an object to a built-in `list`.
+- :func:`to_xp`: Convert an array library name to a `array namespace` or return the `array namespace` directly if is a supported namespace.
 - :func:`as_array`: Convert an object to an array in the specified `array namespace`.
 - :func:`as_array_if_like`: Convert an array-like object to an array in the specified `array namespace`, otherwise return the object itself.
 """
@@ -17,10 +18,10 @@ Functions
 from __future__ import annotations
 from collections import abc
 import array_api_compat as api
-from array_api_compat.common._typing import Namespace
 import warnings
-from typing import (Any, Optional, List, Iterable, Union, overload)
+from typing import (Any, Literal, Optional, List, Iterable, Union, overload, TYPE_CHECKING)
 
+from ._utils import is_array_namespace
 from .exceptions import (
     ParameterIgnoredWarning,
     MissingDependencyError,
@@ -31,12 +32,18 @@ from .exceptions import (
     TorchConversionError,
     CUDAUnavailableError
 )
-from .types import (_T, _T_Str, DTypeT, DeviceT, ArrayLike, ArrayLibraryName)
+
+if TYPE_CHECKING:
+    from numpy.typing import NDArray
+    from torch import Tensor
+    from array_api_compat.common._typing import Namespace
+    from .types import (T, StringT, DTypeT, DeviceT, ArrayLike, ArrayLibraryName)
 
 __all__ = [
     "to_numpy",
     "to_tensor",
     "to_list",
+    "to_xp",
     "as_array",
     "as_array_if_like"
 ]
@@ -70,7 +77,7 @@ def to_numpy(
     /,
     dtype: Optional[DTypeT] = None,
     copy: bool = True
-):
+) -> NDArray[Any]:
     """
     Convert the given object to a `NumPy array` (i.e. :class:`np.ndarray` instance).
 
@@ -82,7 +89,7 @@ def to_numpy(
             - _set_: Converted to a `NumPy array` containing the elements of the set (order is not guaranteed);
             - _others_: Converted to a `NumPy array` directly.
 
-        dtype : Optional[T_DType], default to `None`
+        dtype : Optional[DTypeT], default to `None`
             The data type of the resulting `NumPy array`.
             - `None`: Use the default data type of the object.
 
@@ -93,7 +100,7 @@ def to_numpy(
 
     Returns
     -------
-        NDArray
+        NDArray[Any]
             The converted `NumPy array` representation of the object.
 
     Raises
@@ -128,7 +135,7 @@ def to_tensor(
     dtype: Optional[DTypeT] = None,
     device: Optional[DeviceT] = None,
     copy: bool = True
-):
+) -> Tensor:
     """
     Convert the given object to a `PyTorch tensor` (i.e. :class:`torch.Tensor` instance).
 
@@ -140,11 +147,11 @@ def to_tensor(
             - `None`: Raises `ConvertNoneTypeError`;
             - _others_: Converted to a `PyTorch tensor` directly.
 
-        dtype : Optional[T_DType], default to `None`
+        dtype : Optional[DTypeT], default to `None`
             The data type of the resulting `PyTorch tensor`.
             - `None`: Use the default data type of the object.
 
-        device : Optional[T_Device], default to `None`
+        device : Optional[DeviceT], default to `None`
             The device on which the resulting `PyTorch tensor` will be allocated.
             - `None`: Use the default device (usually `"cpu"`).
 
@@ -196,13 +203,13 @@ def to_tensor(
 
 
 @overload
-def to_list(obj: List[_T], /, copy: bool = ...) -> List[_T]: ...
+def to_list(obj: List[T], /, copy: bool = ...) -> List[T]: ...
 @overload
-def to_list(obj: _T_Str, /, copy: bool = ...) -> List[_T_Str]: ...
+def to_list(obj: StringT, /, copy: bool = ...) -> List[StringT]: ...
 @overload
-def to_list(obj: Iterable[_T], /, copy: bool = ...) -> List[Any]: ...
+def to_list(obj: Iterable[T], /, copy: bool = ...) -> List[Any]: ...
 @overload
-def to_list(obj: _T, /, copy: bool = ...) -> List[_T]: ...
+def to_list(obj: T, /, copy: bool = ...) -> List[T]: ...
 
 
 def to_list(obj: object, /, copy: bool = True) -> List[Any]:
@@ -255,6 +262,86 @@ def to_list(obj: object, /, copy: bool = True) -> List[Any]:
     return [obj]
 
 
+def to_xp(obj: object, /) -> Namespace:
+    """
+    Convert an array library name to a `array namespace` or return the `array namespace` directly if is a supported namespace.
+
+    Parameters
+    ----------
+        obj : Union[Namespace, ArrayLibraryName]
+            The `array namespace` or array library name.
+            - _ArrayLibraryName_ (`"numpy"` or `"torch"`): Return the corresponding `array namespace` module;
+            - _Namespace_: Return the namespace module directly.
+
+    Returns
+    -------
+        Namespace
+            The `array namespace` module corresponding to the input.
+
+    Raises
+    ------
+        MissingDependencyError
+            If the required array library for the specified `array namespace` is not installed.
+        UnsupportedNameSpaceError
+            If the input is not a supported `array namespace` name or module.
+    """
+    if isinstance(obj, str):
+        if obj == "numpy":
+            if np is None:
+                raise MissingDependencyError("Dependency `NumPy` is required for using array namespace.")
+            return np
+
+        if obj == "torch":
+            if torch is None:
+                raise MissingDependencyError("Dependency `PyTorch` is required for using array namespace.")
+            return torch
+
+        raise UnsupportedNameSpaceError(
+            "Parameter `obj` of `to_xp()` must be a supported array namespace "
+            f"name ('numpy', 'torch'), got {obj!r}."
+        )
+
+    if is_array_namespace(obj):
+        return obj  # type: ignore
+
+    raise UnsupportedNameSpaceError(
+        f"Parameter `obj` of `to_xp()` is not a supported array namespace, got {obj!r}."
+    )
+
+
+@overload
+def as_array(
+    obj: object,
+    xp: Literal["numpy"],
+    /,
+    dtype: Optional[DTypeT] = ...,
+    device: Optional[DeviceT] = ...,
+    copy: bool = ...
+) -> NDArray[Any]: ...
+
+
+@overload
+def as_array(
+    obj: object,
+    xp: Literal["torch"],
+    /,
+    dtype: Optional[DTypeT] = ...,
+    device: Optional[DeviceT] = ...,
+    copy: bool = ...
+) -> Tensor: ...
+
+
+@overload
+def as_array(
+    obj: object,
+    xp: Namespace,
+    /,
+    dtype: Optional[DTypeT] = ...,
+    device: Optional[DeviceT] = ...,
+    copy: bool = ...
+) -> Any: ...
+
+
 def as_array(
     obj: object,
     xp: Union[Namespace, ArrayLibraryName],
@@ -262,7 +349,7 @@ def as_array(
     dtype: Optional[DTypeT] = None,
     device: Optional[DeviceT] = None,
     copy: bool = False
-) -> ArrayLike:
+) -> Any:
     """
     Convert the given object to an array in the specified `array namespace` (e.g., `NumPy` or `PyTorch`).
 
@@ -288,45 +375,35 @@ def as_array(
 
     Returns
     -------
-        ArrayLike
+        Any
             The converted array representation of the object in the specified `array namespace`.
 
     Raises
     ------
-        Refer to :func:`to_numpy` and :func:`to_tensor` for possible exceptions.
+        Refer to :func:`convert.to_xp`, :func:`convert.to_numpy` and :func:`convert.to_tensor` for possible exceptions.
 
         UnsupportedNameSpaceError
             If an unsupported `array namespace` is specified.
         ArrayConversionError
             If an error occurs during array conversion in the specified `array namespace`.
     """
-    if getattr(xp, "__name__", None) is not None:
-        if api.is_numpy_namespace(xp):
-            xp = "numpy"
-        elif api.is_torch_namespace(xp):
-            xp = "torch"
+    arr_xp = to_xp(xp)
 
-    if isinstance(xp, str):
-        if xp == "numpy":
-            # as NumPy array
-            if device is not None and device != "cpu":
-                warn(
-                    "NumPy array does not support setting a non-CPU device. "
-                    f"Parameter `device` is ignored, got {device!r}.",
-                    category=ParameterIgnoredWarning
-                )
-            return to_numpy(obj, dtype=dtype, copy=copy)
-        if xp == "torch":
-            # as PyTorch tensor
-            return to_tensor(obj, dtype=dtype, device=device, copy=copy)
-        # as unsupported array namespace name
-        raise UnsupportedNameSpaceError(
-            "Parameter `xp` of `as_array()` must be one of the supported "
-            f"array namespace names ('numpy', 'torch'), got {xp!r}."
-        )
+    if api.is_numpy_namespace(arr_xp):
+        # as NumPy array
+        if device is not None and device != "cpu":
+            warn(
+                "NumPy array does not support setting a non-CPU device. "
+                f"Parameter `device` is ignored, got {device!r}.",
+                category=ParameterIgnoredWarning
+            )
+        return to_numpy(obj, dtype=dtype, copy=copy)
+    if api.is_torch_namespace(arr_xp):
+        # as PyTorch tensor
+        return to_tensor(obj, dtype=dtype, device=device, copy=copy)
     # as other namespace object
     try:
-        return xp.asarray(obj, dtype=dtype, device=device, copy=copy)
+        return arr_xp.asarray(obj, dtype=dtype, device=device, copy=copy)
     except AttributeError:
         raise UnsupportedNameSpaceError(
             f"Parameter `xp` of `as_array()` is not a supported array namespace: {xp!r}"
@@ -337,6 +414,41 @@ def as_array(
         ) from e
 
 
+@overload
+def as_array_if_like(
+    obj: ArrayLike,
+    xp: Literal["numpy"],
+    /,
+    dtype: Optional[DTypeT] = ...,
+    device: Optional[DeviceT] = ...,
+    copy: bool = ...
+) -> NDArray[Any]: ...
+
+
+@overload
+def as_array_if_like(
+    obj: ArrayLike,
+    xp: Literal["torch"],
+    /,
+    dtype: Optional[DTypeT] = ...,
+    device: Optional[DeviceT] = ...,
+    copy: bool = ...
+) -> Tensor: ...
+
+
+@overload
+def as_array_if_like(
+    obj: ArrayLike,
+    xp: Namespace,
+    /,
+    dtype: Optional[DTypeT] = ...,
+    device: Optional[DeviceT] = ...,
+    copy: bool = ...
+) -> Any: ...
+@overload
+def as_array_if_like(obj: T, xp: Any, /) -> T: ...
+
+
 def as_array_if_like(
     obj: object,
     xp: Union[Namespace, ArrayLibraryName],
@@ -344,7 +456,7 @@ def as_array_if_like(
     dtype: Optional[DTypeT] = None,
     device: Optional[DeviceT] = None,
     copy: bool = False
-):
+) -> Any:
     """
     Convert an array-like object to an array in the specified `array namespace`, otherwise return the object itself.
 
@@ -357,11 +469,11 @@ def as_array_if_like(
 
     Raises
     ------
-        Refer to :func:`as_array` for possible exceptions.
+        Refer to :func:`convert.as_array` for possible exceptions.
 
     Notes
     -----
-    - All parameters follow the usage conventions of :func:`as_array`.
+    - All parameters follow the usage conventions of :func:`convert.as_array`.
     """
     if api.is_array_api_obj(obj):
         return as_array(obj, xp, dtype=dtype, device=device, copy=copy)

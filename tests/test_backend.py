@@ -1,6 +1,6 @@
 import sys
-# sys.path.insert(0, "/data/tianzhen/my_packages/cobra-array/src")
-sys.path.insert(0, "/Users/apple/Develop/Python_WorkSpace/my_packages/cobra-array/src")
+sys.path.insert(0, "/data/tianzhen/my_packages/cobra-array/src")
+# sys.path.insert(0, "/Users/apple/Develop/Python_WorkSpace/my_packages/cobra-array/src")
 
 from cobra_array._core import array_spec, unify_array_args, context_namespace, as_context_array
 import numpy as np
@@ -15,10 +15,11 @@ def test_array_namespace():
     e = iter(a)
     f = torch.tensor([[1, 2], [3, 4], [5, 6]])
 
-    xp, arr = array_spec(c, f, kw_arrays={"d": d}, ref=0, filter_array_like=True)
+    arr_spec = array_spec(c, f, kw_arrays={"d": d}, ref=0, filter_array_like=True)
     # xp, arr = array_namespace(f, a, kw_arrays={"a": a}, ref=2)
-    print(xp)
-    print(arr)
+    print(arr_spec.xp)
+    print(arr_spec.dtype)
+    print(arr_spec.device)
 
 
 def test_unify_array_args():
@@ -39,10 +40,9 @@ def test_unify_array_args():
         new = [1, 2, 3]
         new = as_context_array(new)
         print(repr(new))
-        
+
         a1 = xp.mean(args[0], axis=1)
         print(a1)
-        
 
     func(c, b, a)
 

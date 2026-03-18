@@ -18,10 +18,9 @@ Functions
 """
 
 from __future__ import annotations
-from array_api_compat.common._typing import Namespace
-from typing import (Tuple, Any)
 
 from .convert import (as_array, np, torch)
+from ._utils import ArraySpec
 from .exceptions import MissingDependencyError
 
 
@@ -32,14 +31,14 @@ DEFAULT_TORCH_NAMESPACE = torch
 DEFAULT_NUMPY_NAMESPACE = np
 
 
-def default_array_spec() -> Tuple[Namespace, Tuple[Any, Any]]:
+def default_array_spec() -> ArraySpec:
     """
     Try to get a suitable `array namespace` from the available array libraries in order of `PyTorch` > `NumPy`, and return it along with the default `dtype` and `device`.
 
     Returns
     -------
-        Tuple[Namespace, Tuple[DTypeT, DeviceT]]
-            A tuple containing the default `array namespace` and a tuple of the default `dtype` and default `device`.
+        ArraySpec
+            An :class:`ArraySpec` named tuple containing the default `xp`(`array namespace`), `dtype` and `device`.
 
     Raises
     ------
@@ -51,7 +50,7 @@ def default_array_spec() -> Tuple[Namespace, Tuple[Any, Any]]:
         raise MissingDependencyError(
             "Missing all default array libraries (`PyTorch` > `NumPy`)."
         )
-    return default_xp, (DEFAULT_DTYPE, DEFAULT_DEVICE)
+    return ArraySpec(default_xp, DEFAULT_DTYPE, DEFAULT_DEVICE)
 
 
 def as_default_array(
@@ -80,17 +79,17 @@ def as_default_array(
 
     Returns
     -------
-        ArrayLike
+        Any
         The converted array representation of the object in the default context `array namespace`, with the default `dtype` and `device` if specified.
 
     Raises
     ------
         Refer to :func:`convert.as_array`, :func:`default.default_array_spec` for possible exceptions.
     """
-    xp, (dtype, device) = default_array_spec()
+    arr_spec = default_array_spec()
     return as_array(
-        obj, xp,
-        dtype if unify_dtype else None,
-        device if unify_device else None,
+        obj, arr_spec.xp,
+        arr_spec.dtype if unify_dtype else None,
+        arr_spec.device if unify_device else None,
         copy
     )
