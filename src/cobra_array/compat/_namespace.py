@@ -168,6 +168,16 @@ def result_type(*arrays_and_dtypes: Array | Dtype | int | float | complex | bool
         *,
         axis: int | None = 0
     ) -> Array
+    
+    def stack(
+        arrays: Tuple[Array, ...] | List[Array],
+        /,
+        *,
+        axis: int = 0
+    ) -> CompatArray[ArrayT]:
+        """
+        """
+        ...
 
 
 

@@ -16,14 +16,14 @@ class CompatArray(Generic[ArrayT]):
     def __init__(self, arr: ArrayT, /, **kwargs): ...
 
     # === Conversion functions ===
-    def to_numpy(self, copy: bool = False) -> NDArray[Any]:
+    def to_numpy(self, *, copy: bool = False) -> NDArray[Any]:
         """
         Convert the array to a `NumPy array`.
         """
         ...
 
     def to_tensor(
-        self,
+        self, *,
         device: Optional[Device] = None,
         copy: bool = False
     ) -> Tensor:
@@ -32,7 +32,7 @@ class CompatArray(Generic[ArrayT]):
         """
         ...
 
-    def to_list(self, copy: bool = False) -> List[Any]:
+    def to_list(self, *, copy: bool = False) -> List[Any]:
         """
         Convert the array to a built-in `list`.
         """
@@ -168,7 +168,7 @@ class CompatArray(Generic[ArrayT]):
         """
         ...
 
-    def clip(self, min: Optional[Any] = None, max: Optional[Any] = None) -> CompatArray[ArrayT]:
+    def clip(self, *, min: Optional[Any] = None, max: Optional[Any] = None) -> CompatArray[ArrayT]:
         """
         Clamps each element x_i of the `array` to the range [:param:`min`, :param:`max`].
         """
@@ -597,27 +597,19 @@ class CompatArray(Generic[ArrayT]):
         ...
     
     def vecdot(self, other: ArrayLike, /, *, axes: int = -1) -> CompatArray[ArrayT]:
+        # FIXME
         """
         Compute $x^2$.
         """
 
     # === Manipulation functions ===
-    def expand_dims(
-        self,
-        /,
-        *,
-        axis: int
-    ) -> CompatArray[ArrayT]:
+    def expand_dims(self, *, axis: int) -> CompatArray[ArrayT]:
         """
+        
         """
         ...
     
-    def flip(
-        self,
-        /,
-        *,
-        axis: int | Tuple[int, ...] | None = None
-    ) -> CompatArray[ArrayT]:
+    def flip(self, *, axis: int | Tuple[int, ...] | None = None) -> CompatArray[ArrayT]:
         """
         """
         ...
@@ -632,11 +624,7 @@ class CompatArray(Generic[ArrayT]):
         """
         ...
 
-    def permute_dims(
-        self,
-        /,
-        axes: Tuple[int, ...]
-    ) -> CompatArray[ArrayT]:
+    def permute_dims(self, axes: Tuple[int, ...]) -> CompatArray[ArrayT]:
         """
         """
         ...
@@ -644,8 +632,7 @@ class CompatArray(Generic[ArrayT]):
     def repeat(
         self,
         repeats: int | Array,
-        /,
-        *,
+        /, *,
         axis: int | None = None
     ) -> CompatArray[ArrayT]:
         """
@@ -654,7 +641,6 @@ class CompatArray(Generic[ArrayT]):
 
     def reshape(
         self,
-        /,
         shape: Tuple[int, ...],
         *,
         copy: bool | None = None
@@ -665,7 +651,6 @@ class CompatArray(Generic[ArrayT]):
 
     def roll(
         self,
-        /,
         shift: int | Tuple[int, ...],
         *,
         axis: int | Tuple[int, ...] | None = None
@@ -674,38 +659,28 @@ class CompatArray(Generic[ArrayT]):
         """
         ...
 
-    def squeeze(
-        self,
-        /,
-        axis: int | Tuple[int, ...]
-    ) -> CompatArray[ArrayT]:
+    def squeeze(self, axis: int | Tuple[int, ...]) -> CompatArray[ArrayT]:
         """
         """
         ...
 
-    def stack(
-        arrays: Tuple[Array, ...] | List[Array],
-        /,
-        *,
-        axis: int = 0
-    ) -> CompatArray[ArrayT]:
-        """
-        """
-        ...
+    # def stack(
+    #     arrays: Tuple[Array, ...] | List[Array],
+    #     /,
+    #     *,
+    #     axis: int = 0
+    # ) -> CompatArray[ArrayT]:
+    #     """
+    #     """
+    #     ...
 
-    def tile(
-        self,
-        repetitions: Tuple[int, ...],
-        /
-    ) -> CompatArray[ArrayT]:
+    def tile(self, repetitions: Tuple[int, ...], /) -> CompatArray[ArrayT]:
         """
         """
         ...
 
     def unstack(
-        self,
-        /,
-        *,
+        self, *,
         axis: int = 0
     ) -> Tuple[Array, ...]:
         """
@@ -714,9 +689,7 @@ class CompatArray(Generic[ArrayT]):
 
     # === searching_functions ===
     def argmax(
-        self,
-        /,
-        *,
+        self, *,
         axis: int | None = None,
         keepdims: bool = False
     ) -> CompatArray[ArrayT]:
@@ -725,9 +698,7 @@ class CompatArray(Generic[ArrayT]):
         ...
 
     def argmin(
-        self,
-        /,
-        *,
+        self, *,
         axis: int | None = None,
         keepdims: bool = False
     ) -> CompatArray[ArrayT]:
@@ -735,18 +706,13 @@ class CompatArray(Generic[ArrayT]):
         """
         ...
 
-    def nonzero(
-        self,
-        /
-    ) -> Tuple[Array, ...]:
+    def nonzero(self) -> Tuple[Array, ...]:
         """
         """
         ...
 
     def count_nonzero(
-        self,
-        /,
-        *,
+        self, *,
         axis: int | Tuple[int, ...] | None = None,
         keepdims: bool = False
     ) -> CompatArray[ArrayT]:
@@ -757,8 +723,7 @@ class CompatArray(Generic[ArrayT]):
     def searchsorted(
         x1: Array,
         x2: Array,
-        /,
-        *,
+        /, *,
         side: Literal['left', 'right'] = "left",
         sorter: Array | None = None
     ) -> CompatArray[ArrayT]:
@@ -767,7 +732,7 @@ class CompatArray(Generic[ArrayT]):
         ...
 
     def where(
-        condition: Array,
+        self,
         x1: bool | int | float | complex | Array,
         x2: bool | int | float | complex | Array,
         /
@@ -777,41 +742,27 @@ class CompatArray(Generic[ArrayT]):
         ...
     
     # === set_functions ===
-    def unique_all(
-        self,
-        /
-    ) -> UniqueAllResult:
+    def unique_all(self) -> UniqueAllResult:
         """
         """
         ...
 
-    def unique_counts(
-        self,
-        /
-    ) -> UniqueCountsResult:
+    def unique_counts(self) -> UniqueCountsResult:
         ...
 
-    def unique_inverse(
-        self,
-        /
-    ) -> UniqueInverseResult:
+    def unique_inverse(self) -> UniqueInverseResult:
         """
         """
         ...
 
-    def unique_values(
-        self,
-        /
-    ) -> CompatArray[ArrayT]:
+    def unique_values(self) -> CompatArray[ArrayT]:
         """
         """
         ...
     
     # === _sorting_functions ===
     def argsort(
-        self,
-        /,
-        *,
+        self, *,
         axis: int = -1,
         descending: bool = False,
         stable: bool = True
@@ -821,9 +772,7 @@ class CompatArray(Generic[ArrayT]):
         ...
         
     def sort(
-        self,
-        /,
-        *,
+        self, *,
         axis: int = -1,
         descending: bool = False,
         stable: bool = True
@@ -834,9 +783,7 @@ class CompatArray(Generic[ArrayT]):
     
     # === _statistical_functions ===
     def cumulative_sum(
-        self,
-        /,
-        *,
+        self, *,
         axis: int | None = None,
         dtype: Dtype | None = None,
         include_initial: bool = False
@@ -846,9 +793,7 @@ class CompatArray(Generic[ArrayT]):
         ...
 
     def cumulative_prod(
-        self,
-        /,
-        *,
+        self, *,
         axis: int | None = None,
         dtype: Dtype | None = None,
         include_initial: bool = False
@@ -858,9 +803,7 @@ class CompatArray(Generic[ArrayT]):
         ...
 
     def max(
-        self,
-        /,
-        *,
+        self, *,
         axis: int | Tuple[int, ...] | None = None,
         keepdims: bool = False
     ) -> CompatArray[ArrayT]:
@@ -869,9 +812,7 @@ class CompatArray(Generic[ArrayT]):
         ...
 
     def mean(
-        self,
-        /,
-        *,
+        self, *,
         axis: int | Tuple[int, ...] | None = None,
         keepdims: bool = False
     ) -> CompatArray[ArrayT]:
@@ -880,9 +821,7 @@ class CompatArray(Generic[ArrayT]):
         ...
 
     def min(
-        self,
-        /,
-        *,
+        self, *,
         axis: int | Tuple[int, ...] | None = None,
         keepdims: bool = False
     ) -> CompatArray[ArrayT]:
@@ -891,9 +830,7 @@ class CompatArray(Generic[ArrayT]):
         ...
 
     def prod(
-        self,
-        /,
-        *,
+        self, *,
         axis: int | Tuple[int, ...] | None = None,
         dtype: Dtype | None = None,
         keepdims: bool = False
@@ -903,9 +840,7 @@ class CompatArray(Generic[ArrayT]):
         ...
 
     def std(
-        self,
-        /,
-        *,
+        self, *,
         axis: int | Tuple[int, ...] | None = None,
         correction: int | float = 0,
         keepdims: bool = False
@@ -915,9 +850,7 @@ class CompatArray(Generic[ArrayT]):
         ...
 
     def sum(
-        self,
-        /,
-        *,
+        self, *,
         axis: int | Tuple[int, ...] | None = None,
         dtype: Dtype | None = None,
         keepdims: bool = False
@@ -927,9 +860,7 @@ class CompatArray(Generic[ArrayT]):
         ...
 
     def var(
-        self,
-        /,
-        *,
+        self, *,
         axis: int | Tuple[int, ...] | None = None,
         correction: int | float = 0,
         keepdims: bool = False
@@ -940,9 +871,7 @@ class CompatArray(Generic[ArrayT]):
     
     # === _utility_functions ===
     def all(
-        self,
-        /,
-        *,
+        self, *,
         axis: int | Tuple[int, ...] | None = None,
         keepdims: bool = False
     ) -> CompatArray[ArrayT]:
@@ -951,9 +880,7 @@ class CompatArray(Generic[ArrayT]):
         ...
 
     def any(
-        self,
-        /,
-        *,
+        self, *,
         axis: int | Tuple[int, ...] | None = None,
         keepdims: bool = False
     ) -> CompatArray[ArrayT]:
@@ -962,9 +889,7 @@ class CompatArray(Generic[ArrayT]):
         ...
 
     def diff(
-        self,
-        /,
-        *,
+        self, *,
         axis: int = -1,
         n: int = 1,
         prepend: Array | None = None,
@@ -973,8 +898,6 @@ class CompatArray(Generic[ArrayT]):
         """
         """
         ...
-
-
 
     # === Constants ===
     @property
