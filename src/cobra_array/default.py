@@ -18,6 +18,7 @@ Functions
 """
 
 from __future__ import annotations
+from array_api_compat import (torch as torch_xp, numpy as numpy_xp)
 
 from .convert import (as_array, np, torch)
 from ._utils import ArraySpec
@@ -27,8 +28,8 @@ from .exceptions import MissingDependencyError
 # get defaults
 DEFAULT_DTYPE = float
 DEFAULT_DEVICE = "cpu"
-DEFAULT_TORCH_NAMESPACE = torch
-DEFAULT_NUMPY_NAMESPACE = np
+DEFAULT_TORCH_NAMESPACE = torch_xp if torch is not None else None
+DEFAULT_NUMPY_NAMESPACE = numpy_xp if np is not None else None
 
 
 def default_array_spec() -> ArraySpec:

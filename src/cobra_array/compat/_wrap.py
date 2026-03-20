@@ -6,43 +6,70 @@ from __future__ import annotations
 import array_api_compat as api
 
 from .._core import array_spec
+from .._utils import array_namespace_alias
 from ..convert import (to_numpy, to_tensor, to_list, to_xp, as_array)
 from ..exceptions import NotArrayAPIObjectError
 
 
 class CompatArray:
-    def __init__(self, data, /, xp=None):
-        # checking
-        if not api.is_array_api_obj(data):
-            raise NotArrayAPIObjectError(
-                f"`arr` of `CompatArray` must be an array API compatible array object, got {type(data)}."
-            )
+    @classmethod
+    def from_other(cls, obj, xp, /):
+        _xp = to_xp(xp)
+        return cls(as_array(obj, xp=_xp), xp=_xp)  # type: ignore
 
-        if xp is not None:
-            self._xp = to_xp(xp)
-            self._data = as_array(data, xp=self._xp)  # type: ignore
+    def __init__(self, arr, /, **kwargs):
+        # checking
+        if not api.is_array_api_obj(arr):
+            raise NotArrayAPIObjectError(
+                f"Parameter `arr` of `CompatArray` must be an array API compatible array object, got {type(arr)}."
+            )
+        self._arr = arr
+
+        if "xp" in kwargs:
+            self._xp = kwargs["xp"]
         else:
-            self._xp = array_spec(data).xp
-            self._data = data
+            self._xp = array_spec(arr).xp
+        self._name = array_namespace_alias(self._xp)
 
     def to_numpy(self, copy=False):
-        return to_numpy(self._data, copy=copy)
+        return to_numpy(self._arr, copy=copy)
 
     def to_tensor(self, device=None, copy=False):
-        return to_tensor(self._data, device=device, copy=copy)
+        return to_tensor(self._arr, device=device, copy=copy)
 
     def to_list(self, copy=False):
-        return to_list(self._data, copy=copy)
+        return to_list(self._arr, copy=copy)
 
+    
+    
+    
+    
+    
+    
     def astype(self):
         
-        api.as
+        pass
         
         
     
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
     @property
-    def data(self):
-        return self._data
+    def arr(self):
+        return self._arr
 
     @property
     def xp(self):
@@ -50,23 +77,23 @@ class CompatArray:
 
     @property
     def dtype(self):
-        return self._data.dtype
+        return self._arr.dtype
 
     @property
     def device(self):
-        return api.device(self._data)
+        return api.device(self._arr)
 
     @property
     def shape(self):
-        return tuple(self._data.shape)
+        return tuple(self._arr.shape)
 
     @property
     def ndim(self):
-        return self._data.ndim
+        return self._arr.ndim
 
-    @property
-    def size(self):
-        return self._xp.size(self._data)
+    # @property
+    # def size(self):
+    #     return self._xp.size(self._data)
 
     def __array__(self):
         """Allow implicit NumPy conversion."""
@@ -80,7 +107,7 @@ class CompatArray:
 
         if callable(attr):
             def wrapper(*args, **kwargs):
-                return attr(self._data, *args, **kwargs)
+                return attr(self._arr, *args, **kwargs)
             return wrapper
         return attr
 
@@ -90,15 +117,14 @@ class CompatArray:
             raise TypeError("`len()` of a 0-D compatible array.")
         return shape[0]
 
-    # def __repr__(self):
-    #     shape = self._data.shape
-    #     return f"ArrayResult(class={self._class_name}, shape={shape})"
+    def __repr__(self):
+        return f"{self._name}_array({self._arr})"
 
 
 
 def unwrap(x):
     if isinstance(x, CompatArray):
-        return x._data
+        return x._arr
     return x
 
 def wrap(x):

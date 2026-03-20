@@ -15,7 +15,7 @@ from typing import (Any, Optional, Set, List)
 
 from .._core import array_spec
 from ..convert import (to_numpy, to_tensor, to_list)
-from ..types import (DeviceT)
+from ..types import (Device)
 
 
 class ArrayResult:
@@ -39,7 +39,7 @@ class ArrayResult:
         """
         return to_numpy(self._val, copy=copy)
 
-    def to_tensor(self, device: Optional[DeviceT] = None, copy: bool = False):
+    def to_tensor(self, device: Optional[Device] = None, copy: bool = False):
         """
         Convert result value to a `PyTorch tensor`.
         """
