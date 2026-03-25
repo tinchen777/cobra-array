@@ -167,7 +167,24 @@ def result_type(*arrays_and_dtypes: Array | Dtype | int | float | complex | bool
         /,
         *,
         axis: int | None = 0
-    ) -> Array
+    ) -> Array:
+        """
+        Joins a sequence of arrays along an existing axis.
+
+        Parameters
+        ----------
+            arrays : Tuple[Array, ...] | List[Array]
+                input arrays to join. The arrays must have the same shape, except in the dimension specified by axis.
+
+            axis : int, default to `0`
+                axis along which the arrays will be joined. If axis is None, arrays must be flattened before concatenation. If axis is negative, the function must determine the axis along which to join by counting from the last dimension.
+        
+        Returns
+        -------
+            CompatArray[ArrayT]
+                an output array containing the concatenated values. 
+        """
+        ...
     
     def stack(
         arrays: Tuple[Array, ...] | List[Array],
@@ -176,12 +193,35 @@ def result_type(*arrays_and_dtypes: Array | Dtype | int | float | complex | bool
         axis: int = 0
     ) -> CompatArray[ArrayT]:
         """
+        Joins a sequence of arrays along a new axis.
+
+        Parameters:
+        arrays (Union[Tuple[array, ...], List[array]]) – input arrays to join. Each array must have the same shape.
+
+        axis (int) – axis along which the arrays will be joined. Providing an axis specifies the index of the new axis in the dimensions of the result. For example, if axis is 0, the new axis will be the first dimension and the output array will have shape (N, A, B, C); if axis is 1, the new axis will be the second dimension and the output array will have shape (A, N, B, C); and, if axis is -1, the new axis will be the last dimension and the output array will have shape (A, B, C, N). A valid axis must be on the interval [-N, N), where N is the rank (number of dimensions) of x. If provided an axis outside of the required interval, the function must raise an exception. Default: 0.
+
+        Returns:
+        out (array) – an output array having rank N+1, where N is the rank (number of dimensions) of x. If the input arrays have different data types, normal Type Promotion Rules must apply. If the input arrays have the same data type, the output array must have the same data type as the input arrays.
+
+        Note
+
+        This specification leaves type promotion between data type families (i.e., intxx and floatxx) unspecified.
+        
         """
         ...
 
 
 
 
+“Answer the question.”
 
+你局部优化：
 
+“Answer carefully”
+“Answer step by step”
+“Answer in detail”
+
+👉 你永远不会得到：
+
+“Use chain-of-thought reasoning with explicit intermediate steps and verification.”
 
