@@ -5,7 +5,7 @@
 from torch import Tensor
 from numpy.typing import NDArray
 from array_api_compat.common._typing import Namespace
-from typing import (Union, Tuple, List, Tuple, Optional, Any, Sequence, Generic)
+from typing import (Union, Tuple, List, Tuple, Optional, Any, Sequence, Generic, Literal)
 
 from ..types import (ArrayT, DType, Device, ArrayLike, ArrayLibraryName)
 
@@ -614,7 +614,7 @@ class CompatArray(Generic[ArrayT]):
     def tensordot(self, other: ArrayLike, /, *, axes: Union[int, Tuple[Sequence[int], Sequence[int]]] = 2) -> CompatArray[ArrayT]:
         """
         Returns a tensor contraction of `self` and `other` over specific axes.
-        - The :func:`tensordot` corresponds to the generalized matrix product.
+        - The function corresponds to the generalized matrix product.
         - `self` should have a numeric data type.
 
         Parameters
@@ -916,7 +916,7 @@ class CompatArray(Generic[ArrayT]):
         """
         ...
 
-    def unstack(self, *, axis: int = 0) -> Tuple[ArrayT, ...]:
+    def unstack(self, *, axis: int = 0) -> Tuple[CompatArray[ArrayT], ...]:
         """
         Splits `self` into a sequence of arrays along the given axis.
 
@@ -929,7 +929,7 @@ class CompatArray(Generic[ArrayT]):
 
         Returns
         -------
-            Tuple[ArrayT, ...]
+            Tuple[CompatArray[ArrayT], ...]
                 Tuple of slices along the given dimension.
                 All the arrays have the same shape.
         """
@@ -975,152 +975,174 @@ class CompatArray(Generic[ArrayT]):
         keepdims: bool = False
     ) -> CompatArray[ArrayT]:
         """
-        # TODO
         Returns the indices of the minimum values along a specified axis.
 
         When the minimum value occurs multiple times, only the indices corresponding to the first occurrence are returned.
-        """
-        ...
 
-    def nonzero(self) -> Tuple[Array, ...]:
-        """
-        Returns the indices of the array elements which are non-zero.
-
-        Data-dependent output shape
-
-        The shape of the output array for this function depends on the data values in the input array; hence, array libraries which build computation graphs (e.g., JAX, Dask, etc.) may find this function difficult to implement without knowing array values. Accordingly, such libraries may choose to omit this function. See Data-dependent output shapes section for more details.
+        - For backward compatibility, conforming implementations may support complex numbers; however, inequality comparison of complex numbers is unspecified and thus implementation-dependent.
+        - `self` should have a real-valued data type.
 
         Parameters
         ----------
-        x (array) – input array. Must have a positive rank. If x is zero-dimensional, the function must raise an exception.
+            axis : Optional[int], default to `None`
+                Axis along which to search.
+                - `None`: The function must return the index of the minimum value of the flattened `self`.
+
+            keepdims : bool, default to `False`
+                - `True`: The reduced axes (dimensions) must be included in the result as singleton dimensions, and, accordingly, the result must be compatible with `self`.
+                - `False`: The reduced axes (dimensions) must not be included in the result.
 
         Returns
         -------
-        out (Tuple[array, …]) – a tuple of k arrays, one for each dimension of x and each of size n (where n is the total number of non-zero elements), containing the indices of the non-zero elements in that dimension. The indices must be returned in row-major, C-style order. The returned array must have the default array index data type.
+            CompatArray[ArrayT]
+                The returned array must have be the default array index data type.
+                For :param:`axis`:
+                - `None`: A zero-dimensional array containing the index of the first occurrence of the minimum value;
+                - _others_: A non-zero-dimensional array containing the indices of the minimum values.
+        """
+        ...
+
+    def nonzero(self) -> Tuple[CompatArray[ArrayT], ...]:
+        """
+        Returns the indices of `self` elements which are non-zero.
+        - `self` must have a positive rank. If `self` is zero-dimensional, the function must raise an exception.
+
+        Returns
+        -------
+            Tuple[CompatArray[ArrayT], ...]
+                A tuple of `k` arrays, one for each dimension of `self` and each of size `n` (where `n` is the total number of non-zero elements), containing the indices of the non-zero elements in that dimension.
+                The indices must be returned in row-major, C-style order.
+                The returned array must have the default array index data type.
 
         Notes
-
-        If x has a complex floating-point data type, non-zero elements are those elements having at least one component (real or imaginary) which is non-zero.
-
-        If x has a boolean data type, non-zero elements are those elements which are equal to True.
+        -----
+        - If `self` has a complex floating-point data type, non-zero elements are those elements having at least one component (real or imaginary) which is non-zero;
+        - If `self` has a boolean data type, non-zero elements are those elements which are equal to `True`.
         """
         ...
 
     def count_nonzero(
         self, *,
-        axis: int | Tuple[int, ...] | None = None,
+        axis: Optional[Union[int, Tuple[int, ...]]] = None,
         keepdims: bool = False
     ) -> CompatArray[ArrayT]:
         """
-        Counts the number of array elements which are non-zero.
+        Counts the number of `self` elements which are non-zero.
 
         Parameters
         ----------
-        x (array) – input array.
+            axis : Optional[Union[int, Tuple[int, ...]]], default to `None`
+                Axis or axes along which to count non-zero values.
+                - `None`: The number of non-zero values must be computed over the entire `self`;
+                - _Tuple[int, ...]_: The number of non-zero values must be computed over multiple axes.
 
-        axis (Optional[Union[int, Tuple[int, ...]]]) – axis or axes along which to count non-zero values. By default, the number of non-zero values must be computed over the entire array. If a tuple of integers, the number of non-zero values must be computed over multiple axes. Default: None.
-
-        keepdims (bool) – if True, the reduced axes (dimensions) must be included in the result as singleton dimensions, and, accordingly, the result must be compatible with the input array. Otherwise, if False, the reduced axes (dimensions) must not be included in the result. Default: False.
+            keepdims : bool, default to `False`
+                - `True`: The reduced axes (dimensions) must be included in the result as singleton dimensions, and, accordingly, the result must be compatible with `self`;
+                - `False`: The reduced axes (dimensions) must not be included in the result.
 
         Returns
         -------
-        out (array) – if the number of non-zeros values was computed over the entire array, a zero-dimensional array containing the total number of non-zero values; otherwise, a non-zero-dimensional array containing the counts along the specified axes. The returned array must have the default array index data type.
+            CompatArray[ArrayT]
+                The returned array must have the default array index data type.
+                - computed over the entire `self`: A zero-dimensional array containing the total number of non-zero values;
+                - _others_: A non-zero-dimensional array containing the counts along the specified axes.
 
         Notes
-
-        If x has a complex floating-point data type, non-zero elements are those elements having at least one component (real or imaginary) which is non-zero.
-
-        If x has a boolean data type, non-zero elements are those elements which are equal to True.
+        -----
+        - If `self` has a complex floating-point data type, non-zero elements are those elements having at least one component (real or imaginary) which is non-zero;
+        - If `self` has a boolean data type, non-zero elements are those elements which are equal to `True`.
         """
         ...
 
     def searchsorted(
-        `self`: Array,
-        `other`: Array,
+        self,
+        other: ArrayLike,
         /, *,
         side: Literal['left', 'right'] = "left",
-        sorter: Array | None = None
+        sorter: Optional[ArrayLike] = None
     ) -> CompatArray[ArrayT]:
         """
         Finds the indices into `self` such that, if the corresponding elements in `other` were inserted before the indices, the order of `self`, when sorted in ascending order, would be preserved.
+        - `self` must be a one-dimensional array. Should have a real-valued data type.
+            - :param:`sorter` is `None`: `self` must be sorted in ascending order;
+            - :param:`sorter` is not `None`: :param:`sorter` must be an array of indices that sort `self` in ascending order.
 
         Parameters
         ----------
-        `self` (array) – input array. Must be a one-dimensional array. Should have a real-valued data type. If sorter is None, must be sorted in ascending order; otherwise, sorter must be an array of indices that sort `self` in ascending order.
+            other : ArrayLike
+                Array containing search values. Should have a real-valued data type.
 
-        `other` (array) – array containing search values. Should have a real-valued data type.
+            side : Literal["left", "right"], default: "left"
+                Argument controlling which index is returned if a value lands exactly on an edge.
+                Let `v` be an element of `other` given by `v = other[j]`, where `j` refers to a valid index.
+                - `v` < `self[any]`: `out[j]` must be `0`;
+                - `v` > `self[any]`: `out[j]` must be `M`, where `M` is the number of elements in `self`.
+                - _others_: Each returned index `i = out[j]` must satisfy an index condition:
 
-        side (Literal['left', 'right']) –
+                    - :param:`side` == `"left"`: `self[i-1] < v <= self[i]`;
+                    - :param:`side` == `"right"`: `self[i-1] <= v < self[i]`.
 
-        argument controlling which index is returned if a value lands exactly on an edge.
-
-        Let v be an element of `other` given by v = `other`[j], where j refers to a valid index (see Indexing).
-
-        If v is less than all elements in `self`, then out[j] must be 0.
-
-        If v is greater than all elements in `self`, then out[j] must be M, where M is the number of elements in `self`.
-
-        Otherwise, each returned index i = out[j] must satisfy an index condition:
-
-        If side == 'left', then `self`[i-1] < v <= `self`[i].
-
-        If side == 'right', then `self`[i-1] <= v < `self`[i].
-
-        Default: 'left'.
-
-        sorter (Optional[array]) – array of indices that sort `self` in ascending order. The array must have the same shape as `self` and have an integer data type. Default: None.
+            sorter : Optional[array], default: `None`
+                Array of indices that sort `self` in ascending order.
+                The array must have the same shape as `self` and have an integer data type.
 
         Returns
         -------
-        out (array) – an array of indices with the same shape as `other`. The returned array must have the default array index data type.
+            CompatArray[ArrayT]
+                An array of indices with the same shape as `other`.
+                The returned array must have the default array index data type.
 
         Notes
-
-        For real-valued floating-point arrays, the sort order of NaNs and signed zeros is unspecified and thus implementation-dependent. Accordingly, when a real-valued floating-point array contains NaNs and signed zeros, what constitutes ascending order may vary among specification-conforming array libraries.
-
-        While behavior for arrays containing NaNs and signed zeros is implementation-dependent, specification-conforming libraries should, however, ensure consistency with sort and argsort (i.e., if a value in `other` is inserted into `self` according to the corresponding index in the output array and sort is invoked on the resultant array, the sorted result should be an array in the same order).
+        -----
+        - For real-valued floating-point arrays, the sort order of NaNs and signed zeros is unspecified and thus implementation-dependent. Accordingly, when a real-valued floating-point array contains NaNs and signed zeros, what constitutes ascending order may vary among specification-conforming array libraries.
+        - While behavior for arrays containing NaNs and signed zeros is implementation-dependent, specification-conforming libraries should, however, ensure consistency with :meth:`CompatArray.sort` and :meth:`CompatArray.argsort` (i.e., if a value in `other` is inserted into `self` according to the corresponding index in the output array and sort is invoked on the resultant array, the sorted result should be an array in the same order).
         """
         ...
 
     def where(
         self,
-        `self`: bool | int | float | complex | Array,
-        `other`: bool | int | float | complex | Array,
+        X: Any,
+        Y: Any,
         /
     ) -> CompatArray[ArrayT]:
         """
-        Returns elements chosen from `self` or `other` depending on condition.
+        Returns elements chosen from `X` or `Y` depending on condition `self`.
+        - `self` is a condition array. Should have a boolean data type. Must be compatible with `X` and `Y`. For each element in `self`:
+            - `True`: yield `X[i]`;
+            - `False`: yield `Y[i]`.
 
         Parameters
         ----------
-        condition (array) – when True, yield x1_i; otherwise, yield x2_i. Should have a boolean data type. Must be compatible with `self` and `other`.
+            X : Any
+                First input array. Must be compatible with `self` and `Y`.
 
-        `self` (Union[array, int, float, complex, bool]) – first input array. Must be compatible with condition and `other`.
-
-        `other` (Union[array, int, float, complex, bool]) – second input array. Must be compatible with condition and `self`.
+            Y : Any
+                Second input array. Must be compatible with `self` and `X`.
 
         Returns
         -------
-        out (array) – an array with elements from `self` where condition is True, and elements from `other` elsewhere. The returned array must have a data type determined by Type Promotion Rules rules with the arrays `self` and `other`.
+            CompatArray[ArrayT]
+                An array with elements from `X` where `self` is `True`, and elements from `Y` elsewhere.
+                The returned array must have a data type determined by Type Promotion Rules rules with the arrays `X` and `Y`.
 
         Notes
-
-        At least one of `self` and `other` must be an array.
-
-        If either `self` or `other` is a scalar value, the returned array must have a data type determined according to Mixing arrays with Python scalars.
-        
+        - At least one of `X` and `Y` must be an array;
+        - If either `X` or `Y` is a scalar value, the returned array must have a data type determined according to Mixing arrays with Python scalars.
         """
         ...
-    
-    # === set_functions ===
+
+    # === Set functions ===
     def unique_all(self) -> UniqueAllResult:
         """
-        Returns the unique elements of an input array x, the first occurring indices for each unique element in x, the indices from the set of unique elements that reconstruct x, and the corresponding counts for each unique element in x.
-        
-        input array. If x has more than one dimension, the function must flatten x and return the unique elements of the flattened array.
-        
+        Returns the unique elements of `self`, the first occurring indices for each unique element in `self`, the indices from the set of unique elements that reconstruct `self`, and the corresponding counts for each unique element in `self`.
+        - `self`:
+            - more than one dimension: the function must flatten `self` and return the unique elements of the flattened `self`.
+
         Returns
         -------
+            
+        
+        
         out (Tuple[array, array, array, array]) – a namedtuple (values, indices, inverse_indices, counts) whose
 
         first element must have the field name values and must be a one-dimensional array containing the unique elements of x. The array must have the same data type as x.
