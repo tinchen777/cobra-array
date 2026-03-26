@@ -6,12 +6,12 @@ from __future__ import annotations
 from torch import Tensor
 from numpy.typing import NDArray
 from array_api_compat.common._typing import Namespace
-from typing import (Union, List, Tuple, Optional, Any, Sequence, Generic, Literal)
+from typing import (Union, List, Tuple, Optional, Any, Sequence, Generic, Literal, overload)
 
-from ..types import (ArrayT, DType, Device, ArrayLike, ArrayLibraryName, UniqueAllResult, UniqueCountsResult, UniqueInverseResult)
+from ..types import (ArrayT, DTypeT, DeviceT, DType, Device, ArrayLike, ArrayLibraryName, UniqueAllResult, UniqueCountsResult, UniqueInverseResult)
 
 
-class CompatArray(Generic[ArrayT]):
+class CompatArray(Generic[DTypeT, DeviceT]):
     """
     A backend-agnostic array abstraction compliant with the [`Python Array API standard`](https://data-apis.org/array-api/2024.12/API_specification/index.html).
 
@@ -24,46 +24,50 @@ class CompatArray(Generic[ArrayT]):
     - Methods correspond directly to standard functions, but are exposed in an object-oriented form.
     """
     @classmethod
-    def from_other(cls, obj: object, xp: Union[Namespace, ArrayLibraryName], /) -> CompatArray[Any]: ...
+    def from_other(cls, obj: object, xp: Union[Namespace, ArrayLibraryName], /) -> CompatArray[DType, Device]: ...
+    def __new__(cls, *args, **kwargs) -> CompatArray[DType, Device]: ...
     def __init__(self, arr: ArrayT, /, **kwargs): ...
 
     # === Conversion functions ===
     def to_numpy(self, *, copy: bool = False) -> NDArray[Any]:
         """
         Convert `self` to a `NumPy array`.
+        See also :func:`convert.to_numpy`.
         """
         ...
 
     def to_tensor(
         self, *,
-        device: Optional[Device] = None,
+        device: Optional[DeviceT] = None,
         copy: bool = False
     ) -> Tensor:
         """
         Convert `self` to a `PyTorch tensor`.
+        See also :func:`convert.to_tensor`.
         """
         ...
 
     def to_list(self, *, copy: bool = False) -> List[Any]:
         """
         Convert `self` to a built-in `list`.
+        See also :func:`convert.to_list`.
         """
         ...
 
     # === Data type functions ===
     def astype(
         self,
-        dtype: DType,
+        dtype: DTypeT,
         /, *,
         copy: bool = True,
-        device: Optional[Device] = None
+        device: Optional[DeviceT] = None
     ) -> CompatArray[Any]:
         """
         Copies `self` to a specified data type irrespective of Type Promotion Rules rules.
 
         Parameters
         ----------
-            dtype : DType
+            dtype : DTypeT
                 Desired data type.
 
             copy : bool, default to `True`
@@ -74,13 +78,15 @@ class CompatArray(Generic[ArrayT]):
                     - `True`: `self` must be returned;
                     - `False`: A newly allocated array must be returned.
 
-            device : Optional[Device], default to `None`
-                Device on which to place the returned array.
+            device : Optional[DeviceT], default to `None`
+                DeviceT on which to place the returned array.
                 - `None`: The output array device must be inferred from `self`.
 
         Returns
         -------
             CompatArray[Any]
+                An array having the specified data type.
+                The returned array must have the same shape as `self`.
         """
         ...
 
@@ -1264,7 +1270,7 @@ class CompatArray(Generic[ArrayT]):
     def cumulative_sum(
         self, *,
         axis: Optional[int] = None,
-        dtype: Optional[DType] = None,
+        dtype: Optional[DTypeT] = None,
         include_initial: bool = False
     ) -> CompatArray[ArrayT]:
         """
@@ -1309,7 +1315,7 @@ class CompatArray(Generic[ArrayT]):
     def cumulative_prod(
         self, *,
         axis: Optional[int] = None,
-        dtype: Optional[DType] = None,
+        dtype: Optional[DTypeT] = None,
         include_initial: bool = False
     ) -> CompatArray[ArrayT]:
         """
@@ -1458,7 +1464,7 @@ class CompatArray(Generic[ArrayT]):
     def prod(
         self, *,
         axis: Optional[Union[int, Tuple[int, ...]]] = None,
-        dtype: Optional[DType] = None,
+        dtype: Optional[DTypeT] = None,
         keepdims: bool = False
     ) -> CompatArray[ArrayT]:
         """
@@ -1541,7 +1547,7 @@ class CompatArray(Generic[ArrayT]):
     def sum(
         self, *,
         axis: Optional[Union[int, Tuple[int, ...]]] = None,
-        dtype: Optional[DType] = None,
+        dtype: Optional[DTypeT] = None,
         keepdims: bool = False
     ) -> CompatArray[ArrayT]:
         """
@@ -1738,6 +1744,8 @@ class CompatArray(Generic[ArrayT]):
         """
         ...
 
+    # BUG no Constants for array, but xp
+    
     # === Constants ===
     @property
     def e(self) -> float: ...
@@ -1755,31 +1763,31 @@ class CompatArray(Generic[ArrayT]):
 
     # === Data type ===
     @property
-    def int8(self) -> DType: ...
+    def int8(self) -> DTypeT: ...
     @property
-    def int16(self) -> DType: ...
+    def int16(self) -> DTypeT: ...
     @property
-    def int32(self) -> DType: ...
+    def int32(self) -> DTypeT: ...
     @property
-    def int64(self) -> DType: ...
+    def int64(self) -> DTypeT: ...
     @property
-    def uint8(self) -> DType: ...
+    def uint8(self) -> DTypeT: ...
     @property
-    def uint16(self) -> DType: ...
+    def uint16(self) -> DTypeT: ...
     @property
-    def uint32(self) -> DType: ...
+    def uint32(self) -> DTypeT: ...
     @property
-    def uint64(self) -> DType: ...
+    def uint64(self) -> DTypeT: ...
     @property
-    def float32(self) -> DType: ...
+    def float32(self) -> DTypeT: ...
     @property
-    def float64(self) -> DType: ...
+    def float64(self) -> DTypeT: ...
     @property
-    def complex64(self) -> DType: ...
+    def complex64(self) -> DTypeT: ...
     @property
-    def complex128(self) -> DType: ...
+    def complex128(self) -> DTypeT: ...
     @property
-    def bool(self) -> DType: ...
+    def bool(self) -> DTypeT: ...
 
     # === Array attributes ===
     @property
@@ -1797,16 +1805,16 @@ class CompatArray(Generic[ArrayT]):
         ...
 
     @property
-    def dtype(self) -> DType:
+    def dtype(self) -> DTypeT:
         """
         Data type of the elements of `self`.
         """
         ...
 
     @property
-    def device(self) -> Device:
+    def device(self) -> DeviceT:
         """
-        Device on which `self` is stored.
+        DeviceT on which `self` is stored.
         """
         ...
 

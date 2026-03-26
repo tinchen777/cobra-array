@@ -5,15 +5,24 @@
 from __future__ import annotations
 import array_api_compat as api
 from array_api_compat.common._typing import Namespace
-from typing import NamedTuple
+from typing import (NamedTuple, TYPE_CHECKING)
 
 from .exceptions import UnsupportedNameSpaceError
 
+if TYPE_CHECKING:
+    from .types import (DType, Device)
+
 
 class ArraySpec(NamedTuple):
+    """
+    A named tuple to hold the specifications of an array.
+    - `xp`: Namespace
+    - `dtype`: DType
+    - `device`: Device
+    """
     xp: Namespace
-    dtype: object
-    device: object
+    dtype: DType
+    device: Device
 
 
 def array_namespace_alias(xp: object) -> str:

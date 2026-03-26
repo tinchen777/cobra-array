@@ -19,20 +19,20 @@ class Device(Protocol):
     ...
 
 
-DTypeT = TypeVar("DTypeT", bound=Any)
-DeviceT = TypeVar("DeviceT", bound=Any)
+DTypeT = TypeVar("DTypeT", bound=DType)
+DeviceT = TypeVar("DeviceT", bound=Device)
 
 ArrayLibraryName = Literal["numpy", "torch"]
 
 
-class ArrayLike(Protocol):
-    dtype: Any
+class ArrayLike(Protocol[DTypeT]):
+    dtype: DTypeT
     shape: Any
 
     def __array__(self) -> Any: ...
 
 
-ArrayT = TypeVar("ArrayT", bound=ArrayLike)
+ArrayT = TypeVar("ArrayT", bound=ArrayLike[Any])
 
 
 class UniqueAllResult(NamedTuple, Generic[T]):
@@ -50,8 +50,3 @@ class UniqueCountsResult(NamedTuple, Generic[T]):
 class UniqueInverseResult(NamedTuple, Generic[T]):
     values: T
     inverse_indices: T
-
-
-# UniqueAllResult = namedtuple("UniqueAllResult", ["values", "indices", "inverse_indices", "counts"])
-# UniqueCountsResult = namedtuple("UniqueCountsResult", ["values", "counts"])
-# UniqueInverseResult = namedtuple("UniqueInverseResult", ["values", "inverse_indices"])
