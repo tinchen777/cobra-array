@@ -2,12 +2,13 @@
 # Python version: 3.9
 # @TianZhen
 
+from __future__ import annotations
 from torch import Tensor
 from numpy.typing import NDArray
 from array_api_compat.common._typing import Namespace
-from typing import (Union, Tuple, List, Tuple, Optional, Any, Sequence, Generic, Literal)
+from typing import (Union, List, Tuple, Optional, Any, Sequence, Generic, Literal)
 
-from ..types import (ArrayT, DType, Device, ArrayLike, ArrayLibraryName)
+from ..types import (ArrayT, DType, Device, ArrayLike, ArrayLibraryName, UniqueAllResult, UniqueCountsResult, UniqueInverseResult)
 
 
 class CompatArray(Generic[ArrayT]):
@@ -1132,7 +1133,7 @@ class CompatArray(Generic[ArrayT]):
         ...
 
     # === Set functions ===
-    def unique_all(self) -> UniqueAllResult:
+    def unique_all(self) -> UniqueAllResult[CompatArray[ArrayT]]:
         """
         Returns the unique elements of `self`, the first occurring indices for each unique element in `self`, the indices from the set of unique elements that reconstruct `self`, and the corresponding counts for each unique element in `self`.
         - `self`:
@@ -1140,100 +1141,60 @@ class CompatArray(Generic[ArrayT]):
 
         Returns
         -------
-            
-        
-        
-        out (Tuple[array, array, array, array]) – a namedtuple (values, indices, inverse_indices, counts) whose
-
-        first element must have the field name values and must be a one-dimensional array containing the unique elements of x. The array must have the same data type as x.
-
-        second element must have the field name indices and must be an array containing the indices (first occurrences) of a flattened x that result in values. The array must have the same shape as values and must have the default array index data type.
-
-        third element must have the field name inverse_indices and must be an array containing the indices of values that reconstruct x. The array must have the same shape as x and must have the default array index data type.
-
-        fourth element must have the field name counts and must be an array containing the number of times each unique element occurs in x. The order of the returned counts must match the order of values, such that a specific element in counts corresponds to the respective unique element in values. The returned array must have same shape as values and must have the default array index data type.
-
-        Note
-
-        The order of unique elements is not specified and may vary between implementations.
-        
-        Note
-
-        Uniqueness should be determined based on value equality (see equal()). For input arrays having floating-point data types, value-based equality implies the following behavior.
-
-        As nan values compare as False, nan values should be considered distinct.
-
-        As complex floating-point values having at least one nan component compare as False, complex floating-point values having nan components should be considered distinct.
-
-        As -0 and +0 compare as True, signed zeros should not be considered distinct, and the corresponding unique element will be implementation-dependent (e.g., an implementation could choose to return -0 if -0 occurs before +0).
-
-        As signed zeros are not distinct, using inverse_indices to reconstruct the input array is not guaranteed to return an array having the exact same values.
-
-        Each nan value and each complex floating-point value having a nan component should have a count of one, while the counts for signed zeros should be aggregated as a single count.
+            UniqueAllResult[CompatArray[ArrayT]]
+                A namedtuple (`values`, `indices`, `inverse_indices`, `counts`):
+                1. :attr:`values`: A one-dimensional array containing the unique elements of `self`. The array must have the same data type as `self`;
+                2. :attr:`indices`: An array containing the indices (first occurrences) of a flattened `self` that result in :attr:`values`. The array must have the same shape as :attr:`values` and must have the default array index data type;
+                3. :attr:`inverse_indices`: An array containing the indices of :attr:`values` that reconstruct `self`. The array must have the same shape as `self` and must have the default array index data type;
+                4. :attr:`counts`: An array containing the number of times each unique element occurs in `self`. The order of the returned counts must match the order of :attr:`values`, such that a specific element in :attr:`counts` corresponds to the respective unique element in :attr:`values`. The returned array must have same shape as :attr:`values` and must have the default array index data type.
         """
         ...
 
-    def unique_counts(self) -> UniqueCountsResult:
+    def unique_counts(self) -> UniqueCountsResult[CompatArray[ArrayT]]:
         """
-        Returns the unique elements of an input array x and the corresponding counts for each unique element in x.
-        
-         input array. If x has more than one dimension, the function must flatten x and return the unique elements of the flattened array.
+        Returns the unique elements of `self` and the corresponding counts for each unique element in `self`.
+        - `self`:
+            - more than one dimension: the function must flatten `self` and return the unique elements of the flattened `self`.
 
         Returns
         -------
-        out (Tuple[array, array]) – a namedtuple (values, counts) whose
-
-        first element must have the field name values and must be a one-dimensional array containing the unique elements of x. The array must have the same data type as x.
-
-        second element must have the field name counts and must be an array containing the number of times each unique element occurs in x. The order of the returned counts must match the order of values, such that a specific element in counts corresponds to the respective unique element in values. The returned array must have same shape as values and must have the default array index data type.
-
-        Note
-
-        The order of unique elements is not specified and may vary between implementations.
+            UniqueCountsResult[CompatArray[ArrayT]]
+                A namedtuple (`values`, `counts`):
+                1. :attr:`values`: A one-dimensional array containing the unique elements of `self`. The array must have the same data type as `self`;
+                2. :attr:`counts`: An array containing the number of times each unique element occurs in `self`. The order of the returned counts must match the order of :attr:`values`, such that a specific element in :attr:`counts` corresponds to the respective unique element in :attr:`values`. The returned array must have same shape as :attr:`values` and must have the default array index data type.
         """
         ...
 
-    def unique_inverse(self) -> UniqueInverseResult:
+    def unique_inverse(self) -> UniqueInverseResult[CompatArray[ArrayT]]:
         """
-        Returns the unique elements of an input array x and the indices from the set of unique elements that reconstruct x.
-        
-        Parameters
-        ----------
-        x (array) – input array. If x has more than one dimension, the function must flatten x and return the unique elements of the flattened array.
+        Returns the unique elements of `self` and the indices from the set of unique elements that reconstruct `self`.
+        - `self`:
+            - more than one dimension: the function must flatten `self` and return the unique elements of the flattened `self`.
 
         Returns
         -------
-        out (Tuple[array, array]) – a namedtuple (values, inverse_indices) whose
-
-        first element must have the field name values and must be a one-dimensional array containing the unique elements of x. The array must have the same data type as x.
-
-        second element must have the field name inverse_indices and must be an array containing the indices of values that reconstruct x. The array must have the same shape as x and have the default array index data type.
-
-        Note
-
-        The order of unique elements is not specified and may vary between implementations.
-        
+            UniqueInverseResult[CompatArray[ArrayT]]
+                A namedtuple (`values`, `inverse_indices`):
+                1. :attr:`values`: A one-dimensional array containing the unique elements of `self`. The array must have the same data type as `self`;
+                2. :attr:`inverse_indices`: An array containing the indices of :attr:`values` that reconstruct `self`. The array must have the same shape as `self` and must have the default array index data type.
         """
         ...
 
     def unique_values(self) -> CompatArray[ArrayT]:
         """
-        Returns the unique elements of an input array x.
-        
-        input array. If x has more than one dimension, the function must flatten x and return the unique elements of the flattened array.
+        Returns the unique elements of an input array `self`.
+        - `self`:
+            - more than one dimension: the function must flatten `self` and return the unique elements of the flattened `self`.
 
         Returns
         -------
-        out (array) – a one-dimensional array containing the set of unique elements in x. The returned array must have the same data type as x.
-
-        Note
-
-        The order of unique elements is not specified and may vary between implementations.
-        
+            CompatArray[ArrayT]
+                A one-dimensional array containing the set of unique elements in `self`.
+                The returned array must have the same data type as `self`.
         """
         ...
-    
-    # === _sorting_functions ===
+
+    # === Sorting functions ===
     def argsort(
         self, *,
         axis: int = -1,
@@ -1243,26 +1204,30 @@ class CompatArray(Generic[ArrayT]):
         """
         Returns the indices that sort `self` along a specified axis.
 
-        Note
-
-        For backward compatibility, conforming implementations may support complex numbers; however, inequality comparison of complex numbers is unspecified and thus implementation-dependent (see Complex Number Ordering).
-
         Parameters
         ----------
-        x (array) – input array. Should have a real-valued data type.
+            axis : int, default to `-1`
+                Axis along which to sort.
+                - `-1`: The function must sort along the last axis.
 
-        axis (int) – axis along which to sort. If set to -1, the function must sort along the last axis. Default: -1.
+            descending : bool, default to `False`
+                Sort order.
+                - `True`: The returned indices sort `self` in descending order (by value);
+                - `False`: The returned indices sort `self` in ascending order (by value).
 
-        descending (bool) – sort order. If True, the returned indices sort x in descending order (by value). If False, the returned indices sort x in ascending order (by value). Default: False.
-
-        stable (bool) – sort stability. If True, the returned indices must maintain the relative order of x values which compare as equal. If False, the returned indices may or may not maintain the relative order of x values which compare as equal (i.e., the relative order of x values which compare as equal is implementation-dependent). Default: True.
+            stable : bool, default to `True`
+                Sort stability.
+                - `True`: The returned indices must maintain the relative order of `self` values which compare as equal;
+                - `False`: The returned indices may or may not maintain the relative order of `self` values which compare as equal (i.e., the relative order of `self` values which compare as equal is implementation-dependent).
 
         Returns
         -------
-        out (array) – an array of indices. The returned array must have the same shape as x. The returned array must have the default array index data type.
+            CompatArray[ArrayT]
+                An array of indices. The returned array must have the same shape as `self`.
+                The returned array must have the default array index data type.
         """
         ...
-        
+
     def sort(
         self, *,
         axis: int = -1,
@@ -1270,469 +1235,456 @@ class CompatArray(Generic[ArrayT]):
         stable: bool = True
     ) -> CompatArray[ArrayT]:
         """
-        Returns a sorted copy of an input array x.
-
-        Note
-
-        For backward compatibility, conforming implementations may support complex numbers; however, inequality comparison of complex numbers is unspecified and thus implementation-dependent (see Complex Number Ordering).
+        Returns a sorted copy of an input array `self`.
 
         Parameters
         ----------
-        x (array) – input array. Should have a real-valued data type.
+            axis : int, default to `-1`
+                Axis along which to sort.
+                - `-1`: The function must sort along the last axis.
 
-        axis (int) – axis along which to sort. If set to -1, the function must sort along the last axis. Default: -1.
+            descending : bool, default to `False`
+                Sort order.
+                - `True`: The returned array must be sorted in descending order (by value);
+                - `False`: The returned array must be sorted in ascending order (by value).
 
-        descending (bool) – sort order. If True, the array must be sorted in descending order (by value). If False, the array must be sorted in ascending order (by value). Default: False.
-
-        stable (bool) – sort stability. If True, the returned array must maintain the relative order of x values which compare as equal. If False, the returned array may or may not maintain the relative order of x values which compare as equal (i.e., the relative order of x values which compare as equal is implementation-dependent). Default: True.
+            stable : bool, default to `True`
+                Sort stability.
+                - `True`: The returned array must maintain the relative order of `self` values which compare as equal;
+                - `False`: The returned array may or may not maintain the relative order of `self` values which compare as equal (i.e., the relative order of `self` values which compare as equal is implementation-dependent).
 
         Returns
         -------
-        out (array) – a sorted array. The returned array must have the same data type and shape as x.
+            CompatArray[ArrayT]
+                A sorted array. The returned array must have the same data type and shape as `self`.
         """
         ...
-    
-    # === _statistical_functions ===
+
+    # === Statistical functions ===
     def cumulative_sum(
         self, *,
-        axis: int | None = None,
-        dtype: Dtype | None = None,
+        axis: Optional[int] = None,
+        dtype: Optional[DType] = None,
         include_initial: bool = False
     ) -> CompatArray[ArrayT]:
         """
-        Calculates the cumulative sum of elements in the input array x.
+        Calculates the cumulative sum of elements in `self`.
+        - `self` should have one or more dimensions (axes). Should have a numeric data type.
 
         Parameters
         ----------
-        x (array) – input array. Should have one or more dimensions (axes). Should have a numeric data type.
+            axis : Optional[int], default to `None`
+                Axis along which a cumulative sum must be computed.
+                - _negative_: The function must determine the axis along which to compute a cumulative sum by counting from the last dimension.
 
-        axis (Optional[int]) –
+                For dimension of `self`:
+                - `1`: Providing an :param:`axis` is optional;
+                - `> 1`: Providing an :param:`axis` is required.
 
-        axis along which a cumulative sum must be computed. If axis is negative, the function must determine the axis along which to compute a cumulative sum by counting from the last dimension.
+            dtype : Optional[dtype], default to `None`
+                Data type of the returned array.
+                - `None`: The returned array must have the same data type as `self`, unless `self` has an integer data type supporting a smaller range of values than the default integer data type (e.g., `self` has an `int16` or `uint32` data type and the default integer data type is `int64`). In those latter cases:
 
-        If x is a one-dimensional array, providing an axis is optional; however, if x has more than one dimension, providing an axis is required.
+                    - `self` has a signed integer data type (e.g., `int16`): The returned array must have the default integer data type;
+                    - `self` has an unsigned integer data type (e.g., `uint16`): The returned array must have an unsigned integer data type having the same number of bits as the default integer data type (e.g., if the default integer data type is `int32`, the returned array must have a `uint32` data type).
+                - `data type` differs from `self`: The input array should be cast to the specified data type before computing the sum (rationale: the dtype keyword argument is intended to help prevent overflows).
 
-        dtype (Optional[dtype]) –
-
-        data type of the returned array. If None, the returned array must have the same data type as x, unless x has an integer data type supporting a smaller range of values than the default integer data type (e.g., x has an int16 or uint32 data type and the default integer data type is int64). In those latter cases:
-
-        if x has a signed integer data type (e.g., int16), the returned array must have the default integer data type.
-
-        if x has an unsigned integer data type (e.g., uint16), the returned array must have an unsigned integer data type having the same number of bits as the default integer data type (e.g., if the default integer data type is int32, the returned array must have a uint32 data type).
-
-        If the data type (either specified or resolved) differs from the data type of x, the input array should be cast to the specified data type before computing the sum (rationale: the dtype keyword argument is intended to help prevent overflows). Default: None.
-
-        include_initial (bool) – boolean indicating whether to include the initial value as the first value in the output. By convention, the initial value must be the additive identity (i.e., zero). Default: False.
+            include_initial : bool, default to `False`
+                Boolean indicating whether to include the initial value as the first value in the output.
+                By convention, the initial value must be the additive identity (i.e., `zero`).
 
         Returns
         -------
-        out (array) – an array containing the cumulative sums. The returned array must have a data type as described by the dtype parameter above.
+            CompatArray[ArrayT]
+                An array containing the cumulative sums.
+                The returned array must have a data type as described by the :param:`dtype` above.
 
-        Let N be the size of the axis along which to compute the cumulative sum. The returned array must have a shape determined according to the following rules:
-
-        if include_initial is True, the returned array must have the same shape as x, except the size of the axis along which to compute the cumulative sum must be N+1.
-
-        if include_initial is False, the returned array must have the same shape as x.
-
-        Notes
-
-        When x is a zero-dimensional array, behavior is unspecified and thus implementation-defined.
+                Let `N` be the size of the axis along which to compute the cumulative sum.
+                The returned array must have a shape determined according to the following rules:
+                - :param:`include_initial` is `True`: The returned array must have the same shape as `self`, except the size of the axis along which to compute the cumulative sum must be `N+1`;
+                - :param:`include_initial` is `False`: The returned array must have the same shape as `self`.
         """
         ...
 
     def cumulative_prod(
         self, *,
-        axis: int | None = None,
-        dtype: Dtype | None = None,
+        axis: Optional[int] = None,
+        dtype: Optional[DType] = None,
         include_initial: bool = False
     ) -> CompatArray[ArrayT]:
         """
-        Calculates the cumulative product of elements in the input array x.
+        Calculates the cumulative product of elements in `self`.
+        - `self` should have one or more dimensions (axes). Should have a numeric data type.
 
         Parameters
         ----------
-        x (array) – input array. Should have one or more dimensions (axes). Should have a numeric data type.
+            axis : Optional[int], default to `None`
+                Axis along which a cumulative product must be computed.
+                - _negative_: The function must determine the axis along which to compute a cumulative product by counting from the last dimension.
 
-        axis (Optional[int]) –
+                For dimension of `self`:
+                - `1`: Providing an :param:`axis` is optional;
+                - `> 1`: Providing an :param:`axis` is required.
 
-        axis along which a cumulative product must be computed. If axis is negative, the function must determine the axis along which to compute a cumulative product by counting from the last dimension.
+            dtype : Optional[dtype], default to `None`
+                Data type of the returned array.
+                - `None`: The returned array must have the same data type as `self`, unless `self` has an integer data type supporting a smaller range of values than the default integer data type (e.g., `self` has an `int16` or `uint32` data type and the default integer data type is `int64`). In those latter cases:
 
-        If x is a one-dimensional array, providing an axis is optional; however, if x has more than one dimension, providing an axis is required.
+                    - `self` has a signed integer data type (e.g., `int16`): The returned array must have the default integer data type;
+                    - `self` has an unsigned integer data type (e.g., `uint16`): The returned array must have an unsigned integer data type having the same number of bits as the default integer data type (e.g., if the default integer data type is `int32`, the returned array must have a `uint32` data type).
+                - `data type` differs from `self`: The input array should be cast to the specified data type before computing the product (rationale: the dtype keyword argument is intended to help prevent overflows).
 
-        dtype (Optional[dtype]) –
-
-        data type of the returned array. If None, the returned array must have the same data type as x, unless x has an integer data type supporting a smaller range of values than the default integer data type (e.g., x has an int16 or uint32 data type and the default integer data type is int64). In those latter cases:
-
-        if x has a signed integer data type (e.g., int16), the returned array must have the default integer data type.
-
-        if x has an unsigned integer data type (e.g., uint16), the returned array must have an unsigned integer data type having the same number of bits as the default integer data type (e.g., if the default integer data type is int32, the returned array must have a uint32 data type).
-
-        If the data type (either specified or resolved) differs from the data type of x, the input array should be cast to the specified data type before computing the product (rationale: the dtype keyword argument is intended to help prevent overflows). Default: None.
-
-        include_initial (bool) – boolean indicating whether to include the initial value as the first value in the output. By convention, the initial value must be the multiplicative identity (i.e., one). Default: False.
+            include_initial : bool, default to `False`
+                Boolean indicating whether to include the initial value as the first value in the output.
+                By convention, the initial value must be the multiplicative identity (i.e., `one`).
 
         Returns
         -------
-        out (array) – an array containing the cumulative products. The returned array must have a data type as described by the dtype parameter above.
+            CompatArray[ArrayT]
+                An array containing the cumulative products.
+                The returned array must have a data type as described by the :param:`dtype` above.
 
-        Let N be the size of the axis along which to compute the cumulative product. The returned array must have a shape determined according to the following rules:
-
-        if include_initial is True, the returned array must have the same shape as x, except the size of the axis along which to compute the cumulative product must be N+1.
-
-        if include_initial is False, the returned array must have the same shape as x.
-
-        Notes
-
-        When x is a zero-dimensional array, behavior is unspecified and thus implementation-defined.
+                Let `N` be the size of the axis along which to compute the cumulative product.
+                The returned array must have a shape determined according to the following rules:
+                - :param:`include_initial` is `True`: The returned array must have the same shape as `self`, except the size of the axis along which to compute the cumulative product must be `N+1`;
+                - :param:`include_initial` is `False`: The returned array must have the same shape as `self`.
         """
         ...
 
     def max(
         self, *,
-        axis: int | Tuple[int, ...] | None = None,
+        axis: Optional[Union[int, Tuple[int, ...]]] = None,
         keepdims: bool = False
     ) -> CompatArray[ArrayT]:
         """
-        Calculates the maximum value of the input array x.
+        Calculates the maximum value of `self`.
 
         Parameters
         ----------
-        x (array) – input array. Should have a real-valued data type.
+            axis : Optional[Union[int, Tuple[int, ...]]], default to `None`
+                Axis or axes along which maximum values must be computed.
+                - `None`: The maximum value must be computed over the entire `self`;
+                - _Tuple[int, ...]_: The maximum value must be computed over multiple axes.
 
-        axis (Optional[Union[int, Tuple[int, ...]]]) – axis or axes along which maximum values must be computed. By default, the maximum value must be computed over the entire array. If a tuple of integers, maximum values must be computed over multiple axes. Default: None.
-
-        keepdims (bool) – if True, the reduced axes (dimensions) must be included in the result as singleton dimensions, and, accordingly, the result must be compatible with the input array. Otherwise, if False, the reduced axes (dimensions) must not be included in the result. Default: False.
+            keepdims : bool, default to `False`
+                - `True`: The reduced axes (dimensions) must be included in the result as singleton dimensions, and, accordingly, the result must be compatible with `self`;
+                - `False`: The reduced axes (dimensions) must not be included in the result.
 
         Returns
         -------
-        out (array) – if the maximum value was computed over the entire array, a zero-dimensional array containing the maximum value; otherwise, a non-zero-dimensional array containing the maximum values. The returned array must have the same data type as x.
+            CompatArray[ArrayT]
+                The returned array must have the same data type as `self`.
+                - computed over the entire `self`: a zero-dimensional array containing the maximum value;
+                - _others_: a non-zero-dimensional array containing the maximum values.
 
         Notes
-
-        When the number of elements over which to compute the maximum value is zero, the maximum value is implementation-defined. Specification-compliant libraries may choose to raise an error, return a sentinel value (e.g., if x is a floating-point input array, return NaN), or return the minimum possible value for the input array x data type (e.g., if x is a floating-point array, return -infinity).
-
-        The order of signed zeros is unspecified and thus implementation-defined. When choosing between -0 or +0 as a maximum value, specification-compliant libraries may choose to return either value.
-
-        For backward compatibility, conforming implementations may support complex numbers; however, inequality comparison of complex numbers is unspecified and thus implementation-defined (see Complex Number Ordering).
-
-        Special Cases
-
-        For floating-point operands,
-
-        If x_i is NaN, the maximum value is NaN (i.e., NaN values propagate).
+        -----
+        - For floating-point operands.
+            - `self[any]` is `NaN`: The maximum value is `NaN` (i.e., `NaN` values propagate).
         """
         ...
 
     def mean(
         self, *,
-        axis: int | Tuple[int, ...] | None = None,
+        axis: Optional[Union[int, Tuple[int, ...]]] = None,
         keepdims: bool = False
     ) -> CompatArray[ArrayT]:
         """
-        Calculates the arithmetic mean of the input array x.
+        Calculates the arithmetic mean of `self`.
 
         Parameters
         ----------
-        x (array) – input array. Should have a floating-point data type.
+            axis : Optional[Union[int, Tuple[int, ...]]], default to `None`
+                Axis or axes along which arithmetic means must be computed.
+                - `None`: The mean must be computed over the entire `self`;
+                - _Tuple[int, ...]_: The arithmetic mean must be computed over multiple axes.
 
-        axis (Optional[Union[int, Tuple[int, ...]]]) – axis or axes along which arithmetic means must be computed. By default, the mean must be computed over the entire array. If a tuple of integers, arithmetic means must be computed over multiple axes. Default: None.
-
-        keepdims (bool) – if True, the reduced axes (dimensions) must be included in the result as singleton dimensions, and, accordingly, the result must be compatible with the input array. Otherwise, if False, the reduced axes (dimensions) must not be included in the result. Default: False.
+            keepdims : bool, default to `False`
+                - `True`: The reduced axes (dimensions) must be included in the result as singleton dimensions, and, accordingly, the result must be compatible with `self`;
+                - `False`: The reduced axes (dimensions) must not be included in the result.
 
         Returns
         -------
-        out (array) – if the arithmetic mean was computed over the entire array, a zero-dimensional array containing the arithmetic mean; otherwise, a non-zero-dimensional array containing the arithmetic means. The returned array must have the same data type as x.
-
-        Note
-
-        While this specification recommends that this function only accept input arrays having a floating-point data type, specification-compliant array libraries may choose to accept input arrays having an integer data type. While mixed data type promotion is implementation-defined, if the input array x has an integer data type, the returned array must have the default real-valued floating-point data type.
+            CompatArray[ArrayT]
+                The returned array must have the same data type as `self`.
+                - computed over the entire `self`: a zero-dimensional array containing the arithmetic mean;
+                - _others_: a non-zero-dimensional array containing the arithmetic means.
 
         Notes
-
-        Special Cases
-
-        Let N equal the number of elements over which to compute the arithmetic mean. For real-valued operands,
-
-        If N is 0, the arithmetic mean is NaN.
-
-        If x_i is NaN, the arithmetic mean is NaN (i.e., NaN values propagate).
-
-        For complex floating-point operands, real-valued floating-point special cases should independently apply to the real and imaginary component operations involving real numbers. For example, let a = real(x_i) and b = imag(x_i), and
-
-        If N is 0, the arithmetic mean is NaN + NaN j.
-
-        If a is NaN, the real component of the result is NaN.
-
-        Similarly, if b is NaN, the imaginary component of the result is NaN.
-
-        Note
-
-        Array libraries, such as NumPy, PyTorch, and JAX, currently deviate from this specification in their handling of components which are NaN when computing the arithmetic mean. In general, consumers of array libraries implementing this specification should use isnan() to test whether the result of computing the arithmetic mean over an array have a complex floating-point data type is NaN, rather than relying on NaN propagation of individual components.
+        -----
+        - Let `N` equal the number of elements over which to compute the arithmetic mean. For real-valued operands,
+            - `N` is `0`: The arithmetic mean is `NaN` (i.e., division by zero results in `NaN`);
+            - `self[any]` is `NaN`: The arithmetic mean is `NaN` (i.e., `NaN` values propagate).
+        - For complex floating-point operands, real-valued floating-point special cases should independently apply to the real and imaginary component operations involving real numbers. For example, let `a = real(x_i) and b = imag(x_i)`, and
+            - `N` is `0`: The arithmetic mean is `NaN + NaN j` (i.e., division by zero results in `NaN` for both the real and imaginary components);
+            - `a` is `NaN`: The real component of the arithmetic mean is `NaN` (i.e., division by zero results in `NaN` for the real component);
+            - `b` is `NaN`: The imaginary component of the arithmetic mean is `NaN` (i.e., division by zero results in `NaN` for the imaginary component).
         """
         ...
 
     def min(
         self, *,
-        axis: int | Tuple[int, ...] | None = None,
+        axis: Optional[Union[int, Tuple[int, ...]]] = None,
         keepdims: bool = False
     ) -> CompatArray[ArrayT]:
         """
-        Calculates the minimum value of the input array x.
+        Calculates the minimum value of `self`.
 
         Parameters
         ----------
-        x (array) – input array. Should have a real-valued data type.
+            axis : Optional[Union[int, Tuple[int, ...]]], default to `None`
+                Axis or axes along which minimum values must be computed.
+                - `None`: The minimum value must be computed over the entire `self`;
+                - _Tuple[int, ...]_: The minimum value must be computed over multiple axes.
 
-        axis (Optional[Union[int, Tuple[int, ...]]]) – axis or axes along which minimum values must be computed. By default, the minimum value must be computed over the entire array. If a tuple of integers, minimum values must be computed over multiple axes. Default: None.
-
-        keepdims (bool) – if True, the reduced axes (dimensions) must be included in the result as singleton dimensions, and, accordingly, the result must be compatible with the input array. Otherwise, if False, the reduced axes (dimensions) must not be included in the result. Default: False.
+            keepdims : bool, default to `False`
+                - `True`: The reduced axes (dimensions) must be included in the result as singleton dimensions, and, accordingly, the result must be compatible with `self`;
+                - `False`: The reduced axes (dimensions) must not be included in the result.
 
         Returns
         -------
-        out (array) – if the minimum value was computed over the entire array, a zero-dimensional array containing the minimum value; otherwise, a non-zero-dimensional array containing the minimum values. The returned array must have the same data type as x.
+            CompatArray[ArrayT]
+                The returned array must have the same data type as `self`.
+                - computed over the entire `self`: a zero-dimensional array containing the minimum value;
+                - _others_: a non-zero-dimensional array containing the minimum values.
 
         Notes
-
-        When the number of elements over which to compute the minimum value is zero, the minimum value is implementation-defined. Specification-compliant libraries may choose to raise an error, return a sentinel value (e.g., if x is a floating-point input array, return NaN), or return the maximum possible value for the input array x data type (e.g., if x is a floating-point array, return +infinity).
-
-        The order of signed zeros is unspecified and thus implementation-defined. When choosing between -0 or +0 as a minimum value, specification-compliant libraries may choose to return either value.
-
-        For backward compatibility, conforming implementations may support complex numbers; however, inequality comparison of complex numbers is unspecified and thus implementation-defined (see Complex Number Ordering).
-
-        Special Cases
-
-        For floating-point operands,
-
-        If x_i is NaN, the minimum value is NaN (i.e., NaN values propagate).
+        -----
+        - For floating-point operands.
+            - `self[any]` is `NaN`: The minimum value is `NaN` (i.e., `NaN` values propagate).
         """
         ...
 
     def prod(
         self, *,
-        axis: int | Tuple[int, ...] | None = None,
-        dtype: Dtype | None = None,
+        axis: Optional[Union[int, Tuple[int, ...]]] = None,
+        dtype: Optional[DType] = None,
         keepdims: bool = False
     ) -> CompatArray[ArrayT]:
         """
-        Calculates the product of input array x elements.
+        Calculates the product of `self` elements.
 
         Parameters
         ----------
-        x (array) – input array. Should have a numeric data type.
+            axis : Optional[Union[int, Tuple[int, ...]]], default to `None`
+                Axis or axes along which products must be computed.
+                - `None`: The product must be computed over the entire `self`;
+                - _Tuple[int, ...]_: The product must be computed over multiple axes.
 
-        axis (Optional[Union[int, Tuple[int, ...]]]) – axis or axes along which products must be computed. By default, the product must be computed over the entire array. If a tuple of integers, products must be computed over multiple axes. Default: None.
+            dtype : Optional[dtype], default to `None`
+                Data type of the returned array.
+                - `None`: The returned array must have the same data type as `self`, unless `self` has an integer data type supporting a smaller range of values than the default integer data type (e.g., `self` has an `int16` or `uint32` data type and the default integer data type is `int64`). In those latter cases:
 
-        dtype (Optional[dtype]) –
+                    - `self` has a signed integer data type (e.g., `int16`): The returned array must have the default integer data type;
+                    - `self` has an unsigned integer data type (e.g., `uint16`): The returned array must have an unsigned integer data type having the same number of bits as the default integer data type (e.g., if the default integer data type is `int32`, the returned array must have a `uint32` data type).
+                - `data type` differs from `self`: The input array should be cast to the specified data type before computing the product (rationale: the dtype keyword argument is intended to help prevent overflows).
 
-        data type of the returned array. If None, the returned array must have the same data type as x, unless x has an integer data type supporting a smaller range of values than the default integer data type (e.g., x has an int16 or uint32 data type and the default integer data type is int64). In those latter cases:
-
-        if x has a signed integer data type (e.g., int16), the returned array must have the default integer data type.
-
-        if x has an unsigned integer data type (e.g., uint16), the returned array must have an unsigned integer data type having the same number of bits as the default integer data type (e.g., if the default integer data type is int32, the returned array must have a uint32 data type).
-
-        If the data type (either specified or resolved) differs from the data type of x, the input array should be cast to the specified data type before computing the sum (rationale: the dtype keyword argument is intended to help prevent overflows). Default: None.
-
-        keepdims (bool) – if True, the reduced axes (dimensions) must be included in the result as singleton dimensions, and, accordingly, the result must be compatible with the input array. Otherwise, if False, the reduced axes (dimensions) must not be included in the result. Default: False.
+            keepdims : bool, default to `False`
+                - `True`: The reduced axes (dimensions) must be included in the result as singleton dimensions, and, accordingly, the result must be compatible with `self`;
+                - `False`: The reduced axes (dimensions) must not be included in the result.
 
         Returns
         -------
-        out (array) – if the product was computed over the entire array, a zero-dimensional array containing the product; otherwise, a non-zero-dimensional array containing the products. The returned array must have a data type as described by the dtype parameter above.
+            CompatArray[ArrayT]
+                The returned array must have a data type as described by the :param:`dtype` above.
+                - computed over the entire `self`: a zero-dimensional array containing the product;
+                - _others_: a non-zero-dimensional array containing the products.
 
         Notes
-
-        Special Cases
-
-        Let N equal the number of elements over which to compute the product.
-
-        If N is 0, the product is 1 (i.e., the empty product).
+        -----
+        - Let `N` equal the number of elements over which to compute the product.
+            - `N` is `0`: The product is `1` (i.e., the empty product).
         """
         ...
 
     def std(
         self, *,
-        axis: int | Tuple[int, ...] | None = None,
-        correction: int | float = 0,
+        axis: Optional[Union[int, Tuple[int, ...]]] = None,
+        correction: Union[int, float] = 0,
         keepdims: bool = False
     ) -> CompatArray[ArrayT]:
         """
-        Calculates the standard deviation of the input array x.
+        Calculates the standard deviation of `self`.
 
         Parameters
         ----------
-        x (array) – input array. Should have a real-valued floating-point data type.
+            axis : Optional[Union[int, Tuple[int, ...]]], default to `None`
+                Axis or axes along which standard deviations must be computed.
+                - `None`: The standard deviation must be computed over the entire `self`;
+                - _Tuple[int, ...]_: The standard deviation must be computed over multiple axes.
 
-        axis (Optional[Union[int, Tuple[int, ...]]]) – axis or axes along which standard deviations must be computed. By default, the standard deviation must be computed over the entire array. If a tuple of integers, standard deviations must be computed over multiple axes. Default: None.
+            correction : Union[int, float], default to `0`
+                Degrees of freedom adjustment.
+                Setting this parameter to a value other than `0` has the effect of adjusting the divisor during the calculation of the standard deviation according to `N-c` where `N` corresponds to the total number of elements over which the standard deviation is computed and `c` corresponds to the provided degrees of freedom adjustment.
+                When computing the standard deviation of a population, setting this parameter to `0` is the standard choice (i.e., the provided array contains data constituting an entire population).
+                When computing the corrected sample standard deviation, setting this parameter to `1` is the standard choice (i.e., the provided array contains data sampled from a larger population; this is commonly referred to as Bessel’s correction).
 
-        correction (Union[int, float]) – degrees of freedom adjustment. Setting this parameter to a value other than 0 has the effect of adjusting the divisor during the calculation of the standard deviation according to N-c where N corresponds to the total number of elements over which the standard deviation is computed and c corresponds to the provided degrees of freedom adjustment. When computing the standard deviation of a population, setting this parameter to 0 is the standard choice (i.e., the provided array contains data constituting an entire population). When computing the corrected sample standard deviation, setting this parameter to 1 is the standard choice (i.e., the provided array contains data sampled from a larger population; this is commonly referred to as Bessel’s correction). Default: 0.
-
-        keepdims (bool) – if True, the reduced axes (dimensions) must be included in the result as singleton dimensions, and, accordingly, the result must be compatible with the input array. Otherwise, if False, the reduced axes (dimensions) must not be included in the result. Default: False.
+            keepdims : bool, default to `False`
+                - `True`: The reduced axes (dimensions) must be included in the result as singleton dimensions, and, accordingly, the result must be compatible with `self`;
+                - `False`: The reduced axes (dimensions) must not be included in the result.
 
         Returns
         -------
-        out (array) – if the standard deviation was computed over the entire array, a zero-dimensional array containing the standard deviation; otherwise, a non-zero-dimensional array containing the standard deviations. The returned array must have the same data type as x.
-
-        Note
-
-        While this specification recommends that this function only accept input arrays having a real-valued floating-point data type, specification-compliant array libraries may choose to accept input arrays having an integer data type. While mixed data type promotion is implementation-defined, if the input array x has an integer data type, the returned array must have the default real-valued floating-point data type.
+            CompatArray[ArrayT]
+                The returned array must have the same data type as `self`.
+                - computed over the entire `self`: a zero-dimensional array containing the standard deviation;
+                - _others_: a non-zero-dimensional array containing the standard deviations.
 
         Notes
-
-        Special Cases
-
-        Let N equal the number of elements over which to compute the standard deviation.
-
-        If N - correction is less than or equal to 0, the standard deviation is NaN.
-
-        If x_i is NaN, the standard deviation is NaN (i.e., NaN values propagate).
+        -----
+        - Let `N` equal the number of elements over which to compute the standard deviation.
+            - `N - correction <= 0`: The standard deviation is `NaN`;
+            - `self[any]` is `NaN`: The standard deviation is `NaN` (i.e., `NaN` values propagate).
         """
         ...
 
     def sum(
         self, *,
-        axis: int | Tuple[int, ...] | None = None,
-        dtype: Dtype | None = None,
+        axis: Optional[Union[int, Tuple[int, ...]]] = None,
+        dtype: Optional[DType] = None,
         keepdims: bool = False
     ) -> CompatArray[ArrayT]:
         """
-        Calculates the sum of the input array x.
+        Calculates the sum of the `self`.
 
         Parameters
         ----------
-        x (array) – input array. Should have a numeric data type.
+            axis : Optional[Union[int, Tuple[int, ...]]], default to `None`
+                Axis or axes along which sums must be computed.
+                - `None`: The sum must be computed over the entire `self`;
+                - _Tuple[int, ...]_: The sum must be computed over multiple axes.
 
-        axis (Optional[Union[int, Tuple[int, ...]]]) – axis or axes along which sums must be computed. By default, the sum must be computed over the entire array. If a tuple of integers, sums must be computed over multiple axes. Default: None.
+            dtype : Optional[dtype], default to `None`
+                Data type of the returned array.
+                - `None`: The returned array must have the same data type as `self`, unless `self` has an integer data type supporting a smaller range of values than the default integer data type (e.g., `self` has an `int16` or `uint32` data type and the default integer data type is `int64`). In those latter cases:
 
-        dtype (Optional[dtype]) –
+                    - `self` has a signed integer data type (e.g., `int16`): The returned array must have the default integer data type;
+                    - `self` has an unsigned integer data type (e.g., `uint16`): The returned array must have an unsigned integer data type having the same number of bits as the default integer data type (e.g., if the default integer data type is `int32`, the returned array must have a `uint32` data type).
+                - `data type` differs from `self`: The input array should be cast to the specified data type before computing the sum (rationale: the dtype keyword argument is intended to help prevent overflows).
 
-        data type of the returned array. If None, the returned array must have the same data type as x, unless x has an integer data type supporting a smaller range of values than the default integer data type (e.g., x has an int16 or uint32 data type and the default integer data type is int64). In those latter cases:
-
-        if x has a signed integer data type (e.g., int16), the returned array must have the default integer data type.
-
-        if x has an unsigned integer data type (e.g., uint16), the returned array must have an unsigned integer data type having the same number of bits as the default integer data type (e.g., if the default integer data type is int32, the returned array must have a uint32 data type).
-
-        If the data type (either specified or resolved) differs from the data type of x, the input array should be cast to the specified data type before computing the sum (rationale: the dtype keyword argument is intended to help prevent overflows). Default: None.
-
-        keepdims (bool) – if True, the reduced axes (dimensions) must be included in the result as singleton dimensions, and, accordingly, the result must be compatible with the input array. Otherwise, if False, the reduced axes (dimensions) must not be included in the result. Default: False.
+            keepdims : bool, default to `False`
+                - `True`: The reduced axes (dimensions) must be included in the result as singleton dimensions, and, accordingly, the result must be compatible with `self`;
+                - `False`: The reduced axes (dimensions) must not be included in the result.
 
         Returns
         -------
-        out (array) – if the sum was computed over the entire array, a zero-dimensional array containing the sum; otherwise, an array containing the sums. The returned array must have a data type as described by the dtype parameter above.
+            CompatArray[ArrayT]
+                The returned array must have a data type as described by the :param:`dtype` above.
+                - computed over the entire `self`: a zero-dimensional array containing the sum;
+                - _others_: a non-zero-dimensional array containing the sums.
 
         Notes
-
-        Special Cases
-
-        Let N equal the number of elements over which to compute the sum.
-
-        If N is 0, the sum is 0 (i.e., the empty sum).
+        -----
+        - Let `N` equal the number of elements over which to compute the sum.
+            - `N` is `0`: The sum is `0` (i.e., the empty sum).
         """
         ...
 
     def var(
         self, *,
-        axis: int | Tuple[int, ...] | None = None,
-        correction: int | float = 0,
+        axis: Optional[Union[int, Tuple[int, ...]]] = None,
+        correction: Union[int, float] = 0,
         keepdims: bool = False
     ) -> CompatArray[ArrayT]:
         """
-        Calculates the variance of the input array x.
+        Calculates the variance of `self`.
 
         Parameters
         ----------
-        x (array) – input array. Should have a real-valued floating-point data type.
+            axis : Optional[Union[int, Tuple[int, ...]]], default to `None`
+                Axis or axes along which variances must be computed.
+                - `None`: The variance must be computed over the entire `self`;
+                - _Tuple[int, ...]_: The variance must be computed over multiple axes.
 
-        axis (Optional[Union[int, Tuple[int, ...]]]) – axis or axes along which variances must be computed. By default, the variance must be computed over the entire array. If a tuple of integers, variances must be computed over multiple axes. Default: None.
+            correction : Union[int, float], default to `0`
+                Degrees of freedom adjustment.
+                Setting this parameter to a value other than `0` has the effect of adjusting the divisor during the calculation of the variance according to `N-c` where `N` corresponds to the total number of elements over which the variance is computed and `c` corresponds to the provided degrees of freedom adjustment.
+                When computing the variance of a population, setting this parameter to `0` is the standard choice (i.e., the provided array contains data constituting an entire population).
+                When computing the unbiased sample variance, setting this parameter to `1` is the standard choice (i.e., the provided array contains data sampled from a larger population; this is commonly referred to as Bessel’s correction).
 
-        correction (Union[int, float]) – degrees of freedom adjustment. Setting this parameter to a value other than 0 has the effect of adjusting the divisor during the calculation of the variance according to N-c where N corresponds to the total number of elements over which the variance is computed and c corresponds to the provided degrees of freedom adjustment. When computing the variance of a population, setting this parameter to 0 is the standard choice (i.e., the provided array contains data constituting an entire population). When computing the unbiased sample variance, setting this parameter to 1 is the standard choice (i.e., the provided array contains data sampled from a larger population; this is commonly referred to as Bessel’s correction). Default: 0.
-
-        keepdims (bool) – if True, the reduced axes (dimensions) must be included in the result as singleton dimensions, and, accordingly, the result must be compatible with the input array. Otherwise, if False, the reduced axes (dimensions) must not be included in the result. Default: False.
+            keepdims : bool, default to `False`
+                - `True`: The reduced axes (dimensions) must be included in the result as singleton dimensions, and, accordingly, the result must be compatible with `self`;
+                - `False`: The reduced axes (dimensions) must not be included in the result.
 
         Returns
         -------
-        out (array) – if the variance was computed over the entire array, a zero-dimensional array containing the variance; otherwise, a non-zero-dimensional array containing the variances. The returned array must have the same data type as x.
-
-        Note
-
-        While this specification recommends that this function only accept input arrays having a real-valued floating-point data type, specification-compliant array libraries may choose to accept input arrays having an integer data type. While mixed data type promotion is implementation-defined, if the input array x has an integer data type, the returned array must have the default real-valued floating-point data type.
+            CompatArray[ArrayT]
+                The returned array must have the same data type as `self`.
+                - computed over the entire `self`: a zero-dimensional array containing the variance;
+                - _others_: a non-zero-dimensional array containing the variances.
 
         Notes
-
-        Special Cases
-
-        Let N equal the number of elements over which to compute the variance.
-
-        If N - correction is less than or equal to 0, the variance is NaN.
-
-        If x_i is NaN, the variance is NaN (i.e., NaN values propagate).
+        -----
+        - Let `N` equal the number of elements over which to compute the variance.
+            - `N - correction <= 0`: The variance is `NaN` (i.e., division by zero results in `NaN`);
+            - `self[any]` is `NaN`: The variance is `NaN` (i.e., `NaN` values propagate).
         """
         ...
-    
-    # === _utility_functions ===
+
+    # === Utility functions ===
     def all(
         self, *,
-        axis: int | Tuple[int, ...] | None = None,
+        axis: Optional[Union[int, Tuple[int, ...]]] = None,
         keepdims: bool = False
     ) -> CompatArray[ArrayT]:
         """
-        Tests whether all input array elements evaluate to True along a specified axis.
-
-        Note
-
-        Positive infinity, negative infinity, and NaN must evaluate to True.
-
-        Note
-
-        If x has a complex floating-point data type, elements having a non-zero component (real or imaginary) must evaluate to True.
-
-        Note
-
-        If x is an empty array or the size of the axis (dimension) along which to evaluate elements is zero, the test result must be True.
+        Tests whether all `self` elements evaluate to `True` along a specified axis.
+        - `Positive infinity`, `negative infinity`, and `NaN` must evaluate to `True`;
+        - If `self` is an empty array or the size of the axis (dimension) along which to evaluate elements is `zero`, the test result must be `True`.
 
         Parameters
         ----------
-        x (array) – input array.
+            axis : Optional[Union[int, Tuple[int, ...]]], default to `None`
+                Axis or axes along which to perform a `logical AND` reduction.
+                - `None`: A `logical AND` reduction must be performed over the entire array.
+                - _Tuple[int, ...]_: `logical AND` reductions must be performed over multiple axes.
+                A valid :param:`axis` must be an integer on the interval `[-N, N)`, where `N` is the rank (number of dimensions) of `self`. For each axis:
+                - _negative_integer_: The function must determine the axis along which to perform a reduction by counting backward from the last dimension (where `-1` refers to the last dimension);
+                - _invalid_: The function must raise an exception.
 
-        axis (Optional[Union[int, Tuple[int, ...]]]) – axis or axes along which to perform a logical AND reduction. By default, a logical AND reduction must be performed over the entire array. If a tuple of integers, logical AND reductions must be performed over multiple axes. A valid axis must be an integer on the interval [-N, N), where N is the rank (number of dimensions) of x. If an axis is specified as a negative integer, the function must determine the axis along which to perform a reduction by counting backward from the last dimension (where -1 refers to the last dimension). If provided an invalid axis, the function must raise an exception. Default: None.
-
-        keepdims (bool) – If True, the reduced axes (dimensions) must be included in the result as singleton dimensions, and, accordingly, the result must be compatible with the input array. Otherwise, if False, the reduced axes (dimensions) must not be included in the result. Default: False.
+            keepdims : bool, default to `False`
+                - `True`: The reduced axes (dimensions) must be included in the result as singleton dimensions, and, accordingly, the result must be compatible with `self`;
+                - `False`: The reduced axes (dimensions) must not be included in the result.
 
         Returns
         -------
-        out (array) – if a logical AND reduction was performed over the entire array, the returned array must be a zero-dimensional array containing the test result; otherwise, the returned array must be a non-zero-dimensional array containing the test results. The returned array must have a data type of bool.
+            CompatArray[ArrayT]
+                The returned array must have a data type of `bool`.
+                - computed over the entire `self`: a zero-dimensional array containing the test result;
+                - _others_: a non-zero-dimensional array containing the test results.
         """
         ...
 
     def any(
         self, *,
-        axis: int | Tuple[int, ...] | None = None,
+        axis: Optional[Union[int, Tuple[int, ...]]] = None,
         keepdims: bool = False
     ) -> CompatArray[ArrayT]:
         """
-        Tests whether any input array element evaluates to True along a specified axis.
-
-        Note
-
-        Positive infinity, negative infinity, and NaN must evaluate to True.
-
-        Note
-
-        If x has a complex floating-point data type, elements having a non-zero component (real or imaginary) must evaluate to True.
-
-        Note
-
-        If x is an empty array or the size of the axis (dimension) along which to evaluate elements is zero, the test result must be False.
+        Tests whether any `self` elements evaluate to `True` along a specified axis.
+        - `Positive infinity`, `negative infinity`, and `NaN` must evaluate to `True`;
+        - If `self` is an empty array or the size of the axis (dimension) along which to evaluate elements is `zero`, the test result must be `False`.
 
         Parameters
         ----------
-        x (array) – input array.
+            axis : Optional[Union[int, Tuple[int, ...]]], default to `None`
+                Axis or axes along which to perform a `logical OR` reduction.
+                - `None`: A `logical OR` reduction must be performed over the entire array.
+                - _Tuple[int, ...]_: `logical OR` reductions must be performed over multiple axes.
+                A valid :param:`axis` must be an integer on the interval `[-N, N)`, where `N` is the rank (number of dimensions) of `self`. For each axis:
+                - _negative_integer_: The function must determine the axis along which to perform a reduction by counting backward from the last dimension (where `-1` refers to the last dimension);
+                - _invalid_: The function must raise an exception.
 
-        axis (Optional[Union[int, Tuple[int, ...]]]) – axis or axes along which to perform a logical OR reduction. By default, a logical OR reduction must be performed over the entire array. If a tuple of integers, logical OR reductions must be performed over multiple axes. A valid axis must be an integer on the interval [-N, N), where N is the rank (number of dimensions) of x. If an axis is specified as a negative integer, the function must determine the axis along which to perform a reduction by counting backward from the last dimension (where -1 refers to the last dimension). If provided an invalid axis, the function must raise an exception. Default: None.
-
-        keepdims (bool) – If True, the reduced axes (dimensions) must be included in the result as singleton dimensions, and, accordingly, the result must be compatible with the input array. Otherwise, if False, the reduced axes (dimensions) must not be included in the result. Default: False.
+            keepdims : bool, default to `False`
+                - `True`: The reduced axes (dimensions) must be included in the result as singleton dimensions, and, accordingly, the result must be compatible with `self`;
+                - `False`: The reduced axes (dimensions) must not be included in the result.
 
         Returns
         -------
-        out (array) – if a logical OR reduction was performed over the entire array, the returned array must be a zero-dimensional array containing the test result; otherwise, the returned array must be a non-zero-dimensional array containing the test results. The returned array must have a data type of bool.
+            CompatArray[ArrayT]
+                The returned array must have a data type of `bool`.
+                - computed over the entire `self`: a zero-dimensional array containing the test result;
+                - _others_: a non-zero-dimensional array containing the test results.
         """
         ...
 
@@ -1740,41 +1692,49 @@ class CompatArray(Generic[ArrayT]):
         self, *,
         axis: int = -1,
         n: int = 1,
-        prepend: Array | None = None,
-        append: Array | None = None
+        prepend: Optional[ArrayLike] = None,
+        append: Optional[ArrayLike] = None
     ) -> CompatArray[ArrayT]:
         """
         Calculates the n-th discrete forward difference along a specified axis.
 
         Parameters
         ----------
-        x (array) – input array. Should have a numeric data type.
+            axis : Optional[Union[int, Tuple[int, ...]]], default to `None`
+                Axis or axes along which to compute differences.
+                A valid :param:`axis` must be an integer on the interval `[-N, N)`, where `N` is the rank (number of dimensions) of `self`. For each axis:
+                - _negative_integer_: The function must determine the axis along which to perform a reduction by counting backward from the last dimension (where `-1` refers to the last dimension);
+                - _invalid_: The function must raise an exception.
 
-        axis (int) – axis along which to compute differences. A valid axis must be an integer on the interval [-N, N), where N is the rank (number of dimensions) of x. If an axis is specified as a negative integer, the function must determine the axis along which to compute differences by counting backward from the last dimension (where -1 refers to the last dimension). If provided an invalid axis, the function must raise an exception. Default: -1.
+            n : int, default to `1`
+                Number of times to recursively compute differences.
 
-        n (int) – number of times to recursively compute differences. Default: 1.
+            prepend : Optional[array], default to `None`
+                Values to prepend to a specified axis prior to computing differences.
+                Must have the same shape as `self`, except for the axis specified by :param:`axis` which may have any size. Should have the same data type as `self`.
 
-        prepend (Optional[array]) – values to prepend to a specified axis prior to computing differences. Must have the same shape as x, except for the axis specified by axis which may have any size. Should have the same data type as x. Default: None.
-
-        append (Optional[array]) – values to append to a specified axis prior to computing differences. Must have the same shape as x, except for the axis specified by axis which may have any size. Should have the same data type as x. Default: None.
+            append : Optional[array], default to `None`
+                Values to append to a specified axis prior to computing differences.
+                Must have the same shape as `self`, except for the axis specified by :param:`axis` which may have any size. Should have the same data type as `self`.
 
         Returns
         -------
-        out (array) – an array containing the n-th differences. Should have the same data type as x. Must have the same shape as x, except for the axis specified by axis which must have a size determined as follows:
+            CompatArray[ArrayT]
+                An array containing the `n`-th differences.
+                Should have the same data type as `self`.
+                Must have the same shape as `self`, except for the axis specified by :param:`axis` which must have a size determined as follows:
+                - Let M be the number of elements along an axis specified by :param:`axis`.
+                - Let N1 be the number of prepended values along an axis specified by :param:`axis`.
+                - Let N2 be the number of appended values along an axis specified by :param:`axis`.
 
-        Let M be the number of elements along an axis specified by axis.
-
-        Let N1 be the number of prepended values along an axis specified by axis.
-
-        Let N2 be the number of appended values along an axis specified by axis.
-
-        The final size of the axis specified by axis must be M + N1 + N2 - n.
+                The final size of the axis specified by :param:`axis` must be `M + N1 + N2 - n`.
 
         Notes
-
-        The first-order differences are given by out[i] = x[i+1] - x[i] along a specified axis. Higher-order differences must be calculated recursively (e.g., by calling diff(out, axis=axis, n=n-1)).
-
-        If a conforming implementation chooses to support prepend and append arrays which have a different data type than x, behavior is unspecified and thus implementation-defined. Implementations may choose to type promote (Type Promotion Rules), cast prepend and/or append to the same data type as x, or raise an exception.
+        -----
+        - The first-order differences are given by `out[i] = self[i+1] - self[i]` along a specified axis.
+        Higher-order differences must be calculated recursively (e.g., by calling `diff(out, axis=axis, n=n-1)`).
+        - If a conforming implementation chooses to support :param:`prepend` and :param:`append` arrays which have a different data type than `self`, behavior is unspecified and thus implementation-defined.
+        Implementations may choose to type promote (Type Promotion Rules), cast :param:`prepend` and/or :param:`append` to the same data type as `self`, or raise an exception.
         """
         ...
 
@@ -1787,6 +1747,7 @@ class CompatArray(Generic[ArrayT]):
     def inf(self) -> float: ...
     @property
     def nan(self) -> float: ...
+
     @property
     def newaxis(self) -> None:
         """An alias for None which is useful for indexing arrays."""
@@ -1876,284 +1837,3 @@ class CompatArray(Generic[ArrayT]):
         Transpose of `self`.
         """
         ...
-
-
-
-
-    
-    
-    
-    
-    
-    
-    +x: array.__pos__()
-
-operator.pos(x)
-
-operator.__pos__(x)
-
--x: array.__neg__()
-
-operator.neg(x)
-
-operator.__neg__(x)
-
-x1 + x2: array.__add__()
-
-operator.add(x1, x2)
-
-operator.__add__(x1, x2)
-
-x1 - x2: array.__sub__()
-
-operator.sub(x1, x2)
-
-operator.__sub__(x1, x2)
-
-x1 * x2: array.__mul__()
-
-operator.mul(x1, x2)
-
-operator.__mul__(x1, x2)
-
-x1 / x2: array.__truediv__()
-
-operator.truediv(x1,x2)
-
-operator.__truediv__(x1, x2)
-
-x1 // x2: array.__floordiv__()
-
-operator.floordiv(x1, x2)
-
-operator.__floordiv__(x1, x2)
-
-x1 % x2: array.__mod__()
-
-operator.mod(x1, x2)
-
-operator.__mod__(x1, x2)
-
-x1 ** x2: array.__pow__()
-
-operator.pow(x1, x2)
-
-operator.__pow__(x1, x2)
-
-x1 @ x2: array.__matmul__()
-
-
-~x: array.__invert__()
-
-operator.inv(x)
-
-operator.invert(x)
-
-operator.__inv__(x)
-
-operator.__invert__(x)
-
-x1 & x2: array.__and__()
-
-operator.and(x1, x2)
-
-operator.__and__(x1, x2)
-
-x1 | x2: array.__or__()
-
-operator.or(x1, x2)
-
-operator.__or__(x1, x2)
-
-x1 ^ x2: array.__xor__()
-
-operator.xor(x1, x2)
-
-operator.__xor__(x1, x2)
-
-x1 << x2: array.__lshift__()
-
-operator.lshift(x1, x2)
-
-operator.__lshift__(x1, x2)
-
-x1 >> x2: array.__rshift__()
-
-operator.rshift(x1, x2)
-
-operator.__rshift__(x1, x2)
-
-x1 < x2: array.__lt__()
-
-operator.lt(x1, x2)
-
-operator.__lt__(x1, x2)
-
-x1 <= x2: array.__le__()
-
-operator.le(x1, x2)
-
-operator.__le__(x1, x2)
-
-x1 > x2: array.__gt__()
-
-operator.gt(x1, x2)
-
-operator.__gt__(x1, x2)
-
-x1 >= x2: array.__ge__()
-
-operator.ge(x1, x2)
-
-operator.__ge__(x1, x2)
-
-x1 == x2: array.__eq__()
-
-operator.eq(x1, x2)
-
-operator.__eq__(x1, x2)
-
-x1 != x2: array.__ne__()
-
-operator.ne(x1, x2)
-
-operator.__ne__(x1, x2)
-
-
-
-array.__abs__()
-
-Calculates the absolute value for each element of an array instance.
-
-array.__add__(other, /)
-
-Calculates the sum for each element of an array instance with the respective element of the array other.
-
-array.__and__(other, /)
-
-Evaluates self_i & other_i for each element of an array instance with the respective element of the array other.
-
-array.__array_namespace__(*, api_version=None)
-
-Returns an object that has all the array API functions on it.
-
-array.__bool__()
-
-Converts a zero-dimensional array to a Python bool object.
-
-array.__complex__()
-
-Converts a zero-dimensional array to a Python complex object.
-
-array.__dlpack__(*, stream=None, max_version=None, dl_device=None, copy=None)
-
-Exports the array for consumption by from_dlpack() as a DLPack capsule.
-
-array.__dlpack_device__()
-
-Returns device type and device ID in DLPack format.
-
-array.__eq__(other, /)
-
-Computes the truth value of self_i == other_i for each element of an array instance with the respective element of the array other.
-
-array.__float__()
-
-Converts a zero-dimensional array to a Python float object.
-
-array.__floordiv__(other, /)
-
-Evaluates self_i // other_i for each element of an array instance with the respective element of the array other.
-
-array.__ge__(other, /)
-
-Computes the truth value of self_i >= other_i for each element of an array instance with the respective element of the array other.
-
-array.__getitem__(key, /)
-
-Returns self[key].
-
-array.__gt__(other, /)
-
-Computes the truth value of self_i > other_i for each element of an array instance with the respective element of the array other.
-
-array.__index__()
-
-Converts a zero-dimensional integer array to a Python int object.
-
-array.__int__()
-
-Converts a zero-dimensional array to a Python int object.
-
-array.__invert__()
-
-Evaluates ~self_i for each element of an array instance.
-
-array.__le__(other, /)
-
-Computes the truth value of self_i <= other_i for each element of an array instance with the respective element of the array other.
-
-array.__lshift__(other, /)
-
-Evaluates self_i << other_i for each element of an array instance with the respective element of the array other.
-
-array.__lt__(other, /)
-
-Computes the truth value of self_i < other_i for each element of an array instance with the respective element of the array other.
-
-array.__matmul__(other, /)
-
-Computes the matrix product.
-
-array.__mod__(other, /)
-
-Evaluates self_i % other_i for each element of an array instance with the respective element of the array other.
-
-array.__mul__(other, /)
-
-Calculates the product for each element of an array instance with the respective element of the array other.
-
-array.__ne__(other, /)
-
-Computes the truth value of self_i != other_i for each element of an array instance with the respective element of the array other.
-
-array.__neg__()
-
-Evaluates -self_i for each element of an array instance.
-
-array.__or__(other, /)
-
-Evaluates self_i | other_i for each element of an array instance with the respective element of the array other.
-
-array.__pos__()
-
-Evaluates +self_i for each element of an array instance.
-
-array.__pow__(other, /)
-
-Calculates an implementation-dependent approximation of exponentiation by raising each element (the base) of an array instance to the power of other_i (the exponent), where other_i is the corresponding element of the array other.
-
-array.__rshift__(other, /)
-
-Evaluates self_i >> other_i for each element of an array instance with the respective element of the array other.
-
-array.__setitem__(key, value, /)
-
-Sets self[key] to value.
-
-array.__sub__(other, /)
-
-Calculates the difference for each element of an array instance with the respective element of the array other.
-
-array.__truediv__(other, /)
-
-Evaluates self_i / other_i for each element of an array instance with the respective element of the array other.
-
-array.__xor__(other, /)
-
-Evaluates self_i ^ other_i for each element of an array instance with the respective element of the array other.
-
-array.to_device(device, /, *, stream=None)
-
-Copy the array from the device on which it currently resides to the specified device.
-

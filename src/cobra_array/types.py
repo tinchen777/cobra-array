@@ -4,7 +4,7 @@ Type definitions for :pkg:`cobra_array`.
 """
 
 from __future__ import annotations
-from typing import (Protocol, TypeVar, Any, Literal, Generic)
+from typing import (Protocol, TypeVar, Any, Literal, NamedTuple, Generic)
 
 
 T = TypeVar("T")
@@ -33,3 +33,25 @@ class ArrayLike(Protocol):
 
 
 ArrayT = TypeVar("ArrayT", bound=ArrayLike)
+
+
+class UniqueAllResult(NamedTuple, Generic[T]):
+    values: T
+    indices: T
+    inverse_indices: T
+    counts: T
+
+
+class UniqueCountsResult(NamedTuple, Generic[T]):
+    values: T
+    counts: T
+
+
+class UniqueInverseResult(NamedTuple, Generic[T]):
+    values: T
+    inverse_indices: T
+
+
+# UniqueAllResult = namedtuple("UniqueAllResult", ["values", "indices", "inverse_indices", "counts"])
+# UniqueCountsResult = namedtuple("UniqueCountsResult", ["values", "counts"])
+# UniqueInverseResult = namedtuple("UniqueInverseResult", ["values", "inverse_indices"])
