@@ -18,18 +18,22 @@ Functions
 """
 
 from __future__ import annotations
-from array_api_compat import (torch as torch_xp, numpy as numpy_xp)
+from typing import (Any, TYPE_CHECKING)
 
-from .convert import (as_array, np, torch)
+from .convert import as_array
+from .array_api import (numpy_xp, torch_xp)
 from ._utils import ArraySpec
 from .exceptions import MissingDependencyError
+
+if TYPE_CHECKING:
+    from .types import ArrayLike
 
 
 # get defaults
 DEFAULT_DTYPE = float
 DEFAULT_DEVICE = "cpu"
-DEFAULT_TORCH_NAMESPACE = torch_xp if torch is not None else None
-DEFAULT_NUMPY_NAMESPACE = numpy_xp if np is not None else None
+DEFAULT_NUMPY_NAMESPACE = numpy_xp
+DEFAULT_TORCH_NAMESPACE = torch_xp
 
 
 def default_array_spec() -> ArraySpec:
@@ -60,7 +64,7 @@ def as_default_array(
     unify_dtype: bool = True,
     unify_device: bool = True,
     copy: bool = False
-):
+) -> ArrayLike[Any]:
     """
     Convert an array-like object to an array in default `array namespace` with the default `dtype` and `device` if specified.
 
@@ -80,7 +84,7 @@ def as_default_array(
 
     Returns
     -------
-        Any
+        ArrayLike[Any]
         The converted array representation of the object in the default context `array namespace`, with the default `dtype` and `device` if specified.
 
     Raises
@@ -90,7 +94,7 @@ def as_default_array(
     arr_spec = default_array_spec()
     return as_array(
         obj, arr_spec.xp,
-        arr_spec.dtype if unify_dtype else None,
-        arr_spec.device if unify_device else None,
-        copy
+        dtype=arr_spec.dtype if unify_dtype else None,
+        device=arr_spec.device if unify_device else None,
+        copy=copy
     )

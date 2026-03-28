@@ -46,6 +46,10 @@ class CUDAUnavailableError(CobraArrayError):
     """Raised when CUDA is not available but a CUDA device is specified."""
 
 
+class DeviceNotSupportedError(CobraArrayError):
+    """Raised when a specified device is not supported by the current array library."""
+
+
 class NotArrayAPIObjectError(CobraArrayError, ValueError):
     """Raised when an array is not an array API compatible array object."""
 

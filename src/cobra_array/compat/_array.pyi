@@ -6,62 +6,90 @@ from __future__ import annotations
 from torch import Tensor
 from numpy.typing import NDArray
 from array_api_compat.common._typing import Namespace
-from typing import (Union, List, Tuple, Optional, Any, Sequence, Generic, Literal, overload)
+from typing import (Union, List, Tuple, Optional, Any, Sequence, Generic, TypeVar, Literal, overload)
 
-from ..types import (ArrayT, DTypeT, DeviceT, DType, Device, ArrayLike, ArrayLibraryName, UniqueAllResult, UniqueCountsResult, UniqueInverseResult)
+from ..types import (
+    DTypeT, DeviceT, dtypeT, deviceT, DType, Device,
+    ArrayLike, ArrayLibraryName,
+    ArrayOrAny, ArrayOrScalar, ArrayOrReal, ArrayOrIntLike, ArrayOrInt, ArrayOrbool,
+    UniqueAllResult, UniqueCountsResult, UniqueInverseResult
+)
+
+TT = TypeVar("TT", bound=DType)
+DT = TypeVar("DT", bound=Device)
 
 
-class CompatArray(Generic[DTypeT, DeviceT]):
-    """
-    A backend-agnostic array abstraction compliant with the [`Python Array API standard`](https://data-apis.org/array-api/2024.12/API_specification/index.html).
-
-    `CompatArray` provides a unified interface for numerical computation across multiple array backends (e.g., `NumPy`, `PyTorch`), strictly adhering to the `Python Array API standard`.
-    Detailed documentation is provided for all supported operations to ensure consistent and predictable behavior.
-
-    Notes
-    -----
-    - All operations follow the semantics defined by the `Python Array API standard`.
-    - Methods correspond directly to standard functions, but are exposed in an object-oriented form.
-    """
+class CompatArray(Generic[TT, DT]):
+    @overload
     @classmethod
-    def from_other(cls, obj: object, xp: Union[Namespace, ArrayLibraryName], /) -> CompatArray[DType, Device]: ...
-    def __new__(cls, *args, **kwargs) -> CompatArray[DType, Device]: ...
-    def __init__(self, arr: ArrayT, /, **kwargs): ...
+    def from_other(cls, obj: NDArray[dtypeT], /, xp: Literal["numpy"]) -> CompatArray[dtypeT, Literal["cpu"]]: ...
+    @overload
+    @classmethod
+    def from_other(cls, obj: ArrayLike[dtypeT], /, xp: Literal["numpy"]) -> CompatArray[dtypeT, Literal["cpu"]]: ...
+    @overload
+    @classmethod
+    def from_other(cls, obj: object, /, xp: Literal["numpy"]) -> CompatArray[Any, Literal["cpu"]]: ...
+    @overload
+    @classmethod
+    def from_other(cls, obj: NDArray[dtypeT], /, xp: Union[Namespace, ArrayLibraryName]) -> CompatArray[dtypeT, Any]: ...
+    @overload
+    @classmethod
+    def from_other(cls, obj: ArrayLike[dtypeT], /, xp: Union[Namespace, ArrayLibraryName]) -> CompatArray[dtypeT, Any]: ...
+    @overload
+    @classmethod
+    def from_other(cls, obj: object, /, xp: Union[Namespace, ArrayLibraryName]) -> CompatArray[Any, Any]: ...
+    @classmethod
+    def from_other(cls, obj: object, /, xp: Union[Namespace, ArrayLibraryName]) -> CompatArray[Any, Any]: ...
+
+    @overload
+    def __new__(cls, arr: NDArray[dtypeT], /, **kwargs) -> CompatArray[dtypeT, Literal["cpu"]]: ...
+    @overload
+    def __new__(cls, arr: Tensor, /, **kwargs) -> CompatArray[Any, Any]: ...
+    @overload
+    def __new__(cls, arr: CompatArray[dtypeT, deviceT], /, **kwargs) -> CompatArray[dtypeT, deviceT]: ...
+    @overload
+    def __new__(cls, arr: ArrayLike[dtypeT], /, **kwargs) -> CompatArray[dtypeT, Any]: ...
+    def __new__(cls, arr: ArrayLike[Any], /, **kwargs) -> CompatArray[Any, Any]: ...
 
     # === Conversion functions ===
-    def to_numpy(self, *, copy: bool = False) -> NDArray[Any]:
-        """
-        Convert `self` to a `NumPy array`.
-        See also :func:`convert.to_numpy`.
-        """
-        ...
+    def to_numpy(self, *, copy: bool = False) -> NDArray[TT]: ...
 
     def to_tensor(
         self, *,
         device: Optional[DeviceT] = None,
         copy: bool = False
-    ) -> Tensor:
-        """
-        Convert `self` to a `PyTorch tensor`.
-        See also :func:`convert.to_tensor`.
-        """
-        ...
+    ) -> Tensor: ...
 
-    def to_list(self, *, copy: bool = False) -> List[Any]:
-        """
-        Convert `self` to a built-in `list`.
-        See also :func:`convert.to_list`.
-        """
-        ...
+    def to_list(self, *, copy: bool = False) -> List[TT]: ...
+
+    # === Device functions ===
+    def to_device(self, device: DeviceT, /, *, stream: Optional[Any] = None) -> CompatArray[TT, DeviceT]: ...
 
     # === Data type functions ===
+    @overload
     def astype(
         self,
         dtype: DTypeT,
         /, *,
+        copy: bool = ...
+    ) -> CompatArray[DTypeT, DT]: ...
+
+    @overload
+    def astype(
+        self,
+        dtype: DTypeT,
+        /, *,
+        copy: bool = ...,
+        device: DeviceT
+    ) -> CompatArray[DTypeT, DeviceT]: ...
+
+    def astype(
+        self,
+        dtype: DType,
+        /, *,
         copy: bool = True,
-        device: Optional[DeviceT] = None
-    ) -> CompatArray[Any]:
+        device: Optional[Device] = None
+    ) -> CompatArray[Any, Any]:
         """
         Copies `self` to a specified data type irrespective of Type Promotion Rules rules.
 
@@ -84,451 +112,493 @@ class CompatArray(Generic[DTypeT, DeviceT]):
 
         Returns
         -------
-            CompatArray[Any]
+            CompatArray
                 An array having the specified data type.
                 The returned array must have the same shape as `self`.
         """
         ...
 
-    def broadcast_to(self, shape: Tuple[int, ...]) -> CompatArray[ArrayT]: ...
-
     # === Elementwise functions ===
-    def abs(self) -> CompatArray[ArrayT]:
+    def abs(self) -> CompatArray[TT, DT]:
         """
         Computes the element-wise `absolute value` of `self`.
         """
         ...
 
-    def acos(self) -> CompatArray[ArrayT]:
+    def acos(self) -> CompatArray[float, DT]:
         """
         Computes the element-wise `principal value of the inverse cosine` of `self`.
+        - `self` should have a floating-point data type.
         """
         ...
 
-    def acosh(self) -> CompatArray[ArrayT]:
+    def acosh(self) -> CompatArray[float, DT]:
         """
         Computes the element-wise `inverse hyperbolic cosine` of `self`.
+        - `self` should have a floating-point data type.
         """
         ...
 
-    def add(self, other: ArrayLike, /) -> CompatArray[ArrayT]:
+    def add(self, other: ArrayOrScalar, /) -> CompatArray[Any, DT]:
         """
         Computes the element-wise `sum` of `self` and `other`.
+        - `self` should have a numeric data type.
         """
         ...
 
-    def asin(self) -> CompatArray[ArrayT]:
+    def asin(self) -> CompatArray[float, DT]:
         """
         Computes the element-wise `principal value of the inverse sine` of `self`.
+        - `self` should have a floating-point data type.
         """
         ...
 
-    def asinh(self) -> CompatArray[ArrayT]:
+    def asinh(self) -> CompatArray[float, DT]:
         """
         Computes the element-wise `inverse hyperbolic sine` of `self`.
+        - `self` should have a floating-point data type.
         """
         ...
 
-    def atan(self) -> CompatArray[ArrayT]:
+    def atan(self) -> CompatArray[float, DT]:
         """
         Computes the element-wise `principal value of the inverse tangent` of `self`.
+        - `self` should have a floating-point data type.
         """
         ...
 
-    def atan2(self, other: ArrayLike, /) -> CompatArray[ArrayT]:
+    def atan2(self, other: ArrayOrReal, /) -> CompatArray[float, DT]:
         """
         Computes the element-wise `inverse tangent` of `self / other`, taking into account the signs of both inputs.
-        This allows determining the correct quadrant. Results are in radians in [-π, π].
+        - `self` should have a real-valued floating-point data type.
+        - This allows determining the correct quadrant. Results are in radians in [-π, π].
         """
         ...
 
-    def atanh(self) -> CompatArray[ArrayT]:
+    def atanh(self) -> CompatArray[float, DT]:
         """
         Computes the element-wise `inverse hyperbolic tangent` of `self`.
+        - `self` should have a floating-point data type.
         """
         ...
 
-    def bitwise_and(self, other: ArrayLike, /) -> CompatArray[ArrayT]:
+    def bitwise_and(self, other: ArrayOrIntLike, /) -> CompatArray[TT, DT]:
         """
         Computes the element-wise `bitwise AND` of `self` and `other`.
+        - `self` should have an integer or boolean data type.
         """
         ...
 
-    def bitwise_left_shift(self, other: ArrayLike, /) -> CompatArray[ArrayT]:
+    def bitwise_left_shift(self, other: ArrayOrInt, /) -> CompatArray[TT, DT]:
         """
         Computes the element-wise `bitwise left shift` of `self` by `other`.
-        Each element is shifted left by the corresponding number of bits.
+        - `self` should have an integer data type.
+        - Each element is shifted left by the corresponding number of bits.
         """
         ...
 
-    def bitwise_invert(self) -> CompatArray[ArrayT]:
+    def bitwise_invert(self) -> CompatArray[TT, DT]:
         """
         Computes the element-wise `bitwise NOT` of `self`.
-        This operation flips every bit of each element.
+        - `self` should have an integer or boolean data type.
+        - This operation flips every bit of each element.
         """
         ...
 
-    def bitwise_or(self, other: ArrayLike, /) -> CompatArray[ArrayT]:
+    def bitwise_or(self, other: ArrayOrIntLike, /) -> CompatArray[TT, DT]:
         """
         Computes the element-wise `bitwise OR` of `self` and `other`.
+        - `self` should have an integer or boolean data type.
         """
         ...
 
-    def bitwise_right_shift(self, other: ArrayLike, /) -> CompatArray[ArrayT]:
+    def bitwise_right_shift(self, other: ArrayOrInt, /) -> CompatArray[TT, DT]:
         """
         Computes the element-wise `bitwise right shift` of `self` by `other`.
-        Each element is shifted right by the corresponding number of bits.
+        - `self` should have an integer data type.
+        - Each element is shifted right by the corresponding number of bits.
         """
         ...
 
-    def bitwise_xor(self, other: ArrayLike, /) -> CompatArray[ArrayT]:
+    def bitwise_xor(self, other: ArrayOrIntLike, /) -> CompatArray[TT, DT]:
         """
         Computes the element-wise `bitwise XOR` of `self` and `other`.
+        - `self` should have an integer or boolean data type.
         """
         ...
 
-    def ceil(self) -> CompatArray[ArrayT]:
+    def ceil(self) -> CompatArray[TT, DT]:
         """
         Computes the element-wise `ceiling` of `self`.
-        Each element is rounded to the smallest (i.e., closest to -infinity) integer-valued number that is not less than itself.
+        - `self` should have a real-valued data type.
+        - Each element is rounded to the smallest (i.e., closest to -infinity) integer-valued number that is not less than itself.
         """
         ...
 
-    def clip(self, *, min: Optional[Any] = None, max: Optional[Any] = None) -> CompatArray[ArrayT]:
+    def clip(self, *, min: Optional[ArrayOrReal] = None, max: Optional[ArrayOrReal] = None) -> CompatArray[TT, DT]:
         """
         Computes the element-wise `clipping` of `self` to the range [:param:`min`, :param:`max`].
+        - `self` should have a real-valued data type.
         """
         ...
 
-    def conj(self) -> CompatArray[ArrayT]:
+    def conj(self) -> CompatArray[TT, DT]:
         """
         Computes the element-wise `complex conjugate` of `self`.
+        - `self` must have a numeric data type.
         """
         ...
 
-    def copysign(self, other: Any, /) -> CompatArray[ArrayT]:
+    def copysign(self, other: ArrayOrReal, /) -> CompatArray[float, DT]:
         """
         Computes the element-wise `copysign` of `self` with `other`.
-        Each element has the magnitude of `self` and the sign of `other`.
+        - `self` should have a real-valued floating-point data type.
+        - Each element has the magnitude of `self` and the sign of `other`.
         """
         ...
 
-    def cos(self) -> CompatArray[ArrayT]:
+    def cos(self) -> CompatArray[float, DT]:
         """
         Computes the element-wise `cosine` of `self`.
+        - `self` should have a floating-point data type.
         """
         ...
 
-    def cosh(self) -> CompatArray[ArrayT]:
+    def cosh(self) -> CompatArray[float, DT]:
         """
         Computes the element-wise `hyperbolic cosine` of `self`.
+        - `self` should have a floating-point data type.
         """
         ...
 
-    def divide(self, other: Any, /) -> CompatArray[ArrayT]:
+    def divide(self, other: ArrayOrScalar, /) -> CompatArray[float, DT]:
         """
         Computes the element-wise `division` of `self` by `other`.
+        - `self` should have a numeric data type.
         """
         ...
 
-    def equal(self, other: Any, /) -> CompatArray[ArrayT]:
+    def equal(self, other: ArrayOrAny, /) -> CompatArray[bool, DT]:
         """
         Computes the element-wise truth value of `self == other`.
-
-        The returned array must have a data type of `bool`.
         """
         ...
 
-    def exp(self) -> CompatArray[ArrayT]:
+    def exp(self) -> CompatArray[float, DT]:
         """
         Computes the element-wise `exponential` (`exp(x)`) of `self`.
+        - `self` should have a floating-point data type.
         """
         ...
 
-    def expm1(self) -> CompatArray[ArrayT]:
+    def expm1(self) -> CompatArray[float, DT]:
         """
         Computes the element-wise `exp(x) - 1` of `self`.
+        - `self` should have a floating-point data type.
         """
         ...
 
-    def floor(self) -> CompatArray[ArrayT]:
+    def floor(self) -> CompatArray[TT, DT]:
         """
         Computes the element-wise `floor` of `self`.
-        Each element is rounded to the largest (i.e., closest to +infinity) integer-valued number that is not greater than itself.
+        - `self` should have a real-valued data type.
+        - Each element is rounded to the largest (i.e., closest to +infinity) integer-valued number that is not greater than itself.
         """
         ...
 
-    def floor_divide(self, other: Any, /) -> CompatArray[ArrayT]:
+    def floor_divide(self, other: ArrayOrReal, /) -> CompatArray[TT, DT]:
         """
         Computes the element-wise `floor division` of `self` by `other`.
-        Each element of the division result is rounded to the largest (i.e., closest to +infinity) integer-valued number that is not greater than itself.
+        - `self` should have a real-valued data type.
+        - Each element of the division result is rounded to the largest (i.e., closest to +infinity) integer-valued number that is not greater than itself.
         """
         ...
 
-    def greater(self, other: Any, /) -> CompatArray[ArrayT]:
+    def greater(self, other: ArrayOrReal, /) -> CompatArray[bool, DT]:
         """
         Computes the element-wise truth value of `self > other`.
-
-        The returned array must have a data type of `bool`.
+        - `self` should have a real-valued data type.
         """
         ...
 
-    def greater_equal(self, other: Any, /) -> CompatArray[ArrayT]:
+    def greater_equal(self, other: ArrayOrReal, /) -> CompatArray[bool, DT]:
         """
         Computes the element-wise truth value of `self >= other`.
-
-        The returned array must have a data type of `bool`.
+        - `self` should have a real-valued data type.
         """
         ...
 
-    def hypot(self, other: Any, /) -> CompatArray[ArrayT]:
+    def hypot(self, other: ArrayOrReal, /) -> CompatArray[float, DT]:
         """
         Computes the element-wise `hypotenuse` of `self` and `other`.
-        Equivalent to `sqrt(self **2 + other **2)`, computed in a numerically stable way.
+        - `self` should have a real-valued floating-point data type.
+        - Equivalent to `sqrt(self **2 + other **2)`, computed in a numerically stable way.
         """
         ...
 
-    def imag(self) -> CompatArray[ArrayT]:
+    def imag(self) -> CompatArray[float, DT]:
         """
         Computes the element-wise `imaginary component` of `self`.
+        - `self` should have a complex floating-point data type.
         """
         ...
 
-    def isfinite(self) -> CompatArray[ArrayT]:
+    def isfinite(self) -> CompatArray[bool, DT]:
         """
         Tests the element-wise `finiteness` of `self`.
-
-        The returned array must have a data type of `bool`.
+        - `self` should have a numeric data type.
         """
         ...
 
-    def isinf(self) -> CompatArray[ArrayT]:
+    def isinf(self) -> CompatArray[bool, DT]:
         """
         Tests the element-wise `infinity` of `self`.
-
-        The returned array must have a data type of `bool`.
+        - - `self` should have a numeric data type.
         """
         ...
 
-    def isnan(self) -> CompatArray[ArrayT]:
+    def isnan(self) -> CompatArray[bool, DT]:
         """
         Tests the element-wise `NaN` of `self`.
-
-        The returned array must have a data type of `bool`.
+        - `self` should have a numeric data type.
         """
         ...
 
-    def less(self, other: Any, /) -> CompatArray[ArrayT]:
+    def less(self, other: ArrayOrReal, /) -> CompatArray[bool, DT]:
         """
         Computes the element-wise truth value of `self < other`.
-
-        The returned array must have a data type of `bool`.
+        - `self` should have a real-valued data type.
         """
         ...
 
-    def less_equal(self, other: Any, /) -> CompatArray[ArrayT]:
+    def less_equal(self, other: ArrayOrReal, /) -> CompatArray[bool, DT]:
         """
         Computes the element-wise truth value of `self <= other`.
-
-        The returned array must have a data type of `bool`.
+        - `self` should have a real-valued data type.
         """
         ...
 
-    def log(self) -> CompatArray[ArrayT]:
+    def log(self) -> CompatArray[float, DT]:
         """
         Computes the element-wise `natural logarithm` (base `e`)  of `self`.
+        - `self` should have a floating-point data type.
         """
         ...
 
-    def log1p(self) -> CompatArray[ArrayT]:
+    def log1p(self) -> CompatArray[float, DT]:
         """
         Computes the element-wise `log(1 + x)` (base `e`) of `self`.
+        - `self` should have a floating-point data type.
         """
         ...
 
-    def log2(self) -> CompatArray[ArrayT]:
+    def log2(self) -> CompatArray[float, DT]:
         """
         Computes the element-wise `base-2 logarithm` of `self`.
+        - `self` should have a floating-point data type.
         """
         ...
 
-    def log10(self) -> CompatArray[ArrayT]:
+    def log10(self) -> CompatArray[float, DT]:
         """
         Computes the element-wise `base-10 logarithm` of `self`.
+        - `self` should have a floating-point data type.
         """
         ...
 
-    def logaddexp(self, other: Any, /) -> CompatArray[ArrayT]:
+    def logaddexp(self, other: ArrayOrReal, /) -> CompatArray[float, DT]:
         """
         Computes the element-wise `logaddexp` of `self` and `other`.
-        Equivalent to `log(exp(self) + exp(other))`.
+        - Equivalent to `log(exp(self) + exp(other))`.
+        - `self` should have a floating-point data type.
         """
         ...
 
-    def logical_and(self, other: Any, /) -> CompatArray[ArrayT]:
+    def logical_and(self, other: ArrayOrbool, /) -> CompatArray[bool, DT]:
         """
         Computes the element-wise `logical AND` of `self` and `other`.
+        - `self` should have a boolean data type.
         """
         ...
 
-    def logical_not(self) -> CompatArray[ArrayT]:
+    def logical_not(self) -> CompatArray[bool, DT]:
         """
         Computes the element-wise `logical NOT` of `self`.
+        - `self` should have a boolean data type.
         """
         ...
 
-    def logical_or(self, other: Any, /) -> CompatArray[ArrayT]:
+    def logical_or(self, other: ArrayOrbool, /) -> CompatArray[bool, DT]:
         """
         Computes the element-wise `logical OR` of `self` and `other`.
+        - `self` should have a boolean data type.
         """
         ...
 
-    def logical_xor(self, other: Any, /) -> CompatArray[ArrayT]:
+    def logical_xor(self, other: ArrayOrbool, /) -> CompatArray[bool, DT]:
         """
         Computes the element-wise `logical XOR` of `self` and `other`.
+        - `self` should have a boolean data type.
         """
         ...
 
-    def maximum(self, other: Any, /) -> CompatArray[ArrayT]:
+    def maximum(self, other: ArrayOrReal, /) -> CompatArray[Any, DT]:
         """
         Computes the element-wise `maximum` of `self` and `other`.
+        - `self` should have a real-valued data type.
         """
         ...
 
-    def minimum(self, other: Any, /) -> CompatArray[ArrayT]:
+    def minimum(self, other: ArrayOrReal, /) -> CompatArray[Any, DT]:
         """
         Computes the element-wise `minimum` of `self` and `other`.
+        - `self` should have a real-valued data type.
         """
         ...
 
-    def multiply(self, other: Any, /) -> CompatArray[ArrayT]:
+    def multiply(self, other: ArrayOrScalar, /) -> CompatArray[Any, DT]:
         """
         Computes the element-wise `product` of `self` and `other`.
+        - `self` should have a numeric data type.
         """
         ...
 
-    def negative(self) -> CompatArray[ArrayT]:
+    def negative(self) -> CompatArray[TT, DT]:
         """
         Computes the element-wise `numerical negative` of `self`.
+        - `self` should have a numeric data type.
         """
         ...
 
-    def nextafter(self, other: Any, /) -> CompatArray[ArrayT]:
+    def nextafter(self, other: ArrayOrReal, /) -> CompatArray[TT, DT]:
         """
         Computes the element-wise `next representable floating-point value` of `self` toward `other`.
+        - `self` should have a real-valued floating-point data type.
         """
         ...
 
-    def not_equal(self, other: Any, /) -> CompatArray[ArrayT]:
+    def not_equal(self, other: ArrayOrAny, /) -> CompatArray[bool, DT]:
         """
         Computes the element-wise truth value of `self != other`.
-
-        The returned array must have a data type of `bool`.
         """
         ...
 
-    def positive(self) -> CompatArray[ArrayT]:
+    def positive(self) -> CompatArray[TT, DT]:
         """
         Computes the element-wise `numerical positive` of `self`.
+        - `self` should have a numeric data type.
         """
         ...
 
-    def pow(self, other: Any, /) -> CompatArray[ArrayT]:
+    def pow(self, other: ArrayOrScalar, /) -> CompatArray[Any, DT]:
         """
         Computes the element-wise `power` of `self` and `other`.
-        Each element of `self` is raised to the corresponding power in `other`.
+        - `self` should have a numeric data type.
+        - Each element of `self` is raised to the corresponding power in `other`.
         """
         ...
 
-    def real(self) -> CompatArray[ArrayT]:
+    def real(self) -> CompatArray[float, DT]:
         """
         Computes the element-wise `real component` of `self`.
+        - `self` should have a numeric data type.
         """
         ...
 
-    def reciprocal(self) -> CompatArray[ArrayT]:
+    def reciprocal(self) -> CompatArray[float, DT]:
         """
         Computes the element-wise `reciprocal` of `self`.
+        - `self` should have a floating-point data type.
         """
         ...
 
-    def remainder(self, other: Any, /) -> CompatArray[ArrayT]:
+    def remainder(self, other: ArrayOrReal, /) -> CompatArray[Any, DT]:
         """
         Computes the element-wise `remainder` of `self` divided by `other`.
+        - `self` should have a real-valued data type.
         """
         ...
 
-    def round(self) -> CompatArray[ArrayT]:
+    def round(self) -> CompatArray[TT, DT]:
         """
         Computes the element-wise `rounding` of `self` to the nearest integer-valued number.
+        - `self` should have a numeric data type.
         """
         ...
 
-    def sign(self) -> CompatArray[ArrayT]:
+    def sign(self) -> CompatArray[TT, DT]:
         """
         Computes the element-wise `indication of the sign` of `self`.
+        - `self` should have a numeric data type.
         """
         ...
 
-    def signbit(self) -> CompatArray[ArrayT]:
+    def signbit(self) -> CompatArray[bool, DT]:
         """
         Tests the element-wise `sign bit` of `self`.
-        Tests each element for whenever is either `-0`, `less than zero`, or a signed `NaN` (i.e., a NaN value whose sign bit is 1).
-
-        The returned array must have a data type of `bool`.
+        - Tests each element for whenever is either `-0`, `less than zero`, or a signed `NaN` (i.e., a NaN value whose sign bit is 1).
+        - `self` should have a real-valued floating-point data type.
         """
         ...
 
-    def sin(self) -> CompatArray[ArrayT]:
+    def sin(self) -> CompatArray[float, DT]:
         """
         Computes the element-wise `sine` of `self`.
+        - `self` should have a floating-point data type.
         """
         ...
 
-    def sinh(self) -> CompatArray[ArrayT]:
+    def sinh(self) -> CompatArray[float, DT]:
         """
         Computes the element-wise `hyperbolic sine` of `self`.
+        - `self` should have a floating-point data type.
         """
         ...
 
-    def square(self) -> CompatArray[ArrayT]:
+    def square(self) -> CompatArray[TT, DT]:
         """
         Computes the element-wise `square` of `self`.
+        - `self` should have a numeric data type.
         """
         ...
 
-    def sqrt(self) -> CompatArray[ArrayT]:
+    def sqrt(self) -> CompatArray[float, DT]:
         """
         Computes the element-wise `principal square root` of `self`.
+        - `self` should have a floating-point data type.
         """
         ...
 
-    def subtract(self, other: Any, /) -> CompatArray[ArrayT]:
+    def subtract(self, other: ArrayOrScalar, /) -> CompatArray[Any, DT]:
         """
         Computes the element-wise `difference` of `self` and `other`.
+        - `self` should have a numeric data type.
         """
         ...
 
-    def tan(self) -> CompatArray[ArrayT]:
+    def tan(self) -> CompatArray[float, DT]:
         """
         Computes the element-wise `tangent` of `self`.
+        - `self` should have a floating-point data type.
         """
         ...
 
-    def tanh(self) -> CompatArray[ArrayT]:
+    def tanh(self) -> CompatArray[float, DT]:
         """
         Computes the element-wise `hyperbolic tangent` of `self`.
+        - `self` should have a floating-point data type.
         """
         ...
 
-    def trunc(self) -> CompatArray[ArrayT]:
+    def trunc(self) -> CompatArray[TT, DT]:
         """
         Computes the element-wise `truncation` of `self` toward `zero`.
-        Each element is rounded to the nearest integer-valued number that is closer to `zero` than itself.
+        - `self` should have a real-valued data type.
+        - Each element is rounded to the nearest integer-valued number that is closer to `zero` than itself.
         """
 
     # === Indexing functions ===
-    def take(self, indices: ArrayLike, /, *, axis: Optional[int] = None) -> CompatArray[ArrayT]:
+    def take(self, indices: ArrayLike[Any], /, *, axis: Optional[int] = None) -> CompatArray[TT, DT]:
         """
         Returns elements of `self` along an :param:`axis`.
         - `self` should have one or more dimensions (axes).
@@ -549,7 +619,7 @@ class CompatArray(Generic[DTypeT, DeviceT]):
 
         Returns
         -------
-            CompatArray[ArrayT]
+            CompatArray
                 An array having the same data type as `self`. The output array must have the same rank (i.e., number of dimensions) as `self` and must have the same shape as `self`, except for the axis specified by :param:`axis` whose size must equal the number of elements in :param:`indices`.
 
         Notes
@@ -560,7 +630,7 @@ class CompatArray(Generic[DTypeT, DeviceT]):
         """
         ...
 
-    def take_along_axis(self, indices: ArrayLike, /, *, axis: int = -1) -> CompatArray[ArrayT]:
+    def take_along_axis(self, indices: ArrayLike[Any], /, *, axis: int = -1) -> CompatArray[TT, DT]:
         """
         Returns elements from `self` at the one-dimensional indices specified by :param:`indices` along a provided :param:`axis`.
         - `self` must be compatible with :param:`indices`, except for the :param:`axis` (dimension) specified by axis.
@@ -578,7 +648,7 @@ class CompatArray(Generic[DTypeT, DeviceT]):
 
         Returns
         -------
-            CompatArray[ArrayT]
+            CompatArray
                 An array having the same data type as `self`. Must have the same rank (i.e., number of dimensions) as `self` and must have a shape determined according to Broadcasting, except for the axis (dimension) specified by :param:`axis` whose size must equal the size of the corresponding axis (dimension) in :param:`indices`.
 
         Notes
@@ -588,7 +658,7 @@ class CompatArray(Generic[DTypeT, DeviceT]):
         ...
 
     # === Linear algebra functions ===
-    def matmul(self, other: ArrayLike, /) -> CompatArray[ArrayT]:
+    def matmul(self, other: ArrayLike[Any], /) -> CompatArray[Any, DT]:
         """
         Computes the matrix product.
         - `self` should have a numeric data type. Must have at least one dimension.
@@ -606,7 +676,7 @@ class CompatArray(Generic[DTypeT, DeviceT]):
 
         Returns
         -------
-            CompatArray[ArrayT]
+            CompatArray
                 The returned array must have a data type determined by Type Promotion Rules.
                 - If both `self` and `other` are one-dimensional arrays having shape `(N,)`, a zero-dimensional array containing the inner product as its only element.
                 - If `self` is a two-dimensional array having shape `(M, K)` and `other` is a two-dimensional array having shape `(K, N)`, a two-dimensional array containing the conventional matrix product and having shape `(M, N)`.
@@ -618,7 +688,7 @@ class CompatArray(Generic[DTypeT, DeviceT]):
         """
         ...
 
-    def tensordot(self, other: ArrayLike, /, *, axes: Union[int, Tuple[Sequence[int], Sequence[int]]] = 2) -> CompatArray[ArrayT]:
+    def tensordot(self, other: ArrayLike[Any], /, *, axes: Union[int, Tuple[Sequence[int], Sequence[int]]] = 2) -> CompatArray[Any, DT]:
         """
         Returns a tensor contraction of `self` and `other` over specific axes.
         - The function corresponds to the generalized matrix product.
@@ -642,25 +712,25 @@ class CompatArray(Generic[DTypeT, DeviceT]):
 
         Returns
         -------
-            CompatArray[ArrayT]
+            CompatArray
                 An array containing the tensor contraction whose shape consists of the non-contracted axes (dimensions) of the first array `self`, followed by the non-contracted axes (dimensions) of the second array `other`. The returned array must have a data type determined by Type Promotion Rules.
         """
         ...
 
-    def matrix_transpose(self) -> CompatArray[ArrayT]:
+    def matrix_transpose(self) -> CompatArray[TT, DT]:
         """
         Transposes the matrix (or a stack of matrices) `self`.
         - `self` having shape `(..., M, N)` and whose innermost two dimensions form `MxN` matrices.
 
         Returns
         -------
-            CompatArray[ArrayT]
+            CompatArray
                 An array containing the transpose for each matrix and having shape `(..., N, M)`.
                 The returned array must have the same data type as `self`.
         """
         ...
 
-    def vecdot(self, other: ArrayLike, /, *, axes: int = -1) -> CompatArray[ArrayT]:
+    def vecdot(self, other: ArrayLike[Any], /, *, axes: int = -1) -> CompatArray[Any, DT]:
         """
         Computes the (vector) dot product of two arrays.
         - `self` should have a floating-point data type.
@@ -682,14 +752,14 @@ class CompatArray(Generic[DTypeT, DeviceT]):
 
         Returns
         -------
-            CompatArray[ArrayT]
+            CompatArray
                 The returned array must have a data type determined by Type Promotion Rules.
                 - `self` & `other` is `1-D`: A zero-dimensional array containing the dot product as its only element.
                 - _others_: A non-zero-dimensional array containing the dot products and having a shape determined according to Broadcasting along the non-contracted axes.
         """
 
     # === Manipulation functions ===
-    def expand_dims(self, *, axis: int) -> CompatArray[ArrayT]:
+    def expand_dims(self, *, axis: int) -> CompatArray[TT, DT]:
         """
         Expands the shape of `self` by inserting a new axis (dimension) of size one at the position specified by :param:`axis`.
 
@@ -705,7 +775,7 @@ class CompatArray(Generic[DTypeT, DeviceT]):
 
         Returns
         -------
-            CompatArray[ArrayT]
+            CompatArray
                 An expanded output array having the same data type as `self`.
 
         Raises
@@ -715,7 +785,7 @@ class CompatArray(Generic[DTypeT, DeviceT]):
         """
         ...
 
-    def flip(self, *, axis: Optional[Union[int, Tuple[int, ...]]] = None) -> CompatArray[ArrayT]:
+    def flip(self, *, axis: Optional[Union[int, Tuple[int, ...]]] = None) -> CompatArray[TT, DT]:
         """
         Reverses the order of elements in `self` along the given axis. The shape of `self` must be preserved.
 
@@ -730,7 +800,7 @@ class CompatArray(Generic[DTypeT, DeviceT]):
 
         Returns
         -------
-            CompatArray[ArrayT]
+            CompatArray
                 An output array having the same data type and shape as `self` and whose elements, relative to `self`, are reordered.
         """
         ...
@@ -740,7 +810,7 @@ class CompatArray(Generic[DTypeT, DeviceT]):
         source: Union[int, Tuple[int, ...]],
         destination: Union[int, Tuple[int, ...]],
         /
-    ) -> CompatArray[ArrayT]:
+    ) -> CompatArray[TT, DT]:
         """
         Moves `self` axes (dimensions) to new positions, while leaving other axes in their original positions.
 
@@ -757,12 +827,13 @@ class CompatArray(Generic[DTypeT, DeviceT]):
 
         Returns
         -------
-            CompatArray[ArrayT]
-                An array containing reordered axes. The returned array must have the same data type as `self`.
+            CompatArray
+                An array containing reordered axes.
+                The returned array must have the same data type as `self`.
         """
         ...
 
-    def permute_dims(self, axes: Tuple[int, ...]) -> CompatArray[ArrayT]:
+    def permute_dims(self, axes: Tuple[int, ...]) -> CompatArray[TT, DT]:
         """
         Permutes the axes (dimensions) of `self`.
 
@@ -773,23 +844,24 @@ class CompatArray(Generic[DTypeT, DeviceT]):
 
         Returns
         -------
-            CompatArray[ArrayT]
-                An array containing the axes permutation. The returned array must have the same data type as `self`.
+            CompatArray
+                An array containing the axes permutation.
+                The returned array must have the same data type as `self`.
         """
         ...
 
     def repeat(
         self,
-        repeats: Union[int, ArrayLike],
+        repeats: Union[int, ArrayLike[Any]],
         /, *,
         axis: Optional[int] = None
-    ) -> CompatArray[ArrayT]:
+    ) -> CompatArray[TT, DT]:
         """
         Repeats each element of `self` a specified number of times on a per-element basis.
 
         Parameters
         ----------
-            repeats : Union[int, ArrayLike]
+            repeats : Union[int, ArrayLike[Any]]
                 The number of repetitions for each element.
 
                 If :param:`axis` is `None`, let `N = prod(self.shape)` and
@@ -808,7 +880,7 @@ class CompatArray(Generic[DTypeT, DeviceT]):
 
         Returns
         -------
-            CompatArray[ArrayT]
+            CompatArray
                 An output array containing repeated elements.
                 The returned array must have the same data type as `self`.
                 For :param:`axis`:
@@ -822,7 +894,7 @@ class CompatArray(Generic[DTypeT, DeviceT]):
         shape: Tuple[int, ...],
         *,
         copy: Optional[bool] = None
-    ) -> CompatArray[ArrayT]:
+    ) -> CompatArray[TT, DT]:
         """
         Reshapes `self` without changing its data.
 
@@ -840,7 +912,7 @@ class CompatArray(Generic[DTypeT, DeviceT]):
 
         Returns
         -------
-            CompatArray[ArrayT]
+            CompatArray
                 An output array having the same data type and elements as `self`.
 
         Raises
@@ -855,7 +927,7 @@ class CompatArray(Generic[DTypeT, DeviceT]):
         shift: Union[int, Tuple[int, ...]],
         *,
         axis: Optional[Union[int, Tuple[int, ...]]] = None
-    ) -> CompatArray[ArrayT]:
+    ) -> CompatArray[TT, DT]:
         """
         Rolls `self` elements along a specified axis.
         - Array elements that roll beyond the last position are re-introduced at the first position.
@@ -876,12 +948,12 @@ class CompatArray(Generic[DTypeT, DeviceT]):
 
         Returns
         -------
-            CompatArray[ArrayT]
+            CompatArray
                 An output array having the same data type and shape as `self` and whose elements, relative to `self`, are shifted.
         """
         ...
 
-    def squeeze(self, axis: Union[int, Tuple[int, ...]]) -> CompatArray[ArrayT]:
+    def squeeze(self, axis: Union[int, Tuple[int, ...]]) -> CompatArray[TT, DT]:
         """
         Removes singleton dimensions (axes) from `self`.
 
@@ -892,7 +964,7 @@ class CompatArray(Generic[DTypeT, DeviceT]):
 
         Returns
         -------
-            CompatArray[ArrayT]
+            CompatArray
                 An output array having the same data type and elements as `self`.
 
         Raises
@@ -902,7 +974,7 @@ class CompatArray(Generic[DTypeT, DeviceT]):
         """
         ...
 
-    def tile(self, repetitions: Tuple[int, ...], /) -> CompatArray[ArrayT]:
+    def tile(self, repetitions: Tuple[int, ...], /) -> CompatArray[TT, DT]:
         """
         Constructs an array by tiling `self`.
 
@@ -916,38 +988,21 @@ class CompatArray(Generic[DTypeT, DeviceT]):
 
         Returns
         -------
-            CompatArray[ArrayT]
+            CompatArray
                 A tiled output array.
                 The returned array must have the same data type as `self` and must have a rank (i.e., number of dimensions) equal to `max(N, M)`.
                 If `S` is the shape of the tiled array after prepending singleton dimensions (if necessary) and `r` is the tuple of repetitions after prepending ones (if necessary), then the number of elements along each axis (dimension) must satisfy `S[i]*r[i]`, where `i` refers to the `i` th axis (dimension).
         """
         ...
 
-    def unstack(self, *, axis: int = 0) -> Tuple[CompatArray[ArrayT], ...]:
-        """
-        Splits `self` into a sequence of arrays along the given axis.
-
-        Parameters
-        ----------
-            axis : int, default to `0`
-                Axis along which the array will be split.
-                A valid :param:`axis` must be on the interval `[-N, N)`, where `N` is the rank (number of dimensions) of `self`.
-                If provided an :param:`axis` outside of the required interval, the function must raise an exception.
-
-        Returns
-        -------
-            Tuple[CompatArray[ArrayT], ...]
-                Tuple of slices along the given dimension.
-                All the arrays have the same shape.
-        """
-        ...
+    def unstack(self, *, axis: int = 0) -> Tuple[CompatArray[TT, DT], ...]: ...
 
     # === Searching functions ===
     def argmax(
         self, *,
         axis: Optional[int] = None,
         keepdims: bool = False
-    ) -> CompatArray[ArrayT]:
+    ) -> CompatArray[int, DT]:
         """
         Returns the indices of the maximum values along a specified axis.
 
@@ -968,7 +1023,7 @@ class CompatArray(Generic[DTypeT, DeviceT]):
 
         Returns
         -------
-            CompatArray[ArrayT]
+            CompatArray
                 The returned array must have be the default array index data type.
                 For :param:`axis`:
                 - `None`: A zero-dimensional array containing the index of the first occurrence of the maximum value;
@@ -980,7 +1035,7 @@ class CompatArray(Generic[DTypeT, DeviceT]):
         self, *,
         axis: Optional[int] = None,
         keepdims: bool = False
-    ) -> CompatArray[ArrayT]:
+    ) -> CompatArray[int, DT]:
         """
         Returns the indices of the minimum values along a specified axis.
 
@@ -1001,7 +1056,7 @@ class CompatArray(Generic[DTypeT, DeviceT]):
 
         Returns
         -------
-            CompatArray[ArrayT]
+            CompatArray
                 The returned array must have be the default array index data type.
                 For :param:`axis`:
                 - `None`: A zero-dimensional array containing the index of the first occurrence of the minimum value;
@@ -1009,30 +1064,13 @@ class CompatArray(Generic[DTypeT, DeviceT]):
         """
         ...
 
-    def nonzero(self) -> Tuple[CompatArray[ArrayT], ...]:
-        """
-        Returns the indices of `self` elements which are non-zero.
-        - `self` must have a positive rank. If `self` is zero-dimensional, the function must raise an exception.
-
-        Returns
-        -------
-            Tuple[CompatArray[ArrayT], ...]
-                A tuple of `k` arrays, one for each dimension of `self` and each of size `n` (where `n` is the total number of non-zero elements), containing the indices of the non-zero elements in that dimension.
-                The indices must be returned in row-major, C-style order.
-                The returned array must have the default array index data type.
-
-        Notes
-        -----
-        - If `self` has a complex floating-point data type, non-zero elements are those elements having at least one component (real or imaginary) which is non-zero;
-        - If `self` has a boolean data type, non-zero elements are those elements which are equal to `True`.
-        """
-        ...
+    def nonzero(self) -> Tuple[CompatArray[int, DT], ...]: ...
 
     def count_nonzero(
         self, *,
         axis: Optional[Union[int, Tuple[int, ...]]] = None,
         keepdims: bool = False
-    ) -> CompatArray[ArrayT]:
+    ) -> CompatArray[int, DT]:
         """
         Counts the number of `self` elements which are non-zero.
 
@@ -1049,7 +1087,7 @@ class CompatArray(Generic[DTypeT, DeviceT]):
 
         Returns
         -------
-            CompatArray[ArrayT]
+            CompatArray
                 The returned array must have the default array index data type.
                 - computed over the entire `self`: A zero-dimensional array containing the total number of non-zero values;
                 - _others_: A non-zero-dimensional array containing the counts along the specified axes.
@@ -1063,11 +1101,11 @@ class CompatArray(Generic[DTypeT, DeviceT]):
 
     def searchsorted(
         self,
-        other: ArrayLike,
+        other: ArrayLike[Any],
         /, *,
         side: Literal['left', 'right'] = "left",
-        sorter: Optional[ArrayLike] = None
-    ) -> CompatArray[ArrayT]:
+        sorter: Optional[ArrayLike[Any]] = None
+    ) -> CompatArray[int, DT]:
         """
         Finds the indices into `self` such that, if the corresponding elements in `other` were inserted before the indices, the order of `self`, when sorted in ascending order, would be preserved.
         - `self` must be a one-dimensional array. Should have a real-valued data type.
@@ -1095,7 +1133,7 @@ class CompatArray(Generic[DTypeT, DeviceT]):
 
         Returns
         -------
-            CompatArray[ArrayT]
+            CompatArray
                 An array of indices with the same shape as `other`.
                 The returned array must have the default array index data type.
 
@@ -1106,12 +1144,7 @@ class CompatArray(Generic[DTypeT, DeviceT]):
         """
         ...
 
-    def where(
-        self,
-        X: Any,
-        Y: Any,
-        /
-    ) -> CompatArray[ArrayT]:
+    def where(self, X: ArrayOrAny, Y: ArrayOrAny, /) -> CompatArray[Any, DT]:
         """
         Returns elements chosen from `X` or `Y` depending on condition `self`.
         - `self` is a condition array. Should have a boolean data type. Must be compatible with `X` and `Y`. For each element in `self`:
@@ -1120,15 +1153,15 @@ class CompatArray(Generic[DTypeT, DeviceT]):
 
         Parameters
         ----------
-            X : Any
+            X : ArrayOrAny
                 First input array. Must be compatible with `self` and `Y`.
 
-            Y : Any
+            Y : ArrayOrAny
                 Second input array. Must be compatible with `self` and `X`.
 
         Returns
         -------
-            CompatArray[ArrayT]
+            CompatArray
                 An array with elements from `X` where `self` is `True`, and elements from `Y` elsewhere.
                 The returned array must have a data type determined by Type Promotion Rules rules with the arrays `X` and `Y`.
 
@@ -1139,54 +1172,11 @@ class CompatArray(Generic[DTypeT, DeviceT]):
         ...
 
     # === Set functions ===
-    def unique_all(self) -> UniqueAllResult[CompatArray[ArrayT]]:
-        """
-        Returns the unique elements of `self`, the first occurring indices for each unique element in `self`, the indices from the set of unique elements that reconstruct `self`, and the corresponding counts for each unique element in `self`.
-        - `self`:
-            - more than one dimension: the function must flatten `self` and return the unique elements of the flattened `self`.
+    def unique_all(self) -> UniqueAllResult[TT, DT]: ...
+    def unique_counts(self) -> UniqueCountsResult[TT, DT]: ...
+    def unique_inverse(self) -> UniqueInverseResult[TT, DT]: ...
 
-        Returns
-        -------
-            UniqueAllResult[CompatArray[ArrayT]]
-                A namedtuple (`values`, `indices`, `inverse_indices`, `counts`):
-                1. :attr:`values`: A one-dimensional array containing the unique elements of `self`. The array must have the same data type as `self`;
-                2. :attr:`indices`: An array containing the indices (first occurrences) of a flattened `self` that result in :attr:`values`. The array must have the same shape as :attr:`values` and must have the default array index data type;
-                3. :attr:`inverse_indices`: An array containing the indices of :attr:`values` that reconstruct `self`. The array must have the same shape as `self` and must have the default array index data type;
-                4. :attr:`counts`: An array containing the number of times each unique element occurs in `self`. The order of the returned counts must match the order of :attr:`values`, such that a specific element in :attr:`counts` corresponds to the respective unique element in :attr:`values`. The returned array must have same shape as :attr:`values` and must have the default array index data type.
-        """
-        ...
-
-    def unique_counts(self) -> UniqueCountsResult[CompatArray[ArrayT]]:
-        """
-        Returns the unique elements of `self` and the corresponding counts for each unique element in `self`.
-        - `self`:
-            - more than one dimension: the function must flatten `self` and return the unique elements of the flattened `self`.
-
-        Returns
-        -------
-            UniqueCountsResult[CompatArray[ArrayT]]
-                A namedtuple (`values`, `counts`):
-                1. :attr:`values`: A one-dimensional array containing the unique elements of `self`. The array must have the same data type as `self`;
-                2. :attr:`counts`: An array containing the number of times each unique element occurs in `self`. The order of the returned counts must match the order of :attr:`values`, such that a specific element in :attr:`counts` corresponds to the respective unique element in :attr:`values`. The returned array must have same shape as :attr:`values` and must have the default array index data type.
-        """
-        ...
-
-    def unique_inverse(self) -> UniqueInverseResult[CompatArray[ArrayT]]:
-        """
-        Returns the unique elements of `self` and the indices from the set of unique elements that reconstruct `self`.
-        - `self`:
-            - more than one dimension: the function must flatten `self` and return the unique elements of the flattened `self`.
-
-        Returns
-        -------
-            UniqueInverseResult[CompatArray[ArrayT]]
-                A namedtuple (`values`, `inverse_indices`):
-                1. :attr:`values`: A one-dimensional array containing the unique elements of `self`. The array must have the same data type as `self`;
-                2. :attr:`inverse_indices`: An array containing the indices of :attr:`values` that reconstruct `self`. The array must have the same shape as `self` and must have the default array index data type.
-        """
-        ...
-
-    def unique_values(self) -> CompatArray[ArrayT]:
+    def unique_values(self) -> CompatArray[TT, DT]:
         """
         Returns the unique elements of an input array `self`.
         - `self`:
@@ -1194,7 +1184,7 @@ class CompatArray(Generic[DTypeT, DeviceT]):
 
         Returns
         -------
-            CompatArray[ArrayT]
+            CompatArray
                 A one-dimensional array containing the set of unique elements in `self`.
                 The returned array must have the same data type as `self`.
         """
@@ -1206,7 +1196,7 @@ class CompatArray(Generic[DTypeT, DeviceT]):
         axis: int = -1,
         descending: bool = False,
         stable: bool = True
-    ) -> CompatArray[ArrayT]:
+    ) -> CompatArray[int, DT]:
         """
         Returns the indices that sort `self` along a specified axis.
 
@@ -1228,7 +1218,7 @@ class CompatArray(Generic[DTypeT, DeviceT]):
 
         Returns
         -------
-            CompatArray[ArrayT]
+            CompatArray
                 An array of indices. The returned array must have the same shape as `self`.
                 The returned array must have the default array index data type.
         """
@@ -1239,7 +1229,7 @@ class CompatArray(Generic[DTypeT, DeviceT]):
         axis: int = -1,
         descending: bool = False,
         stable: bool = True
-    ) -> CompatArray[ArrayT]:
+    ) -> CompatArray[TT, DT]:
         """
         Returns a sorted copy of an input array `self`.
 
@@ -1261,18 +1251,34 @@ class CompatArray(Generic[DTypeT, DeviceT]):
 
         Returns
         -------
-            CompatArray[ArrayT]
+            CompatArray
                 A sorted array. The returned array must have the same data type and shape as `self`.
         """
         ...
 
     # === Statistical functions ===
+    @overload
+    def cumulative_sum(
+        self, *,
+        axis: Optional[int] = ...,
+        dtype: None = ...,
+        include_initial: bool = ...
+    ) -> CompatArray[TT, DT]: ...
+
+    @overload
+    def cumulative_sum(
+        self, *,
+        axis: Optional[int] = ...,
+        dtype: DTypeT,
+        include_initial: bool = ...
+    ) -> CompatArray[DTypeT, DT]: ...
+
     def cumulative_sum(
         self, *,
         axis: Optional[int] = None,
         dtype: Optional[DTypeT] = None,
         include_initial: bool = False
-    ) -> CompatArray[ArrayT]:
+    ) -> CompatArray[TT, DT]:
         """
         Calculates the cumulative sum of elements in `self`.
         - `self` should have one or more dimensions (axes). Should have a numeric data type.
@@ -1301,7 +1307,7 @@ class CompatArray(Generic[DTypeT, DeviceT]):
 
         Returns
         -------
-            CompatArray[ArrayT]
+            CompatArray
                 An array containing the cumulative sums.
                 The returned array must have a data type as described by the :param:`dtype` above.
 
@@ -1312,12 +1318,28 @@ class CompatArray(Generic[DTypeT, DeviceT]):
         """
         ...
 
+    @overload
+    def cumulative_prod(
+        self, *,
+        axis: Optional[int] = ...,
+        dtype: None = ...,
+        include_initial: bool = ...
+    ) -> CompatArray[TT, DT]: ...
+
+    @overload
+    def cumulative_prod(
+        self, *,
+        axis: Optional[int] = ...,
+        dtype: DTypeT,
+        include_initial: bool = ...
+    ) -> CompatArray[DTypeT, DT]: ...
+
     def cumulative_prod(
         self, *,
         axis: Optional[int] = None,
         dtype: Optional[DTypeT] = None,
         include_initial: bool = False
-    ) -> CompatArray[ArrayT]:
+    ) -> CompatArray[TT, DT]:
         """
         Calculates the cumulative product of elements in `self`.
         - `self` should have one or more dimensions (axes). Should have a numeric data type.
@@ -1346,7 +1368,7 @@ class CompatArray(Generic[DTypeT, DeviceT]):
 
         Returns
         -------
-            CompatArray[ArrayT]
+            CompatArray
                 An array containing the cumulative products.
                 The returned array must have a data type as described by the :param:`dtype` above.
 
@@ -1361,7 +1383,7 @@ class CompatArray(Generic[DTypeT, DeviceT]):
         self, *,
         axis: Optional[Union[int, Tuple[int, ...]]] = None,
         keepdims: bool = False
-    ) -> CompatArray[ArrayT]:
+    ) -> CompatArray[TT, DT]:
         """
         Calculates the maximum value of `self`.
 
@@ -1378,7 +1400,7 @@ class CompatArray(Generic[DTypeT, DeviceT]):
 
         Returns
         -------
-            CompatArray[ArrayT]
+            CompatArray
                 The returned array must have the same data type as `self`.
                 - computed over the entire `self`: a zero-dimensional array containing the maximum value;
                 - _others_: a non-zero-dimensional array containing the maximum values.
@@ -1394,7 +1416,7 @@ class CompatArray(Generic[DTypeT, DeviceT]):
         self, *,
         axis: Optional[Union[int, Tuple[int, ...]]] = None,
         keepdims: bool = False
-    ) -> CompatArray[ArrayT]:
+    ) -> CompatArray[TT, DT]:
         """
         Calculates the arithmetic mean of `self`.
 
@@ -1411,7 +1433,7 @@ class CompatArray(Generic[DTypeT, DeviceT]):
 
         Returns
         -------
-            CompatArray[ArrayT]
+            CompatArray
                 The returned array must have the same data type as `self`.
                 - computed over the entire `self`: a zero-dimensional array containing the arithmetic mean;
                 - _others_: a non-zero-dimensional array containing the arithmetic means.
@@ -1432,7 +1454,7 @@ class CompatArray(Generic[DTypeT, DeviceT]):
         self, *,
         axis: Optional[Union[int, Tuple[int, ...]]] = None,
         keepdims: bool = False
-    ) -> CompatArray[ArrayT]:
+    ) -> CompatArray[TT, DT]:
         """
         Calculates the minimum value of `self`.
 
@@ -1449,7 +1471,7 @@ class CompatArray(Generic[DTypeT, DeviceT]):
 
         Returns
         -------
-            CompatArray[ArrayT]
+            CompatArray
                 The returned array must have the same data type as `self`.
                 - computed over the entire `self`: a zero-dimensional array containing the minimum value;
                 - _others_: a non-zero-dimensional array containing the minimum values.
@@ -1461,12 +1483,28 @@ class CompatArray(Generic[DTypeT, DeviceT]):
         """
         ...
 
+    @overload
+    def prod(
+        self, *,
+        axis: Optional[Union[int, Tuple[int, ...]]] = ...,
+        dtype: None = ...,
+        keepdims: bool = ...
+    ) -> CompatArray[TT, DT]: ...
+
+    @overload
+    def prod(
+        self, *,
+        axis: Optional[Union[int, Tuple[int, ...]]] = ...,
+        dtype: DTypeT,
+        keepdims: bool = ...
+    ) -> CompatArray[DTypeT, DT]: ...
+
     def prod(
         self, *,
         axis: Optional[Union[int, Tuple[int, ...]]] = None,
         dtype: Optional[DTypeT] = None,
         keepdims: bool = False
-    ) -> CompatArray[ArrayT]:
+    ) -> CompatArray[TT, DT]:
         """
         Calculates the product of `self` elements.
 
@@ -1491,7 +1529,7 @@ class CompatArray(Generic[DTypeT, DeviceT]):
 
         Returns
         -------
-            CompatArray[ArrayT]
+            CompatArray
                 The returned array must have a data type as described by the :param:`dtype` above.
                 - computed over the entire `self`: a zero-dimensional array containing the product;
                 - _others_: a non-zero-dimensional array containing the products.
@@ -1508,7 +1546,7 @@ class CompatArray(Generic[DTypeT, DeviceT]):
         axis: Optional[Union[int, Tuple[int, ...]]] = None,
         correction: Union[int, float] = 0,
         keepdims: bool = False
-    ) -> CompatArray[ArrayT]:
+    ) -> CompatArray[TT, DT]:
         """
         Calculates the standard deviation of `self`.
 
@@ -1531,7 +1569,7 @@ class CompatArray(Generic[DTypeT, DeviceT]):
 
         Returns
         -------
-            CompatArray[ArrayT]
+            CompatArray
                 The returned array must have the same data type as `self`.
                 - computed over the entire `self`: a zero-dimensional array containing the standard deviation;
                 - _others_: a non-zero-dimensional array containing the standard deviations.
@@ -1544,12 +1582,28 @@ class CompatArray(Generic[DTypeT, DeviceT]):
         """
         ...
 
+    @overload
+    def sum(
+        self, *,
+        axis: Optional[Union[int, Tuple[int, ...]]] = ...,
+        dtype: None = ...,
+        keepdims: bool = ...
+    ) -> CompatArray[TT, DT]: ...
+
+    @overload
+    def sum(
+        self, *,
+        axis: Optional[Union[int, Tuple[int, ...]]] = ...,
+        dtype: DTypeT,
+        keepdims: bool = ...
+    ) -> CompatArray[DTypeT, DT]: ...
+
     def sum(
         self, *,
         axis: Optional[Union[int, Tuple[int, ...]]] = None,
         dtype: Optional[DTypeT] = None,
         keepdims: bool = False
-    ) -> CompatArray[ArrayT]:
+    ) -> CompatArray[TT, DT]:
         """
         Calculates the sum of the `self`.
 
@@ -1574,7 +1628,7 @@ class CompatArray(Generic[DTypeT, DeviceT]):
 
         Returns
         -------
-            CompatArray[ArrayT]
+            CompatArray
                 The returned array must have a data type as described by the :param:`dtype` above.
                 - computed over the entire `self`: a zero-dimensional array containing the sum;
                 - _others_: a non-zero-dimensional array containing the sums.
@@ -1591,7 +1645,7 @@ class CompatArray(Generic[DTypeT, DeviceT]):
         axis: Optional[Union[int, Tuple[int, ...]]] = None,
         correction: Union[int, float] = 0,
         keepdims: bool = False
-    ) -> CompatArray[ArrayT]:
+    ) -> CompatArray[TT, DT]:
         """
         Calculates the variance of `self`.
 
@@ -1614,7 +1668,7 @@ class CompatArray(Generic[DTypeT, DeviceT]):
 
         Returns
         -------
-            CompatArray[ArrayT]
+            CompatArray
                 The returned array must have the same data type as `self`.
                 - computed over the entire `self`: a zero-dimensional array containing the variance;
                 - _others_: a non-zero-dimensional array containing the variances.
@@ -1632,7 +1686,7 @@ class CompatArray(Generic[DTypeT, DeviceT]):
         self, *,
         axis: Optional[Union[int, Tuple[int, ...]]] = None,
         keepdims: bool = False
-    ) -> CompatArray[ArrayT]:
+    ) -> CompatArray[bool, DT]:
         """
         Tests whether all `self` elements evaluate to `True` along a specified axis.
         - `Positive infinity`, `negative infinity`, and `NaN` must evaluate to `True`;
@@ -1654,7 +1708,7 @@ class CompatArray(Generic[DTypeT, DeviceT]):
 
         Returns
         -------
-            CompatArray[ArrayT]
+            CompatArray
                 The returned array must have a data type of `bool`.
                 - computed over the entire `self`: a zero-dimensional array containing the test result;
                 - _others_: a non-zero-dimensional array containing the test results.
@@ -1665,7 +1719,7 @@ class CompatArray(Generic[DTypeT, DeviceT]):
         self, *,
         axis: Optional[Union[int, Tuple[int, ...]]] = None,
         keepdims: bool = False
-    ) -> CompatArray[ArrayT]:
+    ) -> CompatArray[bool, DT]:
         """
         Tests whether any `self` elements evaluate to `True` along a specified axis.
         - `Positive infinity`, `negative infinity`, and `NaN` must evaluate to `True`;
@@ -1687,7 +1741,7 @@ class CompatArray(Generic[DTypeT, DeviceT]):
 
         Returns
         -------
-            CompatArray[ArrayT]
+            CompatArray
                 The returned array must have a data type of `bool`.
                 - computed over the entire `self`: a zero-dimensional array containing the test result;
                 - _others_: a non-zero-dimensional array containing the test results.
@@ -1698,9 +1752,9 @@ class CompatArray(Generic[DTypeT, DeviceT]):
         self, *,
         axis: int = -1,
         n: int = 1,
-        prepend: Optional[ArrayLike] = None,
-        append: Optional[ArrayLike] = None
-    ) -> CompatArray[ArrayT]:
+        prepend: Optional[ArrayLike[Any]] = None,
+        append: Optional[ArrayLike[Any]] = None
+    ) -> CompatArray[TT, DT]:
         """
         Calculates the n-th discrete forward difference along a specified axis.
 
@@ -1725,7 +1779,7 @@ class CompatArray(Generic[DTypeT, DeviceT]):
 
         Returns
         -------
-            CompatArray[ArrayT]
+            CompatArray
                 An array containing the `n`-th differences.
                 Should have the same data type as `self`.
                 Must have the same shape as `self`, except for the axis specified by :param:`axis` which must have a size determined as follows:
@@ -1744,104 +1798,59 @@ class CompatArray(Generic[DTypeT, DeviceT]):
         """
         ...
 
-    # BUG no Constants for array, but xp
-    
-    # === Constants ===
-    @property
-    def e(self) -> float: ...
-    @property
-    def pi(self) -> float: ...
-    @property
-    def inf(self) -> float: ...
-    @property
-    def nan(self) -> float: ...
-
-    @property
-    def newaxis(self) -> None:
-        """An alias for None which is useful for indexing arrays."""
-        ...
-
-    # === Data type ===
-    @property
-    def int8(self) -> DTypeT: ...
-    @property
-    def int16(self) -> DTypeT: ...
-    @property
-    def int32(self) -> DTypeT: ...
-    @property
-    def int64(self) -> DTypeT: ...
-    @property
-    def uint8(self) -> DTypeT: ...
-    @property
-    def uint16(self) -> DTypeT: ...
-    @property
-    def uint32(self) -> DTypeT: ...
-    @property
-    def uint64(self) -> DTypeT: ...
-    @property
-    def float32(self) -> DTypeT: ...
-    @property
-    def float64(self) -> DTypeT: ...
-    @property
-    def complex64(self) -> DTypeT: ...
-    @property
-    def complex128(self) -> DTypeT: ...
-    @property
-    def bool(self) -> DTypeT: ...
+    # === Others ===
+    def copy(self) -> CompatArray[TT, DT]: ...
 
     # === Array attributes ===
     @property
-    def arr(self) -> ArrayT:
-        """
-        The backend-specific array instance managed by `CompatArray`.
-        """
-        ...
-
+    def arr(self) -> ArrayLike[TT]: ...
     @property
-    def xp(self) -> Namespace:
-        """
-        The `array namespace` associated with `CompatArray`.
-        """
-        ...
-
+    def xp(self) -> Namespace: ...
     @property
-    def dtype(self) -> DTypeT:
-        """
-        Data type of the elements of `self`.
-        """
-        ...
-
+    def dtype(self) -> TT: ...
     @property
-    def device(self) -> DeviceT:
-        """
-        DeviceT on which `self` is stored.
-        """
-        ...
-
+    def device(self) -> DT: ...
     @property
-    def shape(self) -> Tuple[int, ...]:
-        """
-        Dimensions of `self`.
-        """
-        ...
-
+    def shape(self) -> Tuple[int, ...]: ...
     @property
-    def ndim(self) -> int:
-        """
-        Number of `self` dimensions (axes).
-        """
-        ...
-
+    def ndim(self) -> int: ...
     @property
-    def size(self) -> int:
-        """
-        Number of elements in `self`.
-        """
-        ...
-
+    def size(self) -> Optional[int]: ...
     @property
-    def T(self) -> CompatArray[ArrayT]:
-        """
-        Transpose of `self`.
-        """
-        ...
+    def T(self) -> CompatArray[TT, DT]: ...
+    @property
+    def mT(self) -> CompatArray[TT, DT]: ...
+
+    def __array__(self) -> NDArray[TT]: ...
+
+    def __len__(self) -> int: ...
+    def __abs__(self) -> CompatArray[TT, DT]: ...
+    def __add__(self, other: ArrayOrScalar, /) -> CompatArray[Any, DT]: ...
+    def __and__(self, other: ArrayOrIntLike, /) -> CompatArray[TT, DT]: ...
+    def __bool__(self) -> bool: ...
+    def __complex__(self) -> complex: ...
+    def __eq__(self, other: ArrayOrAny, /) -> CompatArray[bool, DT]: ...
+    def __float__(self) -> float: ...
+    def __floordiv__(self, other: ArrayOrReal, /) -> CompatArray[TT, DT]: ...
+    def __ge__(self, other: ArrayOrReal, /) -> CompatArray[bool, DT]: ...
+    def __getitem__(self, key: Any, /) -> CompatArray[TT, DT]: ...
+    def __gt__(self, other: ArrayOrReal, /) -> CompatArray[bool, DT]: ...
+    def __index__(self) -> int: ...
+    def __int__(self) -> int: ...
+    def __invert__(self) -> CompatArray[TT, DT]: ...
+    def __le__(self, other: ArrayOrReal, /) -> CompatArray[bool, DT]: ...
+    def __lshift__(self, other: ArrayOrInt, /) -> CompatArray[TT, DT]: ...
+    def __lt__(self, other: ArrayOrReal, /) -> CompatArray[bool, DT]: ...
+    def __matmul__(self, other: ArrayLike[Any], /) -> CompatArray[Any, DT]: ...
+    def __mod__(self, other: ArrayOrReal, /) -> CompatArray[Any, DT]: ...
+    def __mul__(self, other: ArrayOrScalar, /) -> CompatArray[Any, DT]: ...
+    def __ne__(self, other: ArrayOrAny, /) -> CompatArray[bool, DT]: ...
+    def __neg__(self) -> CompatArray[TT, DT]: ...
+    def __or__(self, other: ArrayOrIntLike, /) -> CompatArray[TT, DT]: ...
+    def __pos__(self) -> CompatArray[TT, DT]: ...
+    def __pow__(self, other: ArrayOrScalar, /) -> CompatArray[Any, DT]: ...
+    def __rshift__(self, other: ArrayOrInt, /) -> CompatArray[TT, DT]: ...
+    def __setitem__(self, key: Any, value: Any, /): ...
+    def __sub__(self, other: ArrayOrScalar, /) -> CompatArray[Any, DT]: ...
+    def __truediv__(self, other: ArrayOrScalar, /) -> CompatArray[float, DT]: ...
+    def __xor__(self, other: ArrayOrIntLike, /) -> CompatArray[TT, DT]: ...

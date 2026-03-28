@@ -15,13 +15,11 @@ Functions
 - :func:`as_array_if_like`: Convert an array-like object to an array in the specified `array namespace`, otherwise return the object itself.
 """
 
-from __future__ import annotations
 from collections import abc
 import array_api_compat as api
-import warnings
-from typing import (Any, Literal, Optional, List, Iterable, Union, overload, TYPE_CHECKING)
 
-from ._utils import is_array_namespace
+from .array_api import (numpy_xp, torch_xp, resolve_device)
+from ._utils import (warn, is_array_namespace)
 from .exceptions import (
     ParameterIgnoredWarning,
     MissingDependencyError,
@@ -29,15 +27,8 @@ from .exceptions import (
     UnsupportedNameSpaceError,
     ArrayConversionError,
     NumPyConversionError,
-    TorchConversionError,
-    CUDAUnavailableError
+    TorchConversionError
 )
-
-if TYPE_CHECKING:
-    from numpy.typing import NDArray
-    from torch import Tensor
-    from array_api_compat.common._typing import Namespace
-    from .types import (T, StringT, DTypeT, DeviceT, ArrayLike, ArrayLibraryName)
 
 __all__ = [
     "to_numpy",
@@ -48,36 +39,8 @@ __all__ = [
     "as_array_if_like"
 ]
 
-# Try to import `torch`.
-try:
-    import torch
-except ImportError:
-    torch = None
-# Try to import `numpy`.
-try:
-    import numpy as np
-except ImportError:
-    np = None
-# Try to import `cobra_log.warning`.
-try:
-    from cobra_log import warning
-    _WARN_AVAILABLE = True
-except ImportError:
-    _WARN_AVAILABLE = False
 
-
-def warn(msg: str, category: Any, stack: int = 2):
-    if _WARN_AVAILABLE:
-        return warning(msg, stack=stack)
-    return warnings.warn(msg, category=category, stacklevel=stack+1)
-
-
-def to_numpy(
-    obj: object,
-    /,
-    dtype: Optional[DTypeT] = None,
-    copy: bool = True
-) -> NDArray[Any]:
+def to_numpy(obj, /, *, dtype=None, copy=True):
     """
     Convert the given object to a `NumPy array` (i.e. :class:`np.ndarray` instance).
 
@@ -110,10 +73,10 @@ def to_numpy(
         NumPyConversionError
             If an error occurs during conversion to a `NumPy array`.
     """
-    if np is None:
+    if numpy_xp is None:
         raise MissingDependencyError("Dependency `NumPy` is required for `to_numpy()`.")
 
-    if torch is not None and isinstance(obj, torch.Tensor):
+    if torch_xp is not None and isinstance(obj, torch_xp.Tensor):
         # as torch.Tensor
         obj = obj.detach().cpu()
     elif isinstance(obj, abc.Set):
@@ -121,21 +84,15 @@ def to_numpy(
         obj = list(obj)
     try:
         if copy:
-            return np.array(obj, dtype=dtype, copy=True)
-        return np.asarray(obj, dtype=dtype)
+            return numpy_xp.array(obj, dtype=dtype, copy=True)
+        return numpy_xp.asarray(obj, dtype=dtype)
     except Exception as e:
         raise NumPyConversionError(
             "An error occurred during conversion to NumPy array."
         ) from e
 
 
-def to_tensor(
-    obj: object,
-    /,
-    dtype: Optional[DTypeT] = None,
-    device: Optional[DeviceT] = None,
-    copy: bool = True
-) -> Tensor:
+def to_tensor(obj, /, *, dtype=None, device=None, copy=True):
     """
     Convert the given object to a `PyTorch tensor` (i.e. :class:`torch.Tensor` instance).
 
@@ -178,14 +135,11 @@ def to_tensor(
     """
     if obj is None:
         raise ConvertNoneTypeError("Can not convert `NoneType` to a PyTorch tensor.")
-    if torch is None:
+    if torch_xp is None:
         raise MissingDependencyError("Dependency `PyTorch` is required for `to_tensor()`.")
-    if device is not None and device != "cpu" and not torch.cuda.is_available():
-        raise CUDAUnavailableError(
-            f"Parameter `device` of `to_tensor()` specifies a non-CPU device {device!r} but CUDA is not available."
-        )
+    device = resolve_device(device, xp="torch")
 
-    if isinstance(obj, torch.Tensor):
+    if isinstance(obj, torch_xp.Tensor):
         # as torch.Tensor
         return obj.to(dtype=dtype, device=device, copy=copy)
 
@@ -194,25 +148,15 @@ def to_tensor(
         obj = list(obj)
     try:
         if copy:
-            return torch.tensor(obj, dtype=dtype, device=device)
-        return torch.as_tensor(obj, dtype=dtype, device=device)  # type: ignore
+            return torch_xp.tensor(obj, dtype=dtype, device=device)
+        return torch_xp.as_tensor(obj, dtype=dtype, device=device)  # type: ignore
     except Exception as e:
         raise TorchConversionError(
             "An error occurred during conversion to PyTorch tensor."
         ) from e
 
 
-@overload
-def to_list(obj: List[T], /, copy: bool = ...) -> List[T]: ...
-@overload
-def to_list(obj: StringT, /, copy: bool = ...) -> List[StringT]: ...
-@overload
-def to_list(obj: Iterable[T], /, copy: bool = ...) -> List[Any]: ...
-@overload
-def to_list(obj: T, /, copy: bool = ...) -> List[T]: ...
-
-
-def to_list(obj: object, /, copy: bool = True) -> List[Any]:
+def to_list(obj, /, *, copy=True):
     """
     Convert the given object to a built-in `list`.
 
@@ -243,12 +187,12 @@ def to_list(obj: object, /, copy: bool = True) -> List[Any]:
         # as NoneType
         raise ConvertNoneTypeError("Can not convert `NoneType` to a built-in list.")
 
-    if torch is not None and isinstance(obj, torch.Tensor):
+    if torch_xp is not None and isinstance(obj, torch_xp.Tensor):
         # as torch.Tensor
         return obj.detach().cpu().tolist()
 
-    if np is not None and isinstance(obj, np.ndarray):
-        # as np.ndarray
+    if numpy_xp is not None and isinstance(obj, numpy_xp.ndarray):
+        # as numpy.ndarray
         return obj.tolist()
 
     if isinstance(obj, list):
@@ -262,7 +206,7 @@ def to_list(obj: object, /, copy: bool = True) -> List[Any]:
     return [obj]
 
 
-def to_xp(obj: object, /) -> Namespace:
+def to_xp(obj, /):
     """
     Convert an array library name to a `array namespace` or return the `array namespace` directly if is a supported namespace.
 
@@ -280,6 +224,8 @@ def to_xp(obj: object, /) -> Namespace:
 
     Raises
     ------
+        Refer to :func:`array_namespace_alias` for possible exceptions.
+
         MissingDependencyError
             If the required array library for the specified `array namespace` is not installed.
         UnsupportedNameSpaceError
@@ -287,14 +233,14 @@ def to_xp(obj: object, /) -> Namespace:
     """
     if isinstance(obj, str):
         if obj == "numpy":
-            if np is None:
+            if numpy_xp is None:
                 raise MissingDependencyError("Dependency `NumPy` is required for using array namespace.")
-            return np
+            return numpy_xp
 
         if obj == "torch":
-            if torch is None:
+            if torch_xp is None:
                 raise MissingDependencyError("Dependency `PyTorch` is required for using array namespace.")
-            return torch
+            return torch_xp
 
         raise UnsupportedNameSpaceError(
             "Parameter `obj` of `to_xp()` must be a supported array namespace "
@@ -309,47 +255,7 @@ def to_xp(obj: object, /) -> Namespace:
     )
 
 
-@overload
-def as_array(
-    obj: object,
-    xp: Literal["numpy"],
-    /,
-    dtype: Optional[DTypeT] = ...,
-    device: Optional[DeviceT] = ...,
-    copy: bool = ...
-) -> NDArray[Any]: ...
-
-
-@overload
-def as_array(
-    obj: object,
-    xp: Literal["torch"],
-    /,
-    dtype: Optional[DTypeT] = ...,
-    device: Optional[DeviceT] = ...,
-    copy: bool = ...
-) -> Tensor: ...
-
-
-@overload
-def as_array(
-    obj: object,
-    xp: Namespace,
-    /,
-    dtype: Optional[DTypeT] = ...,
-    device: Optional[DeviceT] = ...,
-    copy: bool = ...
-) -> Any: ...
-
-
-def as_array(
-    obj: object,
-    xp: Union[Namespace, ArrayLibraryName],
-    /,
-    dtype: Optional[DTypeT] = None,
-    device: Optional[DeviceT] = None,
-    copy: bool = False
-) -> Any:
+def as_array(obj, xp, /, *, dtype=None, device=None, copy=False):
     """
     Convert the given object to an array in the specified `array namespace` (e.g., `NumPy` or `PyTorch`).
 
@@ -375,7 +281,7 @@ def as_array(
 
     Returns
     -------
-        Any
+        ArrayLike[Any]
             The converted array representation of the object in the specified `array namespace`.
 
     Raises
@@ -403,7 +309,7 @@ def as_array(
         return to_tensor(obj, dtype=dtype, device=device, copy=copy)
     # as other namespace object
     try:
-        return arr_xp.asarray(obj, dtype=dtype, device=device, copy=copy)
+        return arr_xp.asarray(obj, dtype=dtype, device=device, copy=copy)  # type: ignore
     except AttributeError:
         raise UnsupportedNameSpaceError(
             f"Parameter `xp` of `as_array()` is not a supported array namespace: {xp!r}"
@@ -414,49 +320,7 @@ def as_array(
         ) from e
 
 
-@overload
-def as_array_if_like(
-    obj: ArrayLike,
-    xp: Literal["numpy"],
-    /,
-    dtype: Optional[DTypeT] = ...,
-    device: Optional[DeviceT] = ...,
-    copy: bool = ...
-) -> NDArray[Any]: ...
-
-
-@overload
-def as_array_if_like(
-    obj: ArrayLike,
-    xp: Literal["torch"],
-    /,
-    dtype: Optional[DTypeT] = ...,
-    device: Optional[DeviceT] = ...,
-    copy: bool = ...
-) -> Tensor: ...
-
-
-@overload
-def as_array_if_like(
-    obj: ArrayLike,
-    xp: Namespace,
-    /,
-    dtype: Optional[DTypeT] = ...,
-    device: Optional[DeviceT] = ...,
-    copy: bool = ...
-) -> Any: ...
-@overload
-def as_array_if_like(obj: T, xp: Any, /) -> T: ...
-
-
-def as_array_if_like(
-    obj: object,
-    xp: Union[Namespace, ArrayLibraryName],
-    /,
-    dtype: Optional[DTypeT] = None,
-    device: Optional[DeviceT] = None,
-    copy: bool = False
-) -> Any:
+def as_array_if_like(obj, xp, /, *, dtype=None, device=None, copy=False):
     """
     Convert an array-like object to an array in the specified `array namespace`, otherwise return the object itself.
 

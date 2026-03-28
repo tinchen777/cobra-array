@@ -12,6 +12,8 @@ class NameSpace(Namespace):
     def __init__(self, xp, /):
         self._xp_name = array_namespace_alias(xp)
         self._xp = xp
+    
+    # TODO
 
     def __getattr__(self, name):
         try:

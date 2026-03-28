@@ -17,15 +17,23 @@ def test_to():
 
     a1 = to_numpy(a, copy=False, dtype=float)
     print(a1, type(a1), a1.dtype, id(a) == id(a1))
+    a1 = to_numpy(a1, copy=False)
 
-    b1 = to_numpy(b, copy=False, dtype=None)
+    b1 = to_numpy(a, copy=False, dtype=None)
     print(b1, type(b1), b1.dtype, id(b) == id(b1))
+    
+    a3 = to_list(a)
+    a3 = to_list(a1)
+    for i in a3:
+        
+        print(i, type(i))
+    
 
     start = time.thread_time()
-    a2 = to_tensor(a, copy=False, dtype=float, device="cuda:1")
+    a2 = to_tensor(a, copy=False, dtype=float, device="cuda: 1")
     print(a2, type(a2), a2.dtype, id(a) == id(a2))
     print("Time taken for to_tensor:", time.thread_time() - start)
-
+  
     start = time.thread_time()
     b2 = to_tensor(b, copy=False, dtype=float, device="cpu")
     print(b2, type(b2), b2.dtype, id(b) == id(b2))
@@ -37,18 +45,22 @@ def test_to_2():
     b = [[1, 2, 3], [4, 5, 6]]
     c = iter(a)
 
-    a1 = to_numpy(a)
+    a1 = to_numpy(a, dtype=np.float32)
     print(a1, type(a1), a1.dtype)
+    c1 = as_array(a1, np, device="cpu")
 
     b1 = to_tensor(b)
     print(b1, type(b1), b1.dtype)
+    
 
     c1 = as_array(a, "torch", device="cpu")
     print(c1, type(c1), c1.dtype)
     c1.device
 
-    a = as_array_if_like(10, "numpy")
+    a = as_array_if_like(a1, "numpy")
+    a = as_array_if_like(a, "numpy", dtype=np.float128)
     print(a)
+    print(a.dtype)
 
 
 if __name__ == "__main__":

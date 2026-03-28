@@ -5,12 +5,26 @@
 from __future__ import annotations
 import array_api_compat as api
 from array_api_compat.common._typing import Namespace
-from typing import (NamedTuple, TYPE_CHECKING)
+import warnings
+from typing import (Any, NamedTuple, TYPE_CHECKING)
 
 from .exceptions import UnsupportedNameSpaceError
 
 if TYPE_CHECKING:
     from .types import (DType, Device)
+
+# Try to import `cobra_log.warning`.
+try:
+    from cobra_log import warning
+    _WARN_AVAILABLE = True
+except ImportError:
+    _WARN_AVAILABLE = False
+
+
+def warn(msg: str, /, category: Any, stack: int = 2):
+    if _WARN_AVAILABLE:
+        return warning(msg, stack=stack)
+    return warnings.warn(msg, category=category, stacklevel=stack+1)
 
 
 class ArraySpec(NamedTuple):
@@ -23,6 +37,7 @@ class ArraySpec(NamedTuple):
     xp: Namespace
     dtype: DType
     device: Device
+# TODO
 
 
 def array_namespace_alias(xp: object) -> str:
@@ -38,6 +53,7 @@ def array_namespace_alias(xp: object) -> str:
     -------
         str
             The alias of the `array namespace`.
+            Including: `"NumPy"`, `"Cupy"`, `"PyTorch"`, `"NDONNX"`, `"Dask"`, `"JAX"`, `"sparse"` and `"array-api-strict"`.
 
     Raises
     ------
@@ -84,6 +100,10 @@ def is_array_namespace(obj: object) -> bool:
     Returns
     -------
         bool
+
+    Raises
+    ------
+        Refer to :func:`array_namespace_alias` for possible exceptions.
     """
     try:
         array_namespace_alias(obj)
