@@ -60,6 +60,9 @@ def array_namespace_alias(xp: object) -> str:
         UnsupportedNameSpaceError
             If the input object is not a supported `array namespace`.
     """
+    if is_cobra_array_namespace(xp):
+        return getattr(xp, "xp_name")
+
     if isinstance(xp, Namespace):
         if api.is_numpy_namespace(xp):
             return "NumPy"
@@ -86,6 +89,13 @@ def array_namespace_alias(xp: object) -> str:
             return "array-api-strict"
 
     raise UnsupportedNameSpaceError(f"Got unsupported array namespace of type {type(xp)}.")
+
+
+def is_cobra_array_namespace(xp: object) -> bool:
+    """
+    Returns `True` if :param:`xp` is a `array namespace` wrapped by :class:`NameSpace`
+    """
+    return "cobra_array" in getattr(xp, __name__, "")
 
 
 def is_array_namespace(obj: object) -> bool:

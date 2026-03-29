@@ -7,6 +7,7 @@ from numpy.typing import NDArray
 from array_api_compat.common._typing import Namespace
 from typing import (Union, List, Tuple, Optional, Any, Literal, overload)
 
+from ._base import Compat
 from ._array import CompatArray
 from ..types import (
     DTypeT, DeviceT, dtypeT, DType, Device,
@@ -14,7 +15,7 @@ from ..types import (
 )
 
 
-class NameSpace(Namespace):
+class NameSpace(Compat):
     def __new__(cls, xp: Namespace, /): ...
 
     # === Creation functions ===
@@ -42,12 +43,12 @@ class NameSpace(Namespace):
         copy: Optional[bool] = None
     ) -> CompatArray[Any, Any]:
         """
-        Convert the input to a `CompatArray` array.
+        Convert the input to a :class:`CompatArray` array.
 
         Parameters
         ----------
             obj : object
-                Object to be converted to a `CompatArray` array.
+                Object to be converted to a :class:`CompatArray` array.
                 May be a Python scalar, a (possibly nested) sequence of Python scalars, or an object supporting the Python buffer protocol.
 
             dtype : Optional[DType], default to `None`
@@ -72,7 +73,7 @@ class NameSpace(Namespace):
         Returns
         -------
             CompatArray
-                A `CompatArray` array containing the data from :param:`obj`.
+                A :class:`CompatArray` array containing the data from :param:`obj`.
         """
         ...
 
@@ -100,7 +101,7 @@ class NameSpace(Namespace):
         device: Optional[Device] = None
     ) -> CompatArray[Any, Any]:
         """
-        Returns evenly spaced values within the half-open interval `[start, stop)` as a one-dimensional `CompatArray` array.
+        Returns evenly spaced values within the half-open interval `[start, stop)` as a one-dimensional :class:`CompatArray` array.
 
         Parameters
         ----------
@@ -128,7 +129,7 @@ class NameSpace(Namespace):
         Returns
         -------
             CompatArray
-                A one-dimensional `CompatArray` array containing evenly spaced values.
+                A one-dimensional :class:`CompatArray` array containing evenly spaced values.
                 The length of the output array must be `ceil((stop-start)/step)` if `stop - start` and :param:`step` have the same sign, and length `0` otherwise.
         """
         ...
@@ -150,7 +151,7 @@ class NameSpace(Namespace):
         device: Optional[Device] = None
     ) -> CompatArray[Any, Any]:
         """
-        Returns an uninitialized `CompatArray` array having a specified shape.
+        Returns an uninitialized :class:`CompatArray` array having a specified shape.
 
         Parameters
         ----------
@@ -167,7 +168,7 @@ class NameSpace(Namespace):
         Returns
         -------
             CompatArray
-                a `CompatArray` array containing uninitialized data.
+                a :class:`CompatArray` array containing uninitialized data.
         """
         ...
 
@@ -190,7 +191,7 @@ class NameSpace(Namespace):
         device: Optional[Device] = None
     ) -> CompatArray[Any, Any]:
         """
-        Returns an uninitialized `CompatArray` array with the same shape as an input array :param:`x`.
+        Returns an uninitialized :class:`CompatArray` array with the same shape as an input array :param:`x`.
 
         Parameters
         ----------
@@ -208,7 +209,7 @@ class NameSpace(Namespace):
         Returns
         -------
             CompatArray
-                a `CompatArray` array having the same shape as :param:`x` and containing uninitialized data.
+                a :class:`CompatArray` array having the same shape as :param:`x` and containing uninitialized data.
         """
         ...
 
@@ -231,7 +232,7 @@ class NameSpace(Namespace):
         device: Optional[Device] = None
     ) -> CompatArray[Any, Any]:
         """
-        Returns a two-dimensional `CompatArray` array with ones on the :param:`k`th diagonal and zeros elsewhere.
+        Returns a two-dimensional :class:`CompatArray` array with ones on the :param:`k`th diagonal and zeros elsewhere.
 
         Parameters
         ----------
@@ -258,7 +259,7 @@ class NameSpace(Namespace):
         Returns
         -------
             CompatArray
-                A `CompatArray` array where all elements are equal to zero, except for the kth diagonal, whose values are equal to one.
+                A :class:`CompatArray` array where all elements are equal to zero, except for the kth diagonal, whose values are equal to one.
         """
         ...
 
@@ -281,7 +282,7 @@ class NameSpace(Namespace):
         copy: Optional[bool] = None
     ) -> CompatArray[Any, Any]:
         """
-        Returns a new `CompatArray` array containing the data from another (array) object with a `__dlpack__` method.
+        Returns a new :class:`CompatArray` array containing the data from another (array) object with a `__dlpack__` method.
 
         Parameters
         ----------
@@ -301,7 +302,7 @@ class NameSpace(Namespace):
         Returns
         -------
             CompatArray
-                A `CompatArray` array containing the data in :param:`x`.
+                A :class:`CompatArray` array containing the data in :param:`x`.
         """
         ...
 
@@ -323,7 +324,7 @@ class NameSpace(Namespace):
         device: Optional[Device] = None
     ) -> CompatArray[Any, Any]:
         """
-        Returns a new `CompatArray` array having a specified :param:`shape` and filled with :param:`fill_value`.
+        Returns a new :class:`CompatArray` array having a specified :param:`shape` and filled with :param:`fill_value`.
 
         Parameters
         ----------
@@ -348,7 +349,7 @@ class NameSpace(Namespace):
         Returns
         -------
             CompatArray
-                A `CompatArray` array where every element is equal to :param:`fill_value`.
+                A :class:`CompatArray` array where every element is equal to :param:`fill_value`.
         """
         ...
 
@@ -373,7 +374,7 @@ class NameSpace(Namespace):
         device: Optional[Device] = None
     ) -> CompatArray[Any, Any]:
         """
-        Returns a `CompatArray` array with the same shape as an input array :param:`x` and filled with :param:`fill_value`.
+        Returns a :class:`CompatArray` array with the same shape as an input array :param:`x` and filled with :param:`fill_value`.
 
         Parameters
         ----------
@@ -394,7 +395,7 @@ class NameSpace(Namespace):
         Returns
         -------
             CompatArray
-                a `CompatArray` array having the same shape as :param:`x` and where every element is equal to :param:`fill_value`.
+                a :class:`CompatArray` array having the same shape as :param:`x` and where every element is equal to :param:`fill_value`.
         """
         ...
 
@@ -453,7 +454,7 @@ class NameSpace(Namespace):
         Returns
         -------
             CompatArray
-                A one-dimensional `CompatArray` array containing evenly spaced values.
+                A one-dimensional :class:`CompatArray` array containing evenly spaced values.
         """
         ...
 
@@ -476,7 +477,7 @@ class NameSpace(Namespace):
         device: Optional[Device] = None
     ) -> CompatArray[Any, Any]:
         """
-        Returns a `CompatArray` array having a specified shape and filled with ones.
+        Returns a :class:`CompatArray` array having a specified shape and filled with ones.
 
         Parameters
         ----------
@@ -493,7 +494,7 @@ class NameSpace(Namespace):
         Returns
         -------
             CompatArray
-                a `CompatArray` array containing ones.
+                a :class:`CompatArray` array containing ones.
         """
         ...
 
@@ -516,7 +517,7 @@ class NameSpace(Namespace):
         device: Optional[Device] = None
     ) -> CompatArray[Any, Any]:
         """
-        Returns a `CompatArray` array filled with ones with the same shape as an input array :param:`x`.
+        Returns a :class:`CompatArray` array filled with ones with the same shape as an input array :param:`x`.
 
         Parameters
         ----------
@@ -534,7 +535,7 @@ class NameSpace(Namespace):
         Returns
         -------
             CompatArray
-                a `CompatArray` array having the same shape as :param:`x` and containing ones.
+                a :class:`CompatArray` array having the same shape as :param:`x` and containing ones.
         """
         ...
 
@@ -561,7 +562,7 @@ class NameSpace(Namespace):
         Returns
         -------
             CompatArray
-                a `CompatArray` array containing the lower triangular part(s).
+                a :class:`CompatArray` array containing the lower triangular part(s).
                 The returned array must have the same shape and data type as :param:`x`.
                 All elements above the specified diagonal :param:`k` must be zeroed.
                 The returned array should be allocated on the same device as :param:`x`.
@@ -596,7 +597,7 @@ class NameSpace(Namespace):
         Returns
         -------
             CompatArray
-                a `CompatArray` array containing the upper triangular part(s).
+                a :class:`CompatArray` array containing the upper triangular part(s).
                 The returned array must have the same shape and data type as :param:`x`.
                 All elements above the specified diagonal :param:`k` must be zeroed.
                 The returned array should be allocated on the same device as :param:`x`.
@@ -620,7 +621,7 @@ class NameSpace(Namespace):
         device: Optional[Device] = None
     ) -> CompatArray[Any, Any]:
         """
-        Returns a `CompatArray` array having a specified shape and filled with zeros.
+        Returns a :class:`CompatArray` array having a specified shape and filled with zeros.
 
         Parameters
         ----------
@@ -637,7 +638,7 @@ class NameSpace(Namespace):
         Returns
         -------
             CompatArray
-                a `CompatArray` array containing zeros.
+                a :class:`CompatArray` array containing zeros.
         """
         ...
 
@@ -660,7 +661,7 @@ class NameSpace(Namespace):
         device: Optional[Device] = None
     ) -> CompatArray[Any, Any]:
         """
-        Returns a `CompatArray` array filled with zeros with the same shape as an input array :param:`x`.
+        Returns a :class:`CompatArray` array filled with zeros with the same shape as an input array :param:`x`.
 
         Parameters
         ----------
@@ -678,7 +679,7 @@ class NameSpace(Namespace):
         Returns
         -------
             CompatArray
-                a `CompatArray` array having the same shape as :param:`x` and containing zeros.
+                a :class:`CompatArray` array having the same shape as :param:`x` and containing zeros.
         """
         ...
 
@@ -722,7 +723,7 @@ class NameSpace(Namespace):
         Returns
         -------
             CompatArray
-                A `CompatArray` array having the specified shape.
+                A :class:`CompatArray` array having the specified shape.
                 Must have the same data type as :param:`x`.
         """
         ...
@@ -750,7 +751,7 @@ class NameSpace(Namespace):
         Returns
         -------
             CompatArray
-                A `CompatArray` output array containing the concatenated values. 
+                A :class:`CompatArray` output array containing the concatenated values. 
         """
         ...
 
@@ -789,7 +790,7 @@ class NameSpace(Namespace):
         """
         ...
 
-# === Constants ===
+    # === Constants ===
     @property
     def e(self) -> float: ...
     @property
@@ -828,3 +829,6 @@ class NameSpace(Namespace):
     def complex128(self) -> DType: ...
     @property
     def bool(self) -> DType: ...
+
+    @property
+    def __name__(self) -> str: ...

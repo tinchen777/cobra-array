@@ -6,7 +6,7 @@ from __future__ import annotations
 import array_api_compat as api
 from collections import namedtuple
 
-from .._utils import array_namespace_alias
+from ._base import Compat
 from ..convert import (to_numpy, to_tensor, to_list, to_xp, as_array)
 from ..exceptions import (NotArrayAPIObjectError, CompatArrayAttributeError)
 
@@ -14,32 +14,30 @@ from ..exceptions import (NotArrayAPIObjectError, CompatArrayAttributeError)
 UniqueResult = namedtuple("UniqueResult", ["values", "indices", "inverse_indices", "counts"])
 
 
-class CompatArray:
+class CompatArray(Compat):
     """
     A backend-agnostic array abstraction compliant with the [`Python Array API standard`](https://data-apis.org/array-api/2024.12/API_specification/index.html).
 
-    `CompatArray` provides a unified interface for numerical computation across multiple array backends (e.g., `NumPy`, `PyTorch`), strictly adhering to the `Python Array API standard`.
+    :class:`CompatArray` provides a unified interface for numerical computation across multiple array backends (e.g., `NumPy`, `PyTorch`), strictly adhering to the `Python Array API standard`.
     Detailed documentation is provided for all supported operations to ensure consistent and predictable behavior.
 
     Notes
     -----
     - All operations follow the semantics defined by the `Python Array API standard`.
     - Methods correspond directly to standard functions, but are exposed in an object-oriented form.
-    - All methods guarantee that any array-like objects in the returned value are automatically wrapped as `CompatArray`. This applies recursively to arrays contained in Python containers (e.g., `tuple`, `list`, `dict`). Non-array objects remain unchanged.
+    - All methods guarantee that any array-like objects in the returned value are automatically wrapped as :class:`CompatArray`. This applies recursively to arrays contained in Python containers (e.g., `tuple`, `list`, `dict`). Non-array objects remain unchanged.
     """
-    _xp = None
-    _name = None
     _arr = None
 
     @classmethod
     def from_other(cls, obj, /, *, xp, copy=False):
         """
-        Create a `CompatArray` from another object using the specified `array namespace`.
+        Create a :class:`CompatArray` array from another object using the specified `array namespace`.
 
         Parameters
         ----------
             obj : object
-                The object to be converted to a `CompatArray`.
+                The object to be converted to a :class:`CompatArray` array.
 
             xp : Union[Namespace, ArrayLibraryName]
                 The `array namespace` to use for conversion.
@@ -67,17 +65,9 @@ class CompatArray:
             raise NotArrayAPIObjectError(
                 f"Parameter `arr` of `CompatArray` must be an array API compatible array object, got {type(arr)}."
             )
-        if "xp" in kwargs:
-            _xp = kwargs["xp"]
-        else:
-            _xp = api.array_namespace(arr)
-        _name = array_namespace_alias(_xp)
-        _arr = as_array(arr, _xp, copy=True) if copy else arr
-
-        obj = super().__new__(cls)
-        obj._xp = _xp
-        obj._name = _name
-        obj._arr = _arr
+        _xp = kwargs.get("xp", api.array_namespace(arr))
+        obj = super().__new__(cls, _xp)
+        obj._arr = as_array(arr, _xp, copy=True) if copy else arr
 
         return obj
 
@@ -250,28 +240,14 @@ class CompatArray:
         try:
             return getattr(self._arr, name)
         except AttributeError:
-            raise AttributeError(f"`CompatArray` `{self._name}` has no attribute `{name}`.") from None
-
-    def _get_xp_attr(self, name: str):
-        """Try to get the attribute `name` from the array namespace of `self`."""
-        try:
-            return getattr(self._xp, name)
-        except AttributeError:
-            raise AttributeError(f"Namespace `{self._name}` of `CompatArray` has no attribute `{name}`.") from None
+            raise AttributeError(f"`CompatArray` `{self._xp_name}` has no attribute `{name}`.") from None
 
     @property
     def arr(self):
         """
-        The backend-specific array instance managed by `CompatArray`.
+        The backend-specific array instance managed by :class:`CompatArray`.
         """
         return self._arr
-
-    @property
-    def xp(self):
-        """
-        The `array namespace` associated with `CompatArray`.
-        """
-        return self._xp
 
     @property
     def dtype(self):
@@ -356,7 +332,7 @@ class CompatArray:
             def wrapper(*args, **kwargs):
                 return wrap_arraylike(attr(self._arr, *args, **kwargs), xp=self._xp)
             return wrapper
-        raise CompatArrayAttributeError(f"`CompatArray` `{self._name}` does not support attribute `{name}`.")
+        raise CompatArrayAttributeError(f"`CompatArray` `{self._xp_name}` does not support attribute `{name}`.")
 
     def __len__(self):
         shape = self.shape
@@ -365,7 +341,7 @@ class CompatArray:
         return shape[0]
 
     def __repr__(self):
-        return f"{self._name}_Array({self._arr})"
+        return f"{self._xp_name}_Array({self._arr})"
 
     def __abs__(self):
         """See also :func:`CompatArray.abs`."""
@@ -378,10 +354,6 @@ class CompatArray:
     def __and__(self, other, /):
         """See also :func:`CompatArray.bitwise_and`."""
         return self.bitwise_and(other)
-
-    def __array_namespace__(*, api_version=None):
-        """Returns an object that has all the array API functions on it."""
-        raise NotImplementedError("`__array_namespace__` is not implemented for `CompatArray`.")
 
     def __bool__(self):
         """Converts `self` to a Python `bool` object."""
@@ -494,14 +466,14 @@ class CompatArray:
 
 def unwrap(obj):
     """
-    Unwraps a `CompatArray` to get the backend-specific array instance, or returns the object itself if it is not a `CompatArray`.
+    Unwraps a :class:`CompatArray` array to get the backend-specific array instance, or returns the object itself if it is not a :class:`CompatArray` array.
     """
     return obj.arr if isinstance(obj, CompatArray) else obj
 
 
 def wrap_arraylike(arr, xp=None):
     """
-    Wraps an array-like object in a `CompatArray` if it is an array API object.
+    Wraps an array-like object in a :class:`CompatArray` array if it is an array API object.
     """
     if api.is_array_api_obj(arr):
         if xp is None:

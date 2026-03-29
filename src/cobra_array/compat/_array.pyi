@@ -8,6 +8,7 @@ from numpy.typing import NDArray
 from array_api_compat.common._typing import Namespace
 from typing import (Union, List, Tuple, Optional, Any, Sequence, Generic, TypeVar, Literal, overload)
 
+from ._base import Compat
 from ..types import (
     T, DTypeT, DeviceT, dtypeT, deviceT, DType, Device,
     ArrayLike, ArrayLibraryName,
@@ -19,7 +20,7 @@ TT = TypeVar("TT", bound=DType)
 DT = TypeVar("DT", bound=Device)
 
 
-class CompatArray(Generic[TT, DT]):
+class CompatArray(Compat, Generic[TT, DT]):
     @overload
     @classmethod
     def from_other(cls, obj: NDArray[dtypeT], /, xp: Literal["numpy"]) -> CompatArray[dtypeT, Literal["cpu"]]: ...
@@ -602,7 +603,7 @@ class CompatArray(Generic[TT, DT]):
         Returns
         -------
             CompatArray
-                An array having the same data type as `self`. The output array must have the same rank (i.e., number of dimensions) as `self` and must have the same shape as `self`, except for the axis specified by :param:`axis` whose size must equal the number of elements in :param:`indices`.
+                A :class:`CompatArray` array having the same data type as `self`. The output array must have the same rank (i.e., number of dimensions) as `self` and must have the same shape as `self`, except for the axis specified by :param:`axis` whose size must equal the number of elements in :param:`indices`.
 
         Notes
         -----
@@ -631,7 +632,7 @@ class CompatArray(Generic[TT, DT]):
         Returns
         -------
             CompatArray
-                An array having the same data type as `self`. Must have the same rank (i.e., number of dimensions) as `self` and must have a shape determined according to Broadcasting, except for the axis (dimension) specified by :param:`axis` whose size must equal the size of the corresponding axis (dimension) in :param:`indices`.
+                A :class:`CompatArray` array having the same data type as `self`. Must have the same rank (i.e., number of dimensions) as `self` and must have a shape determined according to Broadcasting, except for the axis (dimension) specified by :param:`axis` whose size must equal the size of the corresponding axis (dimension) in :param:`indices`.
 
         Notes
         -----
@@ -659,7 +660,7 @@ class CompatArray(Generic[TT, DT]):
         Returns
         -------
             CompatArray
-                The returned array must have a data type determined by Type Promotion Rules.
+                The returned :class:`CompatArray` array must have a data type determined by Type Promotion Rules.
                 - If both `self` and `other` are one-dimensional arrays having shape `(N,)`, a zero-dimensional array containing the inner product as its only element.
                 - If `self` is a two-dimensional array having shape `(M, K)` and `other` is a two-dimensional array having shape `(K, N)`, a two-dimensional array containing the conventional matrix product and having shape `(M, N)`.
                 - If `self` is a one-dimensional array having shape `(K,)` and `other` is an array having shape `(..., K, N)`, an array having shape `(..., N)` (i.e., prepended dimensions during vector-to-matrix promotion must be removed) and containing the conventional matrix product.
@@ -695,7 +696,7 @@ class CompatArray(Generic[TT, DT]):
         Returns
         -------
             CompatArray
-                An array containing the tensor contraction whose shape consists of the non-contracted axes (dimensions) of the first array `self`, followed by the non-contracted axes (dimensions) of the second array `other`. The returned array must have a data type determined by Type Promotion Rules.
+                A :class:`CompatArray` array containing the tensor contraction whose shape consists of the non-contracted axes (dimensions) of the first array `self`, followed by the non-contracted axes (dimensions) of the second array `other`. The returned array must have a data type determined by Type Promotion Rules.
         """
         ...
 
@@ -707,7 +708,7 @@ class CompatArray(Generic[TT, DT]):
         Returns
         -------
             CompatArray
-                An array containing the transpose for each matrix and having shape `(..., N, M)`.
+                A :class:`CompatArray` array containing the transpose for each matrix and having shape `(..., N, M)`.
                 The returned array must have the same data type as `self`.
         """
         ...
@@ -735,7 +736,7 @@ class CompatArray(Generic[TT, DT]):
         Returns
         -------
             CompatArray
-                The returned array must have a data type determined by Type Promotion Rules.
+                The returned :class:`CompatArray` array must have a data type determined by Type Promotion Rules.
                 - `self` & `other` is `1-D`: A zero-dimensional array containing the dot product as its only element.
                 - _others_: A non-zero-dimensional array containing the dot products and having a shape determined according to Broadcasting along the non-contracted axes.
         """
@@ -758,7 +759,7 @@ class CompatArray(Generic[TT, DT]):
         Returns
         -------
             CompatArray
-                An expanded output array having the same data type as `self`.
+                An expanded output :class:`CompatArray` array having the same data type as `self`.
 
         Raises
         ------
@@ -783,7 +784,7 @@ class CompatArray(Generic[TT, DT]):
         Returns
         -------
             CompatArray
-                An output array having the same data type and shape as `self` and whose elements, relative to `self`, are reordered.
+                An output :class:`CompatArray` array having the same data type and shape as `self` and whose elements, relative to `self`, are reordered.
         """
         ...
 
@@ -810,7 +811,7 @@ class CompatArray(Generic[TT, DT]):
         Returns
         -------
             CompatArray
-                An array containing reordered axes.
+                A :class:`CompatArray` array containing reordered axes.
                 The returned array must have the same data type as `self`.
         """
         ...
@@ -827,7 +828,7 @@ class CompatArray(Generic[TT, DT]):
         Returns
         -------
             CompatArray
-                An array containing the axes permutation.
+                A :class:`CompatArray` array containing the axes permutation.
                 The returned array must have the same data type as `self`.
         """
         ...
@@ -863,7 +864,7 @@ class CompatArray(Generic[TT, DT]):
         Returns
         -------
             CompatArray
-                An output array containing repeated elements.
+                An output :class:`CompatArray` array containing repeated elements.
                 The returned array must have the same data type as `self`.
                 For :param:`axis`:
                 - `None`: the returned array must be a one-dimensional array;
@@ -895,7 +896,7 @@ class CompatArray(Generic[TT, DT]):
         Returns
         -------
             CompatArray
-                An output array having the same data type and elements as `self`.
+                A :class:`CompatArray` output array having the same data type and elements as `self`.
 
         Raises
         ------
@@ -931,7 +932,7 @@ class CompatArray(Generic[TT, DT]):
         Returns
         -------
             CompatArray
-                An output array having the same data type and shape as `self` and whose elements, relative to `self`, are shifted.
+                An output :class:`CompatArray` array having the same data type and shape as `self` and whose elements, relative to `self`, are shifted.
         """
         ...
 
@@ -947,7 +948,7 @@ class CompatArray(Generic[TT, DT]):
         Returns
         -------
             CompatArray
-                An output array having the same data type and elements as `self`.
+                An output :class:`CompatArray` array having the same data type and elements as `self`.
 
         Raises
         ------
@@ -971,7 +972,7 @@ class CompatArray(Generic[TT, DT]):
         Returns
         -------
             CompatArray
-                A tiled output array.
+                A tiled output :class:`CompatArray` array.
                 The returned array must have the same data type as `self` and must have a rank (i.e., number of dimensions) equal to `max(N, M)`.
                 If `S` is the shape of the tiled array after prepending singleton dimensions (if necessary) and `r` is the tuple of repetitions after prepending ones (if necessary), then the number of elements along each axis (dimension) must satisfy `S[i]*r[i]`, where `i` refers to the `i` th axis (dimension).
         """
@@ -1006,7 +1007,7 @@ class CompatArray(Generic[TT, DT]):
         Returns
         -------
             CompatArray
-                The returned array must have be the default array index data type.
+                The returned :class:`CompatArray` array must have be the default array index data type.
                 For :param:`axis`:
                 - `None`: A zero-dimensional array containing the index of the first occurrence of the maximum value;
                 - _others_: A non-zero-dimensional array containing the indices of the maximum values.
@@ -1039,7 +1040,7 @@ class CompatArray(Generic[TT, DT]):
         Returns
         -------
             CompatArray
-                The returned array must have be the default array index data type.
+                The returned :class:`CompatArray` array must have be the default array index data type.
                 For :param:`axis`:
                 - `None`: A zero-dimensional array containing the index of the first occurrence of the minimum value;
                 - _others_: A non-zero-dimensional array containing the indices of the minimum values.
@@ -1070,7 +1071,7 @@ class CompatArray(Generic[TT, DT]):
         Returns
         -------
             CompatArray
-                The returned array must have the default array index data type.
+                The returned :class:`CompatArray` array must have the default array index data type.
                 - computed over the entire `self`: A zero-dimensional array containing the total number of non-zero values;
                 - _others_: A non-zero-dimensional array containing the counts along the specified axes.
 
@@ -1116,7 +1117,7 @@ class CompatArray(Generic[TT, DT]):
         Returns
         -------
             CompatArray
-                An array of indices with the same shape as `other`.
+                A :class:`CompatArray` array of indices with the same shape as `other`.
                 The returned array must have the default array index data type.
 
         Notes
@@ -1144,7 +1145,7 @@ class CompatArray(Generic[TT, DT]):
         Returns
         -------
             CompatArray
-                An array with elements from `X` where `self` is `True`, and elements from `Y` elsewhere.
+                A :class:`CompatArray` array with elements from `X` where `self` is `True`, and elements from `Y` elsewhere.
                 The returned array must have a data type determined by Type Promotion Rules rules with the arrays `X` and `Y`.
 
         Notes
@@ -1167,7 +1168,7 @@ class CompatArray(Generic[TT, DT]):
         Returns
         -------
             CompatArray
-                A one-dimensional array containing the set of unique elements in `self`.
+                A one-dimensional :class:`CompatArray` array containing the set of unique elements in `self`.
                 The returned array must have the same data type as `self`.
         """
         ...
@@ -1201,7 +1202,7 @@ class CompatArray(Generic[TT, DT]):
         Returns
         -------
             CompatArray
-                An array of indices. The returned array must have the same shape as `self`.
+                A :class:`CompatArray` array of indices. The returned array must have the same shape as `self`.
                 The returned array must have the default array index data type.
         """
         ...
@@ -1234,7 +1235,7 @@ class CompatArray(Generic[TT, DT]):
         Returns
         -------
             CompatArray
-                A sorted array. The returned array must have the same data type and shape as `self`.
+                A sorted :class:`CompatArray` array. The returned array must have the same data type and shape as `self`.
         """
         ...
 
@@ -1279,7 +1280,7 @@ class CompatArray(Generic[TT, DT]):
         Returns
         -------
             CompatArray
-                An array containing the cumulative sums.
+                A :class:`CompatArray` array containing the cumulative sums.
                 The returned array must have a data type as described by the :param:`dtype` above.
 
                 Let `N` be the size of the axis along which to compute the cumulative sum.
@@ -1329,7 +1330,7 @@ class CompatArray(Generic[TT, DT]):
         Returns
         -------
             CompatArray
-                An array containing the cumulative products.
+                A :class:`CompatArray` array containing the cumulative products.
                 The returned array must have a data type as described by the :param:`dtype` above.
 
                 Let `N` be the size of the axis along which to compute the cumulative product.
@@ -1361,7 +1362,7 @@ class CompatArray(Generic[TT, DT]):
         Returns
         -------
             CompatArray
-                The returned array must have the same data type as `self`.
+                The returned :class:`CompatArray` array must have the same data type as `self`.
                 - computed over the entire `self`: a zero-dimensional array containing the maximum value;
                 - _others_: a non-zero-dimensional array containing the maximum values.
 
@@ -1394,7 +1395,7 @@ class CompatArray(Generic[TT, DT]):
         Returns
         -------
             CompatArray
-                The returned array must have the same data type as `self`.
+                The returned :class:`CompatArray` array must have the same data type as `self`.
                 - computed over the entire `self`: a zero-dimensional array containing the arithmetic mean;
                 - _others_: a non-zero-dimensional array containing the arithmetic means.
 
@@ -1432,7 +1433,7 @@ class CompatArray(Generic[TT, DT]):
         Returns
         -------
             CompatArray
-                The returned array must have the same data type as `self`.
+                The returned :class:`CompatArray` array must have the same data type as `self`.
                 - computed over the entire `self`: a zero-dimensional array containing the minimum value;
                 - _others_: a non-zero-dimensional array containing the minimum values.
 
@@ -1479,7 +1480,7 @@ class CompatArray(Generic[TT, DT]):
         Returns
         -------
             CompatArray
-                The returned array must have a data type as described by the :param:`dtype` above.
+                The returned :class:`CompatArray` array must have a data type as described by the :param:`dtype` above.
                 - computed over the entire `self`: a zero-dimensional array containing the product;
                 - _others_: a non-zero-dimensional array containing the products.
 
@@ -1519,7 +1520,7 @@ class CompatArray(Generic[TT, DT]):
         Returns
         -------
             CompatArray
-                The returned array must have the same data type as `self`.
+                The returned :class:`CompatArray` array must have the same data type as `self`.
                 - computed over the entire `self`: a zero-dimensional array containing the standard deviation;
                 - _others_: a non-zero-dimensional array containing the standard deviations.
 
@@ -1567,7 +1568,7 @@ class CompatArray(Generic[TT, DT]):
         Returns
         -------
             CompatArray
-                The returned array must have a data type as described by the :param:`dtype` above.
+                The returned :class:`CompatArray` array must have a data type as described by the :param:`dtype` above.
                 - computed over the entire `self`: a zero-dimensional array containing the sum;
                 - _others_: a non-zero-dimensional array containing the sums.
 
@@ -1607,7 +1608,7 @@ class CompatArray(Generic[TT, DT]):
         Returns
         -------
             CompatArray
-                The returned array must have the same data type as `self`.
+                The returned :class:`CompatArray` array must have the same data type as `self`.
                 - computed over the entire `self`: a zero-dimensional array containing the variance;
                 - _others_: a non-zero-dimensional array containing the variances.
 
@@ -1647,7 +1648,7 @@ class CompatArray(Generic[TT, DT]):
         Returns
         -------
             CompatArray
-                The returned array must have a data type of `bool`.
+                The returned :class:`CompatArray` array must have a data type of `bool`.
                 - computed over the entire `self`: a zero-dimensional array containing the test result;
                 - _others_: a non-zero-dimensional array containing the test results.
         """
@@ -1680,7 +1681,7 @@ class CompatArray(Generic[TT, DT]):
         Returns
         -------
             CompatArray
-                The returned array must have a data type of `bool`.
+                The returned :class:`CompatArray` array must have a data type of `bool`.
                 - computed over the entire `self`: a zero-dimensional array containing the test result;
                 - _others_: a non-zero-dimensional array containing the test results.
         """
@@ -1718,7 +1719,7 @@ class CompatArray(Generic[TT, DT]):
         Returns
         -------
             CompatArray
-                An array containing the `n`-th differences.
+                A :class:`CompatArray` array containing the `n`-th differences.
                 Should have the same data type as `self`.
                 Must have the same shape as `self`, except for the axis specified by :param:`axis` which must have a size determined as follows:
                 - Let M be the number of elements along an axis specified by :param:`axis`.
@@ -1742,8 +1743,6 @@ class CompatArray(Generic[TT, DT]):
     # === Array attributes ===
     @property
     def arr(self) -> ArrayLike[TT]: ...
-    @property
-    def xp(self) -> Namespace: ...
     @property
     def dtype(self) -> TT: ...
     @property

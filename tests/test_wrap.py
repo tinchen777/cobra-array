@@ -2,16 +2,20 @@ import sys
 sys.path.insert(0, "/data/tianzhen/my_packages/cobra-array/src")
 # sys.path.insert(0, "/Users/apple/Develop/Python_WorkSpace/my_packages/cobra-array/src")
 
-from cobra_array.compat._array import CompatArray
-from cobra_array.compat._namespace import NameSpace
+from cobra_array.compat import CompatArray, NameSpace
+from cobra_array.convert import to_xp
 import numpy as np
 from numpy.typing import NDArray
 import torch
 import time
 import array_api_compat as api
+from array_api_compat.common._typing import Namespace
 import array_api_strict
 import inspect
 
+
+class A(NameSpace):
+    ...
 
 
 def test_class():
@@ -27,13 +31,37 @@ def test_class():
 
     
     ba = CompatArray.from_other(b, xp="numpy")
-    # ba = CompatArray.from_other(ba, xp="torch")
+    ba = CompatArray.from_other(ba, xp="torch")
     ba = CompatArray(ba)
     
     # ba = ba.astype(np.float128)
 
-    bxp = ba.xp
+  
     
+    bxp = ba.xp
+    if isinstance(bxp, Namespace):
+        print("Strict Namespace")
+    
+    # print(bxp.__array_namespace__())
+    
+    print(type(bxp), bxp.__name__)
+    xx = NameSpace(bxp)
+    print(type(xx), xx.__name__)
+    
+    print(xx.xp_name)
+    
+    f = xx.asarray([1, 2, 3], dtype=xx.float32)
+    
+    print(f, type(f), f.dtype)
+    
+    f = xx.full((2, 3), 0.7)
+    
+    f += f
+    
+    print(f)
+    
+    
+    exit()
     
 
     print(ba)

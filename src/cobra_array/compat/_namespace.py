@@ -3,14 +3,13 @@
 # @TianZhen
 
 from __future__ import annotations
-from array_api_compat.common._typing import Namespace
 
+from ._base import Compat
 from ._array import (CompatArray, wrap_arraylike)
-from .._utils import array_namespace_alias
 from ..exceptions import NameSpaceAttributeError
 
 
-class NameSpace(Namespace):
+class NameSpace(Compat):
     """
     A wrapper around an `array namespace` providing a unified, backend-agnostic functional interface.
 
@@ -23,24 +22,15 @@ class NameSpace(Namespace):
     Notes
     -----
     - Functions correspond directly to those defined in the underlying `array namespace`, following the `Python Array API standard`.
-    - This namespace complements `CompatArray` by providing a functional interface for operations that are not naturally expressed as methods.
-    - All functions guarantee that any array-like objects in the returned value are automatically wrapped as `CompatArray`. This conversion is applied recursively to arrays contained in Python containers (e.g., `tuple`, `list`, `dict`). Non-array objects remain unchanged.
+    - This namespace complements :class:`CompatArray` by providing a functional interface for operations that are not naturally expressed as methods.
+    - All functions guarantee that any array-like objects in the returned value are automatically wrapped as :class:`CompatArray`. This conversion is applied recursively to arrays contained in Python containers (e.g., `tuple`, `list`, `dict`). Non-array objects remain unchanged.
     """
-    _xp_name = None
-    _xp = None
-
     def __new__(cls, xp, /):
         if isinstance(xp, NameSpace):
             # for `NameSpace` input
             return xp
         # for `Namespace` input
-        _xp_name = array_namespace_alias(xp)
-
-        obj = super().__new__(cls)
-        obj._xp_name = _xp_name
-        obj._xp = xp
-
-        return obj
+        return super().__new__(cls, xp)
 
     # === Creation functions ===
     def meshgrid(self, *arrays, indexing):
@@ -212,26 +202,12 @@ class NameSpace(Namespace):
         Returns
         -------
             List[CompatArray]
-                A list of broadcasted `CompatArray` arrays.
+                A list of broadcasted :class:`CompatArray` arrays.
                 Each array must have the same shape.
                 Each array must have the same dtype as its corresponding input array.
         """
         result = self._get_xp_attr("broadcast_arrays")(*arrays)
         return [CompatArray(arr, xp=self._xp) for arr in result]
-
-    def _get_xp_attr(self, name: str):
-        """Try to get the attribute `name` from the array namespace."""
-        try:
-            return getattr(self._xp, name)
-        except AttributeError:
-            raise AttributeError(f"Namespace `{self._name}` has no attribute `{name}`.") from None
-
-    @property
-    def xp(self):
-        """
-        The 
-        """
-        return self._xp
 
     # === Constants ===
     @property
@@ -308,6 +284,10 @@ class NameSpace(Namespace):
     def bool(self):
         return self._get_xp_attr("bool")
 
+    @property
+    def __name__(self):
+        return "(cobra_array)" + getattr(self._xp, "__name__", type(self._xp).__name__)
+
     def __getattr__(self, name: str):
         attr = self._get_xp_attr(name)
 
@@ -315,4 +295,4 @@ class NameSpace(Namespace):
             def wrapper(*args, **kwargs):
                 return wrap_arraylike(attr(*args, **kwargs), xp=self._xp)
             return wrapper
-        raise NameSpaceAttributeError(f"Namespace `{self._name}` does not support attribute `{name}`.")
+        raise NameSpaceAttributeError(f"Namespace `{self._xp_name}` does not support attribute `{name}`.")
