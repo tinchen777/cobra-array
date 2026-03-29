@@ -10,12 +10,12 @@ from typing import (Union, List, Tuple, Optional, Any, Literal, overload)
 from ._array import CompatArray
 from ..types import (
     DTypeT, DeviceT, dtypeT, DType, Device,
-    ValueT, Value, ArrayLike
+    ValueT, Value, ArrayLike, ArrayOrAny
 )
 
 
 class NameSpace(Namespace):
-    def __init__(self, xp: Namespace, /): ...
+    def __new__(cls, xp: Namespace, /): ...
 
     # === Creation functions ===
     @overload
@@ -457,40 +457,7 @@ class NameSpace(Namespace):
         """
         ...
 
-    def meshgrid(self, *arrays: ArrayLike[Any], indexing: Literal["xy", "ij"] = "xy") -> List[CompatArray[Any, Any]]:
-        """
-        Returns coordinate matrices from coordinate vectors.
-
-        Parameters
-        ----------
-            arrays : ArrayLike[Any]
-                An arbitrary number of one-dimensional arrays representing grid coordinates.
-                Each array should have the same numeric data type.
-
-            indexing : Literal["xy", "ij"], default to `"xy"`
-                Cartesian `"xy"` or matrix `"ij"` indexing of output.
-                If provided zero or one one-dimensional vector(s) (i.e., the zero- and one-dimensional cases, respectively), the indexing keyword has no effect and should be ignored.
-
-        Returns
-        -------
-            List[CompatArray]
-                List of `N` arrays, where `N` is the number of provided one-dimensional input arrays.
-                Each returned array must have rank `N`.
-                For `N` one-dimensional arrays having lengths `Ni = len(xi)`,
-                - `matrix indexing ij`: Each returned array must have the shape `(N1, N2, N3, ..., Nn)`;
-                - `Cartesian indexing xy`: Each returned array must have shape `(N2, N1, N3, ..., Nn)`.
-
-                Accordingly, for the two-dimensional case with input one-dimensional arrays of length `M` and `N`,
-                - `matrix indexing ij`: Each returned array must have shape `(M, N)`;
-                - `Cartesian indexing xy`: Each returned array must have shape `(N, M)`.
-
-                Similarly, for the three-dimensional case with input one-dimensional arrays of length `M`, `N`, and `P`,
-                - `matrix indexing ij`: Each returned array must have shape `(M, N, P)`;
-                - `Cartesian indexing xy`: Each returned array must have shape `(N, M, P)`.
-
-                Each returned array should have the same data type as the input arrays.
-        """
-        ...
+    def meshgrid(self, *arrays: ArrayLike[Any], indexing: Literal["xy", "ij"] = "xy") -> List[CompatArray[Any, Any]]: ...
 
     @overload
     def ones(self, shape: Union[int, Tuple[int, ...]], *, dtype: None = ..., device: None = ...) -> CompatArray[float, Literal["cpu"]]: ...
@@ -716,152 +683,22 @@ class NameSpace(Namespace):
         ...
 
     # === Data Type functions ===
-    def can_cast(self, from_: Union[DType, ArrayLike[Any]], to: DType, /) -> bool:
-        """
-        Determines whether an array can be cast to a different data type according to type promotion rules.
+    def can_cast(self, from_: Union[DType, ArrayLike[Any]], to: DType, /) -> bool: ...
 
-        Parameters
-        ----------
-            from_ : Union[DType, ArrayLike[Any]]
-                Input array or data type.
+    def finfo(self, type_: Union[DType, ArrayLike[Any]], /) -> Any: ...
 
-            to : DType
-                Output data type.
-
-        Returns
-        -------
-            bool
-                A boolean indicating whether the cast is possible.
-        """
-        ...
-
-    def finfo(self, type: Union[DType, ArrayLike[Any]], /) -> Any:
-        """
-        Machine limits for floating-point data types.
-
-        Parameters
-        ----------
-            type : Union[DType, ArrayLike[Any]]
-                The kind of floating-point data-type about which to get information.
-                - _complex_: The information is about its component data type.
-
-        Returns
-        -------
-            finfo_object
-                An object having the following attributes:
-                - `bits`: _int_
-                Number of bits occupied by the real-valued floating-point data type.
-                - `eps`: _float_
-                Difference between `1.0` and the next smallest representable real-valued floating-point number larger than 1.0 according to the IEEE-754 standard.
-                - `max`: _float_
-                Largest representable real-valued number.
-                - `min`: _float_
-                Smallest representable real-valued number.
-                - `smallest_normal`: _float_
-                Smallest positive real-valued floating-point number with full precision.
-                - `dtype`: _dtype_
-                Real-valued floating-point data type.
-        """
-        ...
-
-    def iinfo(self, type: Union[DType, ArrayLike[Any]], /) -> Any:
-        """
-        Machine limits for integer data types.
-
-        Parameters
-        ----------
-            type : Union[DType, ArrayLike[Any]]
-                The kind of integer data-type about which to get information.
-                - _complex_: The information is about its component data type.
-
-        Returns
-        -------
-            iinfo_object
-                an object having the following attributes:
-                - `bits`: _int_
-                Number of bits occupied by the integer data type.
-                - `max`: _int_
-                Largest representable integer value.
-                - `min`: _int_
-                Smallest representable integer value.
-                - `dtype`: _dtype_
-                Integer data type.
-        """
-        ...
+    def iinfo(self, type_: Union[DType, ArrayLike[Any]], /) -> Any: ...
 
     def isdtype(
         self,
         dtype: DType,
         kind: Union[str, DType, Tuple[Union[str, DType], ...]]
-    ) -> bool:
-        """
-        # TODO
-        Returns a boolean indicating whether a provided dtype is of a specified data type “kind”.
+    ) -> bool: ...
 
-        Parameters:
-        dtype (dtype) – the input dtype.
-
-        kind (Union[str, dtype, Tuple[Union[str, dtype], ...]]) –
-
-        data type kind.
-
-        If kind is a dtype, the function must return a boolean indicating whether the input dtype is equal to the dtype specified by kind.
-
-        If kind is a string, the function must return a boolean indicating whether the input dtype is of a specified data type kind. The following dtype kinds must be supported:
-
-        'bool': boolean data types (e.g., bool).
-
-        'signed integer': signed integer data types (e.g., int8, int16, int32, int64).
-
-        'unsigned integer': unsigned integer data types (e.g., uint8, uint16, uint32, uint64).
-
-        'integral': integer data types. Shorthand for ('signed integer', 'unsigned integer').
-
-        'real floating': real-valued floating-point data types (e.g., float32, float64).
-
-        'complex floating': complex floating-point data types (e.g., complex64, complex128).
-
-        'numeric': numeric data types. Shorthand for ('integral', 'real floating', 'complex floating').
-
-        If kind is a tuple, the tuple specifies a union of dtypes and/or kinds, and the function must return a boolean indicating whether the input dtype is either equal to a specified dtype or belongs to at least one specified data type kind.
-        
-        Returns:
-        out (bool) – boolean indicating whether a provided dtype is of a specified data type kind.
-        """
-        ...
-
-    def result_type(*arrays_and_dtypes: Union[ArrayLike[Any], int, float, complex, bool, DType]) -> DType:
-        """
-        # TODO
-        Returns the dtype that results from applying type promotion rules (see Type Promotion Rules) to the arguments.
-
-        Parameters:
-        arrays_and_dtypes (Union[array, int, float, complex, bool, dtype]) – an arbitrary number of input arrays, scalars, and/or dtypes.
-
-        Returns:
-        out (dtype) – the dtype resulting from an operation involving the input arrays, scalars, and/or dtypes.
-        
-        """
-        ...
+    def result_type(self, *arrays_and_dtypes: Union[ArrayOrAny, DType]) -> DType: ...
 
     # === Manipulation functions ===
-    def broadcast_arrays(self, *arrays: ArrayLike[Any]) -> List[CompatArray[Any, Any]]:
-        """
-        Broadcasts one or more arrays against one another.
-
-        Parameters
-        ----------
-            arrays : ArrayLike[Any]
-                An arbitrary number of to-be broadcasted arrays.
-
-        Returns
-        -------
-            List[CompatArray]
-                A list of broadcasted `CompatArray` arrays.
-                Each array must have the same shape.
-                Each array must have the same dtype as its corresponding input array.
-        """
-        ...
+    def broadcast_arrays(self, *arrays: ArrayLike[Any]) -> List[CompatArray[Any, Any]]: ...
 
     @overload
     def broadcast_to(self, x: NDArray[dtypeT], shape: Tuple[int, ...]) -> CompatArray[dtypeT, Literal["cpu"]]: ...
@@ -961,11 +798,8 @@ class NameSpace(Namespace):
     def inf(self) -> float: ...
     @property
     def nan(self) -> float: ...
-
     @property
-    def newaxis(self) -> None:
-        """An alias for None which is useful for indexing arrays."""
-        ...
+    def newaxis(self) -> None: ...
 
     # === Data type ===
     @property

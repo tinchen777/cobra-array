@@ -320,6 +320,7 @@ def as_array(obj, xp, /, *, dtype=None, device=None, copy=False):
         ) from e
 
 
+# FIXME 可以和asarray合并
 def as_array_if_like(obj, xp, /, *, dtype=None, device=None, copy=False):
     """
     Convert an array-like object to an array in the specified `array namespace`, otherwise return the object itself.

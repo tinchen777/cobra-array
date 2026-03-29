@@ -9,7 +9,7 @@ from array_api_compat.common._typing import Namespace
 from typing import (Union, List, Tuple, Optional, Any, Sequence, Generic, TypeVar, Literal, overload)
 
 from ..types import (
-    DTypeT, DeviceT, dtypeT, deviceT, DType, Device,
+    T, DTypeT, DeviceT, dtypeT, deviceT, DType, Device,
     ArrayLike, ArrayLibraryName,
     ArrayOrAny, ArrayOrScalar, ArrayOrReal, ArrayOrIntLike, ArrayOrInt, ArrayOrbool,
     UniqueAllResult, UniqueCountsResult, UniqueInverseResult
@@ -53,13 +53,7 @@ class CompatArray(Generic[TT, DT]):
 
     # === Conversion functions ===
     def to_numpy(self, *, copy: bool = False) -> NDArray[TT]: ...
-
-    def to_tensor(
-        self, *,
-        device: Optional[DeviceT] = None,
-        copy: bool = False
-    ) -> Tensor: ...
-
+    def to_tensor(self, *, device: Optional[DeviceT] = None, copy: bool = False) -> Tensor: ...
     def to_list(self, *, copy: bool = False) -> List[TT]: ...
 
     # === Device functions ===
@@ -67,21 +61,9 @@ class CompatArray(Generic[TT, DT]):
 
     # === Data type functions ===
     @overload
-    def astype(
-        self,
-        dtype: DTypeT,
-        /, *,
-        copy: bool = ...
-    ) -> CompatArray[DTypeT, DT]: ...
-
+    def astype(self, dtype: DTypeT, /, *, copy: bool = ...) -> CompatArray[DTypeT, DT]: ...
     @overload
-    def astype(
-        self,
-        dtype: DTypeT,
-        /, *,
-        copy: bool = ...,
-        device: DeviceT
-    ) -> CompatArray[DTypeT, DeviceT]: ...
+    def astype(self, dtype: DTypeT, /, *, copy: bool = ..., device: DeviceT) -> CompatArray[DTypeT, DeviceT]: ...
 
     def astype(
         self,
@@ -1258,20 +1240,9 @@ class CompatArray(Generic[TT, DT]):
 
     # === Statistical functions ===
     @overload
-    def cumulative_sum(
-        self, *,
-        axis: Optional[int] = ...,
-        dtype: None = ...,
-        include_initial: bool = ...
-    ) -> CompatArray[TT, DT]: ...
-
+    def cumulative_sum(self, *, axis: Optional[int] = ..., dtype: None = ..., include_initial: bool = ...) -> CompatArray[TT, DT]: ...
     @overload
-    def cumulative_sum(
-        self, *,
-        axis: Optional[int] = ...,
-        dtype: DTypeT,
-        include_initial: bool = ...
-    ) -> CompatArray[DTypeT, DT]: ...
+    def cumulative_sum(self, *, axis: Optional[int] = ..., dtype: DTypeT, include_initial: bool = ...) -> CompatArray[DTypeT, DT]: ...
 
     def cumulative_sum(
         self, *,
@@ -1319,20 +1290,9 @@ class CompatArray(Generic[TT, DT]):
         ...
 
     @overload
-    def cumulative_prod(
-        self, *,
-        axis: Optional[int] = ...,
-        dtype: None = ...,
-        include_initial: bool = ...
-    ) -> CompatArray[TT, DT]: ...
-
+    def cumulative_prod(self, *, axis: Optional[int] = ..., dtype: None = ..., include_initial: bool = ...) -> CompatArray[TT, DT]: ...
     @overload
-    def cumulative_prod(
-        self, *,
-        axis: Optional[int] = ...,
-        dtype: DTypeT,
-        include_initial: bool = ...
-    ) -> CompatArray[DTypeT, DT]: ...
+    def cumulative_prod(self, *, axis: Optional[int] = ..., dtype: DTypeT, include_initial: bool = ...) -> CompatArray[DTypeT, DT]: ...
 
     def cumulative_prod(
         self, *,
@@ -1484,20 +1444,9 @@ class CompatArray(Generic[TT, DT]):
         ...
 
     @overload
-    def prod(
-        self, *,
-        axis: Optional[Union[int, Tuple[int, ...]]] = ...,
-        dtype: None = ...,
-        keepdims: bool = ...
-    ) -> CompatArray[TT, DT]: ...
-
+    def prod(self, *, axis: Optional[Union[int, Tuple[int, ...]]] = ..., dtype: None = ..., keepdims: bool = ...) -> CompatArray[TT, DT]: ...
     @overload
-    def prod(
-        self, *,
-        axis: Optional[Union[int, Tuple[int, ...]]] = ...,
-        dtype: DTypeT,
-        keepdims: bool = ...
-    ) -> CompatArray[DTypeT, DT]: ...
+    def prod(self, *, axis: Optional[Union[int, Tuple[int, ...]]] = ..., dtype: DTypeT, keepdims: bool = ...) -> CompatArray[DTypeT, DT]: ...
 
     def prod(
         self, *,
@@ -1583,20 +1532,9 @@ class CompatArray(Generic[TT, DT]):
         ...
 
     @overload
-    def sum(
-        self, *,
-        axis: Optional[Union[int, Tuple[int, ...]]] = ...,
-        dtype: None = ...,
-        keepdims: bool = ...
-    ) -> CompatArray[TT, DT]: ...
-
+    def sum(self, *, axis: Optional[Union[int, Tuple[int, ...]]] = ..., dtype: None = ..., keepdims: bool = ...) -> CompatArray[TT, DT]: ...
     @overload
-    def sum(
-        self, *,
-        axis: Optional[Union[int, Tuple[int, ...]]] = ...,
-        dtype: DTypeT,
-        keepdims: bool = ...
-    ) -> CompatArray[DTypeT, DT]: ...
+    def sum(self, *, axis: Optional[Union[int, Tuple[int, ...]]] = ..., dtype: DTypeT, keepdims: bool = ...) -> CompatArray[DTypeT, DT]: ...
 
     def sum(
         self, *,
@@ -1854,3 +1792,27 @@ class CompatArray(Generic[TT, DT]):
     def __sub__(self, other: ArrayOrScalar, /) -> CompatArray[Any, DT]: ...
     def __truediv__(self, other: ArrayOrScalar, /) -> CompatArray[float, DT]: ...
     def __xor__(self, other: ArrayOrIntLike, /) -> CompatArray[TT, DT]: ...
+
+
+@overload
+def unwrap(obj: CompatArray[dtypeT, Any]) -> ArrayLike[dtypeT]: ...
+@overload
+def unwrap(obj: ArrayLike[dtypeT]) -> ArrayLike[dtypeT]: ...
+@overload
+def unwrap(obj: T) -> T: ...
+
+
+def unwrap(obj: Any) -> Any: ...
+
+
+@overload
+def wrap_arraylike(arr: NDArray[dtypeT], xp: Optional[Namespace] = ...) -> CompatArray[dtypeT, Literal["cpu"]]: ...
+@overload
+def wrap_arraylike(arr: CompatArray[dtypeT, deviceT], xp: Optional[Namespace] = ...) -> CompatArray[dtypeT, deviceT]: ...
+@overload
+def wrap_arraylike(arr: ArrayLike[dtypeT], xp: Optional[Namespace] = ...) -> CompatArray[dtypeT, Any]: ...
+@overload
+def wrap_arraylike(arr: T, xp: Optional[Namespace] = ...) -> T: ...
+
+
+def wrap_arraylike(arr: Any, xp: Optional[Namespace] = None) -> Any: ...

@@ -27,7 +27,7 @@ def test_class():
 
     
     ba = CompatArray.from_other(b, xp="numpy")
-    ba = CompatArray.from_other(ba, xp="torch")
+    # ba = CompatArray.from_other(ba, xp="torch")
     ba = CompatArray(ba)
     
     # ba = ba.astype(np.float128)

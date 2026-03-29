@@ -60,3 +60,11 @@ class NoArrayInputsError(CobraArrayError, ValueError):
 
 class GetArrayNamespaceError(CobraArrayError):
     """Raised when an error occurs while determining the `array namespace`."""
+
+
+class NameSpaceAttributeError(CobraArrayError, AttributeError):
+    """Raised when an attribute is not supported in the `array namespace`."""
+
+
+class CompatArrayAttributeError(CobraArrayError, AttributeError):
+    """Raised when an attribute is not supported in the `CompatArray` class."""

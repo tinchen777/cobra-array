@@ -6,10 +6,9 @@ from __future__ import annotations
 import array_api_compat as api
 from collections import namedtuple
 
-from .._core import array_spec
 from .._utils import array_namespace_alias
 from ..convert import (to_numpy, to_tensor, to_list, to_xp, as_array)
-from ..exceptions import NotArrayAPIObjectError
+from ..exceptions import (NotArrayAPIObjectError, CompatArrayAttributeError)
 
 
 UniqueResult = namedtuple("UniqueResult", ["values", "indices", "inverse_indices", "counts"])
@@ -26,6 +25,7 @@ class CompatArray:
     -----
     - All operations follow the semantics defined by the `Python Array API standard`.
     - Methods correspond directly to standard functions, but are exposed in an object-oriented form.
+    - All methods guarantee that any array-like objects in the returned value are automatically wrapped as `CompatArray`. This applies recursively to arrays contained in Python containers (e.g., `tuple`, `list`, `dict`). Non-array objects remain unchanged.
     """
     _xp = None
     _name = None
@@ -70,7 +70,7 @@ class CompatArray:
         if "xp" in kwargs:
             _xp = kwargs["xp"]
         else:
-            _xp = array_spec(arr).xp
+            _xp = api.array_namespace(arr)
         _name = array_namespace_alias(_xp)
         _arr = as_array(arr, _xp, copy=True) if copy else arr
 
@@ -354,14 +354,9 @@ class CompatArray:
 
         if callable(attr) and not isinstance(attr, type):
             def wrapper(*args, **kwargs):
-                # FIXME
-                args = [unwrap(arg) for arg in args]
-                kwargs = {k: unwrap(v) for k, v in kwargs.items()}
-                
-                
-                return attr(self._arr, *args, **kwargs)
+                return wrap_arraylike(attr(self._arr, *args, **kwargs), xp=self._xp)
             return wrapper
-        return attr
+        raise CompatArrayAttributeError(f"`CompatArray` `{self._name}` does not support attribute `{name}`.")
 
     def __len__(self):
         shape = self.shape
@@ -386,7 +381,7 @@ class CompatArray:
 
     def __array_namespace__(*, api_version=None):
         """Returns an object that has all the array API functions on it."""
-        pass # TODO
+        raise NotImplementedError("`__array_namespace__` is not implemented for `CompatArray`.")
 
     def __bool__(self):
         """Converts `self` to a Python `bool` object."""
@@ -498,4 +493,18 @@ class CompatArray:
 
 
 def unwrap(obj):
+    """
+    Unwraps a `CompatArray` to get the backend-specific array instance, or returns the object itself if it is not a `CompatArray`.
+    """
     return obj.arr if isinstance(obj, CompatArray) else obj
+
+
+def wrap_arraylike(arr, xp=None):
+    """
+    Wraps an array-like object in a `CompatArray` if it is an array API object.
+    """
+    if api.is_array_api_obj(arr):
+        if xp is None:
+            xp = CompatArray(arr)
+        return CompatArray(arr, xp=xp)
+    return arr
