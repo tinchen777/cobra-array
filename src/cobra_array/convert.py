@@ -10,21 +10,21 @@ Functions
 - :func:`to_numpy`: Convert an object to a `NumPy array`.
 - :func:`to_tensor`: Convert an object to a `PyTorch tensor`.
 - :func:`to_list`: Convert an object to a built-in `list`.
-- :func:`to_xp`: Convert an array library name to a `array namespace` or return the `array namespace` directly if is a supported namespace.
+- :func:`to_array_namespace` or :func:`to_xp`: Convert an array library name to a `array namespace` or return the `array namespace` directly if is a supported namespace.
 - :func:`as_array`: Convert an object to an array in the specified `array namespace`.
-- :func:`as_array_if_like`: Convert an array-like object to an array in the specified `array namespace`, otherwise return the object itself.
 """
 
 from collections import abc
 import array_api_compat as api
 
 from .array_api import (numpy_xp, torch_xp, resolve_device)
-from ._utils import (warn, is_array_namespace)
+from ._utils import (warn, is_array_namespace, is_compat_namespace)
 from .exceptions import (
     ParameterIgnoredWarning,
     MissingDependencyError,
     ConvertNoneTypeError,
-    UnsupportedNameSpaceError,
+    UnsupportedNamespaceError,
+    UnsupportedArrayLibraryNameError,
     ArrayConversionError,
     NumPyConversionError,
     TorchConversionError
@@ -35,8 +35,8 @@ __all__ = [
     "to_tensor",
     "to_list",
     "to_xp",
-    "as_array",
-    "as_array_if_like"
+    "to_array_namespace",
+    "as_array"
 ]
 
 
@@ -208,14 +208,15 @@ def to_list(obj, /, *, copy=True):
 
 def to_xp(obj, /):
     """
-    Convert an array library name to a `array namespace` or return the `array namespace` directly if is a supported namespace.
+    Convert an array library name or `compatibility namespace` to a `array namespace` or return the `array namespace` directly if is a supported namespace.
 
     Parameters
     ----------
-        obj : Union[Namespace, ArrayLibraryName]
+        obj : Union[Namespace, CompatNamespace, ArrayLibraryName]
             The `array namespace` or array library name.
             - _ArrayLibraryName_ (`"numpy"` or `"torch"`): Return the corresponding `array namespace` module;
             - _Namespace_: Return the namespace module directly.
+            - _CompatNamespace_: Return the underlying `array namespace` module.
 
     Returns
     -------
@@ -224,11 +225,11 @@ def to_xp(obj, /):
 
     Raises
     ------
-        Refer to :func:`array_namespace_alias` for possible exceptions.
-
         MissingDependencyError
             If the required array library for the specified `array namespace` is not installed.
-        UnsupportedNameSpaceError
+        UnsupportedArrayLibraryNameError
+            If an unsupported `array namespace` name is specified.
+        UnsupportedNamespaceError
             If the input is not a supported `array namespace` name or module.
     """
     if isinstance(obj, str):
@@ -242,7 +243,7 @@ def to_xp(obj, /):
                 raise MissingDependencyError("Dependency `PyTorch` is required for using array namespace.")
             return torch_xp
 
-        raise UnsupportedNameSpaceError(
+        raise UnsupportedArrayLibraryNameError(
             "Parameter `obj` of `to_xp()` must be a supported array namespace "
             f"name ('numpy', 'torch'), got {obj!r}."
         )
@@ -250,12 +251,18 @@ def to_xp(obj, /):
     if is_array_namespace(obj):
         return obj  # type: ignore
 
-    raise UnsupportedNameSpaceError(
+    if is_compat_namespace(obj):
+        return obj.xp  # type: ignore
+
+    raise UnsupportedNamespaceError(
         f"Parameter `obj` of `to_xp()` is not a supported array namespace, got {obj!r}."
     )
 
 
-def as_array(obj, xp, /, *, dtype=None, device=None, copy=False):
+to_array_namespace = to_xp  # alias of `to_xp()`
+
+
+def as_array(obj, xp, /, *, dtype=None, device=None, copy=False, arraylike_only=False):
     """
     Convert the given object to an array in the specified `array namespace` (e.g., `NumPy` or `PyTorch`).
 
@@ -267,7 +274,7 @@ def as_array(obj, xp, /, *, dtype=None, device=None, copy=False):
         xp : Union[Namespace, ArrayLibraryName]
             The target `array namespace` or array library name for the conversion.
             - _ArrayLibraryName_ (`"numpy"` or `"torch"`): Converted to a `NumPy array` or `PyTorch tensor` respectively using the corresponding conversion functions;
-            - _Namespace_: Converted to an array using the `asarray()` function provided by the namespace module, which must be compatible with the array API standard.
+            - _Namespace_ or _CompatNamespace_: Converted to an array using the `asarray()` function provided by the namespace module, which must be compatible with the array API standard.
 
         dtype : Optional[DTypeT], default to `None`
             The data type of the resulting array.
@@ -279,22 +286,29 @@ def as_array(obj, xp, /, *, dtype=None, device=None, copy=False):
         copy : bool, default to `False`
             Control whether to create a copy of the object when converting to an array.
 
+        arraylike_only : bool, default to `False`
+            Whether to only convert array-like objects to arrays in the specified `array namespace`, and return the object itself if it is not array-like.
+
     Returns
     -------
         ArrayLike[Any]
             The converted array representation of the object in the specified `array namespace`.
+        object
+            If :param:`arraylike_only` is `True` and the object is not array-like.
 
     Raises
     ------
         Refer to :func:`convert.to_xp`, :func:`convert.to_numpy` and :func:`convert.to_tensor` for possible exceptions.
 
-        UnsupportedNameSpaceError
+        AttributeError
             If an unsupported `array namespace` is specified.
         ArrayConversionError
             If an error occurs during array conversion in the specified `array namespace`.
     """
-    arr_xp = to_xp(xp)
+    if arraylike_only and not api.is_array_api_obj(obj):
+        return obj
 
+    arr_xp = to_xp(xp)
     if api.is_numpy_namespace(arr_xp):
         # as NumPy array
         if device is not None and device != "cpu":
@@ -311,35 +325,10 @@ def as_array(obj, xp, /, *, dtype=None, device=None, copy=False):
     try:
         return arr_xp.asarray(obj, dtype=dtype, device=device, copy=copy)  # type: ignore
     except AttributeError:
-        raise UnsupportedNameSpaceError(
+        raise AttributeError(
             f"Parameter `xp` of `as_array()` is not a supported array namespace: {xp!r}"
         ) from None
     except Exception as e:
         raise ArrayConversionError(
             f"An error occurred during array conversion in the specified array namespace {xp!r}"
         ) from e
-
-
-# FIXME 可以和asarray合并
-def as_array_if_like(obj, xp, /, *, dtype=None, device=None, copy=False):
-    """
-    Convert an array-like object to an array in the specified `array namespace`, otherwise return the object itself.
-
-    Returns
-    -------
-        ArrayLike
-            If the object is array-like, the converted array representation of the object in the specified `array namespace`.
-        object
-            If the object is not array-like, the object itself is returned without conversion.
-
-    Raises
-    ------
-        Refer to :func:`convert.as_array` for possible exceptions.
-
-    Notes
-    -----
-    - All parameters follow the usage conventions of :func:`convert.as_array`.
-    """
-    if api.is_array_api_obj(obj):
-        return as_array(obj, xp, dtype=dtype, device=device, copy=copy)
-    return obj

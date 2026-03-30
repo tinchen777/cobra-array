@@ -9,15 +9,15 @@ Functions
 Classes
 -------
 - :class:`CompatArray`: A backend-agnostic array abstraction compliant with the `Python Array API standard`.
-- :class:`NameSpace`: A wrapper around an `array namespace` providing a unified, backend-agnostic functional interface.
+- :class::class:`CompatNamespace`: A wrapper around an `array namespace` providing a unified, backend-agnostic functional interface.
 """
 
 from ._array import (CompatArray, wrap_arraylike, unwrap)
-from ._namespace import NameSpace
+from ._namespace import CompatNamespace
 
 __all__ = [
     "CompatArray",
     "wrap_arraylike",
     "unwrap",
-    "NameSpace",
+    "CompatNamespace",
 ]

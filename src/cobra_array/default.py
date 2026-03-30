@@ -29,6 +29,20 @@ if TYPE_CHECKING:
     from .types import ArrayLike
 
 
+class ArraySpec(NamedTuple):
+    """
+    A named tuple to hold the specifications of an array.
+    - `xp`: Namespace
+    - `dtype`: DType
+    - `device`: Device
+    """
+    xp: Namespace
+    dtype: DType
+    device: Device
+
+
+
+
 # get defaults
 DEFAULT_DTYPE = float
 DEFAULT_DEVICE = "cpu"

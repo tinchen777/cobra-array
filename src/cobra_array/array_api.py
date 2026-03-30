@@ -18,16 +18,15 @@ Functions
 """
 
 from __future__ import annotations
-from typing import (TYPE_CHECKING, Optional, Union)
+from typing import (Any, TYPE_CHECKING, Optional, Union)
 
-from ._utils import array_namespace_alias
+from ._utils import (array_namespace_alias, is_compat_namespace)
 from .exceptions import (
     CUDAUnavailableError,
     DeviceNotSupportedError
 )
 
 if TYPE_CHECKING:
-    from array_api_compat.common._typing import Namespace
     from .types import ArrayLibraryName
 
 
@@ -52,7 +51,7 @@ except ImportError:
 def resolve_device(
     obj: object,
     /, *,
-    xp: Optional[Union[Namespace, ArrayLibraryName]] = None
+    xp: Optional[Union[Any, ArrayLibraryName]] = None
 ) -> Optional[str]:
     """
     Get the device string from an object or a device specification string, and check if it is compatible with the specified `array namespace` if provided.
@@ -62,7 +61,7 @@ def resolve_device(
         obj : object
             The input object or device specification string to extract the device information from.
 
-        xp : Optional[Union[Namespace, ArrayLibraryName]], default is `None`
+        xp : Optional[Union[Namespace, CompatNamespace, ArrayLibraryName]], default is `None`
             The `array namespace` to check the device compatibility against.
             - `None`: No compatibility check will be performed.
 
@@ -96,7 +95,12 @@ def resolve_device(
     s_fmt = f"{s_type}:{s_index}" if s_index else s_type
 
     if xp is not None:
-        xp_name = xp if isinstance(xp, str) else array_namespace_alias(xp)
+        if isinstance(xp, str):
+            xp_name = xp
+        elif is_compat_namespace(xp):
+            xp_name = xp.xp_name
+        else:
+            xp_name = array_namespace_alias(xp)
         if xp_name in ("numpy", "NumPy"):
             # NumPy
             if s_type != "cpu":

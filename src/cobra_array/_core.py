@@ -21,6 +21,7 @@ from .exceptions import (
 
 if TYPE_CHECKING:
     from array_api_compat.common._typing import Namespace
+    # FIXME type
     from .types import (T, DTypeT, DeviceT, ArrayLike, ArrayLibraryName)
 
 

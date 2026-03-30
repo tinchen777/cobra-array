@@ -2,7 +2,7 @@ import sys
 sys.path.insert(0, "/data/tianzhen/my_packages/cobra-array/src")
 # sys.path.insert(0, "/Users/apple/Develop/Python_WorkSpace/my_packages/cobra-array/src")
 
-from cobra_array.compat import CompatArray, NameSpace
+from cobra_array.compat import CompatArray, CompatNamespace
 from cobra_array.convert import to_xp
 import numpy as np
 from numpy.typing import NDArray
@@ -14,7 +14,7 @@ import array_api_strict
 import inspect
 
 
-class A(NameSpace):
+class A(CompatNamespace):
     ...
 
 
@@ -45,7 +45,7 @@ def test_class():
     # print(bxp.__array_namespace__())
     
     print(type(bxp), bxp.__name__)
-    xx = NameSpace(bxp)
+    xx = CompatNamespace(bxp)
     print(type(xx), xx.__name__)
     
     print(xx.xp_name)
@@ -55,10 +55,18 @@ def test_class():
     print(f, type(f), f.dtype)
     
     f = xx.full((2, 3), 0.7)
+    print("f", f, type(f), f.dtype)
+    o = xx.asarray(f)
+    print("o", o, type(o), o.dtype)
+    oo = o.arr
+    print("oo", oo, type(oo), oo.dtype)
     
-    f += f
+    f += oo
     
     print(f)
+    
+    
+    
     
     
     exit()

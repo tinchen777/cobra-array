@@ -4,7 +4,6 @@
 
 from __future__ import annotations
 from numpy.typing import NDArray
-from array_api_compat.common._typing import Namespace
 from typing import (Union, List, Tuple, Optional, Any, Literal, overload)
 
 from ._base import Compat
@@ -15,8 +14,8 @@ from ..types import (
 )
 
 
-class NameSpace(Compat):
-    def __new__(cls, xp: Namespace, /): ...
+class CompatNamespace(Compat):
+    def __new__(cls, xp: object, /): ...
 
     # === Creation functions ===
     @overload

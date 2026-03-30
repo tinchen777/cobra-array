@@ -26,8 +26,12 @@ class ConvertNoneTypeError(CobraArrayError, TypeError):
     """Raised when conversion of `NoneType` is attempted."""
 
 
-class UnsupportedNameSpaceError(CobraArrayError):
+class UnsupportedNamespaceError(CobraArrayError, ValueError):
     """Raised when an unsupported `array namespace` is specified."""
+
+
+class UnsupportedArrayLibraryNameError(CobraArrayError, ValueError):
+    """Raised when an unsupported `array namespace` name is specified."""
 
 
 class ArrayConversionError(CobraArrayError):
@@ -62,9 +66,9 @@ class GetArrayNamespaceError(CobraArrayError):
     """Raised when an error occurs while determining the `array namespace`."""
 
 
-class NameSpaceAttributeError(CobraArrayError, AttributeError):
-    """Raised when an attribute is not supported in the `array namespace`."""
+class CompatNamespaceAttributeError(CobraArrayError, AttributeError):
+    """Raised when an attribute is not supported in :class:`CompatNamespace`."""
 
 
 class CompatArrayAttributeError(CobraArrayError, AttributeError):
-    """Raised when an attribute is not supported in the `CompatArray` class."""
+    """Raised when an attribute is not supported in :class:`CompatArray`."""

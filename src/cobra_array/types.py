@@ -10,12 +10,14 @@ from typing import (Union, Protocol, TypeVar, Any, Literal, NamedTuple, Generic,
 if TYPE_CHECKING:
     from .compat._array import CompatArray
 
+# === Type Aliases ===
 Value = Union[int, float, complex, bool]
 
 T = TypeVar("T")
 StringT = TypeVar("StringT", str, bytes)
 ValueT = TypeVar("ValueT", bound=Value)
 
+# === DType and Device ===
 DType = Any
 # FIXME 无法推断
 DeviceLiteral = Literal["cpu", "cuda", "xpu", "mkldnn", "opengl", "opencl", "ideep", "hip", "ve", "ort", "mlc", "xla", "lazy", "vulkan", "meta", "hpu"]
@@ -30,6 +32,7 @@ DTypeT_co = TypeVar("DTypeT_co", bound=DType, covariant=True)
 DeviceT_co = TypeVar("DeviceT_co", bound=Device, covariant=True)
 
 
+# === Array Protocols ===
 class ArrayLike(Protocol[DTypeT_co]):
     @property
     def dtype(self) -> DTypeT_co: ...
@@ -39,7 +42,6 @@ class ArrayLike(Protocol[DTypeT_co]):
 
 
 ArrayLibraryName = Literal["numpy", "torch"]
-
 ArrayT = TypeVar("ArrayT", bound=ArrayLike[Any])
 ArrayOrAny = Union[ArrayLike[Any], int, float, complex, bool]
 ArrayOrScalar = Union[ArrayLike[Any], int, float, complex]

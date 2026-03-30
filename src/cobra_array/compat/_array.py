@@ -8,6 +8,7 @@ from collections import namedtuple
 
 from ._base import Compat
 from ..convert import (to_numpy, to_tensor, to_list, to_xp, as_array)
+from .._utils import is_compat_namespace
 from ..exceptions import (NotArrayAPIObjectError, CompatArrayAttributeError)
 
 
@@ -39,8 +40,8 @@ class CompatArray(Compat):
             obj : object
                 The object to be converted to a :class:`CompatArray` array.
 
-            xp : Union[Namespace, ArrayLibraryName]
-                The `array namespace` to use for conversion.
+            xp : Union[Any, ArrayLibraryName]
+                The `array namespace` or `compatibility namespace` to use for conversion.
 
             copy : bool, default to `False`
                 Whether to create a copy of the data during conversion via :func:`convert.as_array`.
@@ -66,6 +67,7 @@ class CompatArray(Compat):
                 f"Parameter `arr` of `CompatArray` must be an array API compatible array object, got {type(arr)}."
             )
         _xp = kwargs.get("xp", api.array_namespace(arr))
+        _xp = _xp.xp if is_compat_namespace(_xp) else _xp
         obj = super().__new__(cls, _xp)
         obj._arr = as_array(arr, _xp, copy=True) if copy else arr
 
@@ -477,6 +479,6 @@ def wrap_arraylike(arr, xp=None):
     """
     if api.is_array_api_obj(arr):
         if xp is None:
-            xp = CompatArray(arr)
+            return CompatArray(arr)
         return CompatArray(arr, xp=xp)
     return arr

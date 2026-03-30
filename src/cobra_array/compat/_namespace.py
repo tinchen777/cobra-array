@@ -6,16 +6,15 @@ from __future__ import annotations
 
 from ._base import Compat
 from ._array import (CompatArray, wrap_arraylike)
-from ..exceptions import NameSpaceAttributeError
+from ..exceptions import CompatNamespaceAttributeError
 
 
-class NameSpace(Compat):
+class CompatNamespace(Compat):
     """
-    A wrapper around an `array namespace` providing a unified, backend-agnostic functional interface.
+    A wrapper around an `array namespace` that provides a compatibility layer for backend-agnostic array operations.
 
-    `NameSpace` exposes functions from the underlying `array namespace` (e.g., `NumPy`, `PyTorch`) while ensuring compliance with the `Python Array API standard`.
-    It includes detailed documentation for
-    functions that are not suitable for an object-oriented interface.
+    :class:`CompatNamespace` exposes functions from the underlying `array namespace` (e.g., `NumPy`, `PyTorch`) while ensuring compliance with the `Python Array API standard`.
+    It includes detailed documentation for functions that are not suitable for an object-oriented interface.
 
     All functions preserve the semantics of the underlying namespace, with additional guarantees on input and output handling.
 
@@ -26,8 +25,8 @@ class NameSpace(Compat):
     - All functions guarantee that any array-like objects in the returned value are automatically wrapped as :class:`CompatArray`. This conversion is applied recursively to arrays contained in Python containers (e.g., `tuple`, `list`, `dict`). Non-array objects remain unchanged.
     """
     def __new__(cls, xp, /):
-        if isinstance(xp, NameSpace):
-            # for `NameSpace` input
+        if isinstance(xp, CompatNamespace):
+            # for `CompatNamespace` input
             return xp
         # for `Namespace` input
         return super().__new__(cls, xp)
@@ -286,7 +285,7 @@ class NameSpace(Compat):
 
     @property
     def __name__(self):
-        return "(cobra_array)" + getattr(self._xp, "__name__", type(self._xp).__name__)
+        return "(compat)" + getattr(self._xp, "__name__", type(self._xp).__name__)
 
     def __getattr__(self, name: str):
         attr = self._get_xp_attr(name)
@@ -295,4 +294,4 @@ class NameSpace(Compat):
             def wrapper(*args, **kwargs):
                 return wrap_arraylike(attr(*args, **kwargs), xp=self._xp)
             return wrapper
-        raise NameSpaceAttributeError(f"Namespace `{self._xp_name}` does not support attribute `{name}`.")
+        raise CompatNamespaceAttributeError(f"`CompatNamespace` `{self._xp_name}` does not support attribute `{name}`.")

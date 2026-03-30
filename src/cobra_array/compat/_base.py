@@ -13,12 +13,12 @@ if TYPE_CHECKING:
 
 class Compat:
     """
-    A base class for creating compatibility wrappers for :param:`NameSpace` and :param:`CompatArray`.
+    A base class for creating compatibility wrappers for :class:`CompatNamespace` and :class:`CompatArray`.
     """
     _xp: Namespace
     _xp_name: str
 
-    def __new__(cls, xp: Namespace, /):
+    def __new__(cls, xp: Any, /):
         _xp_name = array_namespace_alias(xp)
 
         obj = super().__new__(cls)
