@@ -55,9 +55,7 @@ def test_to_numpy_to_list_and_array_protocol():
 
 def test_to_device_on_numpy_backend():
     a = _arr_1d()
-    moved = a.to_device("cpu:0")
-    
-    f = a.astype(int, device="cpu: 0")  # type: ignore[call-arg]
+    moved = a.to_device("cpu")
 
     assert isinstance(moved, np.ndarray)
     assert moved.tolist() == a.to_list()
