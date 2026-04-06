@@ -20,7 +20,7 @@ Functions
 # from ._core import (
 #     api,
 #     array_spec,
-#     context_array_spec,
+#     context_spec,
 #     context_namespace,
 #     unify_array_args,
 #     as_context_array
@@ -32,7 +32,7 @@ Functions
 # __all__ = [
 #     "api",
 #     "array_spec",
-#     "context_array_spec",
+#     "context_spec",
 #     "context_namespace",
 #     "unify_array_args",
 #     "as_context_array"

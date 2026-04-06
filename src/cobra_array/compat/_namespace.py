@@ -5,7 +5,7 @@
 from __future__ import annotations
 
 from ._base import Compat
-from ._array import (CompatArray, wrap_arraylike)
+from ._array import (CompatArray, wrap_arraylike, unwrap)
 from ..exceptions import CompatNamespaceAttributeError
 
 
@@ -49,7 +49,7 @@ class CompatNamespace(Compat):
         Returns
         -------
             List[CompatArray]
-                List of `N` arrays, where `N` is the number of provided one-dimensional input arrays.
+                List of `N` :class:`CompatArray` arrays, where `N` is the number of provided one-dimensional input arrays.
                 Each returned array must have rank `N`.
                 For `N` one-dimensional arrays having lengths `Ni = len(xi)`,
                 - `matrix indexing ij`: Each returned array must have the shape `(N1, N2, N3, ..., Nn)`;
@@ -65,7 +65,10 @@ class CompatNamespace(Compat):
 
                 Each returned array should have the same data type as the input arrays.
         """
-        result = self._get_xp_attr("meshgrid")(*arrays, indexing=indexing)
+        result = self._get_xp_attr("meshgrid")(
+            *tuple(unwrap(arr) for arr in arrays),
+            indexing=indexing
+        )
         return [CompatArray(arr, xp=self._xp) for arr in result]
 
     # === Data Type functions ===
@@ -86,7 +89,7 @@ class CompatNamespace(Compat):
             bool
                 A boolean indicating whether the cast is possible.
         """
-        return self._get_xp_attr("can_cast")(from_, to)
+        return self._get_xp_attr("can_cast")(unwrap(from_), to)
 
     def finfo(self, type_, /):
         """
@@ -115,7 +118,7 @@ class CompatNamespace(Compat):
                 - `dtype`: _dtype_
                 Real-valued floating-point data type.
         """
-        return self._get_xp_attr("finfo")(type_)
+        return self._get_xp_attr("finfo")(unwrap(type_))
 
     def iinfo(self, type_, /):
         """
@@ -140,7 +143,7 @@ class CompatNamespace(Compat):
                 - `dtype`: _dtype_
                 Integer data type.
         """
-        return self._get_xp_attr("iinfo")(type_)
+        return self._get_xp_attr("iinfo")(unwrap(type_))
 
     def isdtype(self, dtype, kind) -> bool:
         """
@@ -186,7 +189,7 @@ class CompatNamespace(Compat):
             DType
                 The dtype resulting from an operation involving the input arrays, scalars, and/or dtypes.
         """
-        return self._get_xp_attr("result_type")(*arrays_and_dtypes)
+        return self._get_xp_attr("result_type")(*tuple(unwrap(arr) for arr in arrays_and_dtypes))
 
     # === Manipulation functions ===
     def broadcast_arrays(self, *arrays):
@@ -205,7 +208,7 @@ class CompatNamespace(Compat):
                 Each array must have the same shape.
                 Each array must have the same dtype as its corresponding input array.
         """
-        result = self._get_xp_attr("broadcast_arrays")(*arrays)
+        result = self._get_xp_attr("broadcast_arrays")(*tuple(unwrap(arr) for arr in arrays))
         return [CompatArray(arr, xp=self._xp) for arr in result]
 
     # === Constants ===
@@ -292,6 +295,11 @@ class CompatNamespace(Compat):
 
         if callable(attr):
             def wrapper(*args, **kwargs):
-                return wrap_arraylike(attr(*args, **kwargs), xp=self._xp)
+                if not args and not kwargs:
+                    return wrap_arraylike(attr(), xp=self._xp)
+
+                new_args = tuple(unwrap(a) for a in args)
+                new_kwargs = {k: unwrap(v) for k, v in kwargs.items()} if kwargs else kwargs
+                return wrap_arraylike(attr(*new_args, **new_kwargs), xp=self._xp)
             return wrapper
         raise CompatNamespaceAttributeError(f"`CompatNamespace` `{self._xp_name}` does not support attribute `{name}`.")

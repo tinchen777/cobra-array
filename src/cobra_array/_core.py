@@ -10,8 +10,7 @@ from contextvars import ContextVar
 from typing import (Any, Union, Optional, Dict, overload, TYPE_CHECKING)
 
 from .convert import (to_xp, as_array)
-from ._utils import ArraySpec
-from .default import default_array_spec
+from .default import (ArraySpec, default_spec)
 from .exceptions import (
     NoArrayInputsError,
     GetArrayNamespaceError,
@@ -20,8 +19,8 @@ from .exceptions import (
 )
 
 if TYPE_CHECKING:
+    from .compat import CompatNamespace
     from array_api_compat.common._typing import Namespace
-    # FIXME type
     from .types import (T, DTypeT, DeviceT, ArrayLike, ArrayLibraryName)
 
 
@@ -34,7 +33,7 @@ def array_spec(
     use_compat: Optional[bool] = None
 ) -> ArraySpec:
     """
-    Determine the array API compatible `namespace`, `dtype` and `device` from the provided array arguments and the reference array.
+    Determine the array API compatible `array namespace`, `dtype` and `device` from the provided array arguments and the reference array.
 
     Parameters
     ----------
@@ -62,10 +61,14 @@ def array_spec(
             - `True`: Always return the compat-wrapped namespace;
             - `False`: Return the native namespace.
 
+            NOTE: The compat-wrapped namespace is NOT `compatibility namespace`. The former is a wrapper in :pkg:`array_api_compat`.
+
     Returns
     -------
         ArraySpec
-            An :class:`ArraySpec` named tuple containing the determined `xp`(`array namespace`), `dtype` and `device`. If :param:`ref` is `None`, the returned `dtype` and `device` will be `None`.
+            An :class:`ArraySpec` named tuple containing the determined `cxp`(`compatibility namespace`), `dtype` and `device`.
+            - If :param:`ref` is `None`, the returned `dtype` and `device` will be `None`.
+            - `compatibility namespace` is a wrapper of the native `array namespace` provides a compatibility layer for backend-agnostic array operations. See also :class:`compat.CompatNamespace`.
 
     Raises
     ------
@@ -96,7 +99,7 @@ def array_spec(
     if ref is None:
         # use arrays and kw_arrays in order to determine the namespace
         try:
-            return ArraySpec(
+            return ArraySpec.create(
                 api.array_namespace(
                     *all_arrays,
                     api_version=api_version,
@@ -149,7 +152,7 @@ def array_spec(
     dtype = getattr(ref_arr, "dtype", None)
     device = api.device(ref_arr)
     try:
-        return ArraySpec(
+        return ArraySpec.create(
             api.array_namespace(
                 ref_arr,
                 api_version=api_version,
@@ -166,10 +169,10 @@ def array_spec(
 _arr_spec_var = ContextVar("arr_spec")
 
 
-def context_array_spec() -> ArraySpec:
+def context_spec() -> ArraySpec:
     """
     Get the `array namespace`, `dtype` and `device` associated with the most recent :func:`unify_array_args`-decorated function call in the current context.
-    If there is no such function call in the current context, return the default `array namespace`, `dtype` and `device` from :func:`default.default_array_spec`.
+    If there is no such function call in the current context, return the default `array namespace`, `dtype` and `device` from :func:`default.default_spec`.
 
     Returns
     -------
@@ -178,29 +181,29 @@ def context_array_spec() -> ArraySpec:
 
     Raises
     ------
-        Refer to :func:`default.default_array_spec` for possible exceptions.
+        Refer to :func:`default.default_spec` for possible exceptions.
     """
     try:
         return _arr_spec_var.get()
     except LookupError:
-        return default_array_spec()
+        return default_spec()
 
 
-def context_namespace() -> Namespace:
+def context_namespace() -> CompatNamespace:
     """
     Get the `array namespace` associated with the most recent :func:`unify_array_args`-decorated function call in the current context.
-    If there is no such function call in the current context, return the default `array namespace` from :func:`default.default_array_spec`.
+    If there is no such function call in the current context, return the default `array namespace` from :func:`default.default_spec`.
 
     Returns
     -------
-        Namespace
-            The `array namespace`.
+        CompatNamespace
+            The `array namespace`. # FIXME
 
     Raises
     ------
-        Refer to :func:`default.default_array_spec` for possible exceptions.
+        Refer to :func:`default.default_spec` for possible exceptions.
     """
-    return context_array_spec().xp
+    return context_spec().cxp
 
 
 def as_context_array(
@@ -234,9 +237,9 @@ def as_context_array(
 
     Raises
     ------
-        Refer to :func:`convert.as_array`, :func:`context_array_spec` for possible exceptions.
+        Refer to :func:`convert.as_array`, :func:`context_spec` for possible exceptions.
     """
-    arr_spec = context_array_spec()
+    arr_spec = context_spec()
     return as_array(
         obj, arr_spec.xp,
         arr_spec.dtype if unify_dtype else None,
@@ -323,7 +326,7 @@ class array_context:
             device : Optional[DeviceT], default to `None`
                 See also :param:`device` in :func:`convert.as_array`.
         """
-        self.xp = to_xp(xp) if xp is not None else context_array_spec().xp
+        self.xp = to_xp(xp) if xp is not None else context_spec().xp
         self.dtype = dtype
         self.device = device
 
@@ -384,7 +387,7 @@ def unify_array_args(
 
     Raises
     ------
-        Refer to :func:`default.default_array_spec`, :func:`as_context_array_if_like` for possible exceptions.
+        Refer to :func:`default.default_spec`, :func:`as_context_array_if_like` for possible exceptions.
     """
     def decorator(func):
         @wraps(func)
@@ -402,7 +405,7 @@ def unify_array_args(
                     raise e
                 try:
                     # fall back to the default namespace
-                    arr_spec = default_array_spec()
+                    arr_spec = default_spec()
                 except MissingDependencyError:
                     # just run the function without conversion
                     return func(*args, **kwargs)

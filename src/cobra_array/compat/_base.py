@@ -18,11 +18,11 @@ class Compat:
     _xp: Namespace
     _xp_name: str
 
-    def __new__(cls, xp: Any, /):
-        _xp_name = array_namespace_alias(xp)
+    _UNWRAP_COMPAT: bool = True
 
+    def __new__(cls, xp: Any, /):
         obj = super().__new__(cls)
-        obj._xp_name = _xp_name
+        obj._xp_name = array_namespace_alias(xp)
         obj._xp = xp
 
         return obj

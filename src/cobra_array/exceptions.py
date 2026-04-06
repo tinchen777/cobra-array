@@ -6,7 +6,7 @@ Exceptions for :pkg:`cobra_array`.
 
 # === WARNING ===
 class CobraArrayWarning(Warning):
-    """Base warning class for :pkg:`cobra_array` package."""
+    """Base warning class for :pkg:`cobra_array`."""
 
 
 class ParameterIgnoredWarning(CobraArrayWarning):
@@ -15,7 +15,7 @@ class ParameterIgnoredWarning(CobraArrayWarning):
 
 # === ERROR ===
 class CobraArrayError(Exception):
-    """Base error class for :pkg:`cobra_array` package."""
+    """Base error class for :pkg:`cobra_array`."""
 
 
 class MissingDependencyError(CobraArrayError, ImportError):

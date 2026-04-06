@@ -8,7 +8,6 @@ from collections import namedtuple
 
 from ._base import Compat
 from ..convert import (to_numpy, to_tensor, to_list, to_xp, as_array)
-from .._utils import is_compat_namespace
 from ..exceptions import (NotArrayAPIObjectError, CompatArrayAttributeError)
 
 
@@ -29,6 +28,7 @@ class CompatArray(Compat):
     - All methods guarantee that any array-like objects in the returned value are automatically wrapped as :class:`CompatArray`. This applies recursively to arrays contained in Python containers (e.g., `tuple`, `list`, `dict`). Non-array objects remain unchanged.
     """
     _arr = None
+    _cxp = None
 
     @classmethod
     def from_other(cls, obj, /, *, xp, copy=False):
@@ -66,10 +66,11 @@ class CompatArray(Compat):
             raise NotArrayAPIObjectError(
                 f"Parameter `arr` of `CompatArray` must be an array API compatible array object, got {type(arr)}."
             )
-        _xp = kwargs.get("xp", api.array_namespace(arr))
-        _xp = _xp.xp if is_compat_namespace(_xp) else _xp
+        _cxp = to_cxp(kwargs.get("xp", api.array_namespace(arr)))
+        _xp = _cxp.xp
         obj = super().__new__(cls, _xp)
         obj._arr = as_array(arr, _xp, copy=True) if copy else arr
+        obj._cxp = _cxp
 
         return obj
 
@@ -244,6 +245,13 @@ class CompatArray(Compat):
         except AttributeError:
             raise AttributeError(f"`CompatArray` `{self._xp_name}` has no attribute `{name}`.") from None
 
+    def _get_cxp_attr(self, name: str):
+        """Try to get the attribute `name` from the `compatibility namespace`."""
+        try:
+            return getattr(self._cxp, name)
+        except AttributeError:
+            raise AttributeError(f"Compatibility namespace `{self._xp_name}` of `{self.__class__.__name__}` has no attribute `{name}`.") from None
+
     @property
     def arr(self):
         """
@@ -328,11 +336,11 @@ class CompatArray(Compat):
         return self.to_numpy()
 
     def __getattr__(self, name: str):
-        attr = self._get_xp_attr(name)
+        attr = self._get_cxp_attr(name)
 
         if callable(attr) and not isinstance(attr, type):
             def wrapper(*args, **kwargs):
-                return wrap_arraylike(attr(self._arr, *args, **kwargs), xp=self._xp)
+                return attr(self._arr, *args, **kwargs)
             return wrapper
         raise CompatArrayAttributeError(f"`CompatArray` `{self._xp_name}` does not support attribute `{name}`.")
 
@@ -482,3 +490,10 @@ def wrap_arraylike(arr, xp=None):
             return CompatArray(arr)
         return CompatArray(arr, xp=xp)
     return arr
+
+
+def to_cxp(xp):
+    """Convert an `array namespace` or `compatibility namespace` to a :class:`CompatNamespace` instance."""
+    from ._namespace import CompatNamespace
+
+    return CompatNamespace(xp)

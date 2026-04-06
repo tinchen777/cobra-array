@@ -69,7 +69,7 @@ def test_class():
     
     
     
-    exit()
+    
     
 
     print(ba)

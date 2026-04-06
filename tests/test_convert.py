@@ -2,7 +2,7 @@ import sys
 sys.path.insert(0, "/data/tianzhen/my_packages/cobra-array/src")
 # sys.path.insert(0, "/Users/apple/Develop/Python_WorkSpace/my_packages/cobra-array/src")
 
-from cobra_array.convert import to_numpy, to_tensor, to_list, as_array, as_array_if_like
+from cobra_array.convert import to_numpy, to_tensor, to_list, as_array
 import numpy as np
 import torch
 import time
@@ -57,8 +57,8 @@ def test_to_2():
     print(c1, type(c1), c1.dtype)
     c1.device
 
-    a = as_array_if_like(a1, "numpy")
-    a = as_array_if_like(a, "numpy", dtype=np.float128)
+    a = as_array(a1, "numpy", arraylike_only=False)
+    a = as_array(1, "numpy", dtype=np.float128, arraylike_only=True)
     print(a)
     print(a.dtype)
 

@@ -70,31 +70,24 @@ def array_namespace_alias(xp: object) -> str:
         if api.is_array_api_strict_namespace(xp):
             return "array-api-strict"
 
-    raise UnsupportedNamespaceError(f"Got unsupported array namespace of type {type(xp)}.")
-
-
-def is_compat_namespace(xp: object) -> bool:
-    """
-    Returns `True` if :param:`xp` is a `compatibility namespace` wrapped by :class:`CompatNamespace`
-    """
-    return "(compat)" in getattr(xp, __name__, "")
+    raise UnsupportedNamespaceError(
+        f"Got unsupported array namespace of type {type(xp)}."
+    )
 
 
 def is_array_namespace(obj: object) -> bool:
     """
-    Check if the input object is a supported `array namespace`.
-
-    Parameters
-    ----------
-        obj : object
-            The object to be checked.
-
-    Returns
-    -------
-        bool
+    Returns `True` if input is a supported `array namespace`.
     """
     try:
         array_namespace_alias(obj)
         return True
     except UnsupportedNamespaceError:
         return False
+
+
+def is_compat_namespace(xp: object) -> bool:
+    """
+    Returns `True` if input is a `compatibility namespace` wrapped by :class:`CompatNamespace`
+    """
+    return "(compat)" in getattr(xp, __name__, "")
