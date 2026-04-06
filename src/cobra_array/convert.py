@@ -271,7 +271,7 @@ def as_array(obj, xp, /, *, dtype=None, device=None, copy=False, arraylike_only=
         obj : object
             The object to be converted to an array.
 
-        xp : Union[Namespace, ArrayLibraryName]
+        xp : Union[object, ArrayLibraryName]
             The target `array namespace` or array library name for the conversion.
             - _ArrayLibraryName_ (`"numpy"` or `"torch"`): Converted to a `NumPy array` or `PyTorch tensor` respectively using the corresponding conversion functions;
             - _Namespace_ or _CompatNamespace_: Converted to an array using the `asarray()` function provided by the namespace module, which must be compatible with the array API standard.

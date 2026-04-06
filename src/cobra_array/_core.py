@@ -7,8 +7,9 @@ from functools import wraps
 from itertools import (islice, chain)
 import array_api_compat as api
 from contextvars import ContextVar
-from typing import (Any, Union, Optional, Dict, overload, TYPE_CHECKING)
+from typing import (Any, Literal, Union, Optional, Dict, overload, TYPE_CHECKING)
 
+from .compat import wrap_arraylike
 from .convert import (to_xp, as_array)
 from .default import (ArraySpec, default_spec)
 from .exceptions import (
@@ -19,41 +20,41 @@ from .exceptions import (
 )
 
 if TYPE_CHECKING:
-    from .compat import CompatNamespace
-    from array_api_compat.common._typing import Namespace
-    from .types import (T, DTypeT, DeviceT, ArrayLike, ArrayLibraryName)
+    from numpy.typing import NDArray
+    from .compat import CompatArray
+    from .types import (T, dtypeT, DType, Device, ArrayLike, ArrayLibraryName)
 
 
 def array_spec(
     *arrays: object,
     kw_arrays: Optional[Dict[str, object]] = None,
     ref: Optional[Union[str, int]] = None,
-    filter_array_like: bool = False,
+    filter_arraylike: bool = False,
     api_version: Optional[str] = None,
     use_compat: Optional[bool] = None
 ) -> ArraySpec:
     """
-    Determine the array API compatible `array namespace`, `dtype` and `device` from the provided array arguments and the reference array.
+    Determine the array API compatible `compatibility namespace`, `dtype` and `device` from the provided array arguments and the reference array.
 
     Parameters
     ----------
         arrays : object
-            Positional array-like objects to determine the `array namespace`.
+            Positional array-like objects to determine the `compatibility namespace`.
 
         kw_arrays : Optional[Dict[str, object]], default to `None`
-            Keyword array-like objects to determine the `array namespace`.
+            Keyword array-like objects to determine the `compatibility namespace`.
 
         ref : Optional[Union[str, int]], default to `None`
-            Reference array to determine the `array namespace`, `dtype` and `device`.
-            - `None`: Use all provided arrays in `arrays` and `kw_arrays` to determine the `array namespace`, and return `None` for `dtype` and `device`;
-            - _str_: Use the specified keyword array in `kw_arrays` as reference array to determine the `array namespace`, `dtype` and `device`;
-            - _int_: Use the specified positional array in `arrays` and `kw_arrays` (in order) as reference array to determine the `array namespace`, `dtype` and `device`. The index and valid range are affected by :param:`filter_array_like`.
+            Reference array to determine the `compatibility namespace`, `dtype` and `device`.
+            - `None`: Use all provided arrays in `arrays` and `kw_arrays` to determine the `compatibility namespace`, and return `None` for `dtype` and `device`;
+            - _str_: Use the specified keyword array in `kw_arrays` as reference array to determine the `compatibility namespace`, `dtype` and `device`;
+            - _int_: Use the specified positional array in `arrays` and `kw_arrays` (in order) as reference array to determine the `compatibility namespace`, `dtype` and `device`. The index and valid range are affected by :param:`filter_arraylike`.
 
-        filter_array_like : bool, default to `False`
-            Whether to filter the provided inputs to all array-likes via :func:`array_api_compat.is_array_api_obj` when determining the `array namespace`.
+        filter_arraylike : bool, default to `False`
+            Whether to filter the provided inputs to all array-likes via :func:`array_api_compat.is_array_api_obj` when determining the `compatibility namespace`.
 
         api_version : Optional[str], default to `None`
-            The target array API version for the returned `array namespace`. See also :param:`api_version` in :func:`array_api_compat.array_namespace`.
+            The target array API version for the returned `compatibility namespace`. See also :param:`api_version` in :func:`array_api_compat.array_namespace`.
 
         use_compat : Optional[bool], default to `None`
             See also :param:`use_compat` in :func:`array_api_compat.array_namespace`.
@@ -75,7 +76,7 @@ def array_spec(
         NoArrayInputsError
             If no array inputs are provided in `arrays` and `kw_arrays`.
         GetArrayNamespaceError
-            If an error occurs while determining the `array namespace` from the provided inputs or the reference array.
+            If an error occurs while determining the `compatibility namespace` from the provided inputs or the reference array.
         KeyError
             If `ref` is a string but not a key in `kw_arrays`.
         IndexError
@@ -84,6 +85,10 @@ def array_spec(
             If `ref` is not `None`, a string, or an integer.
         NotArrayAPIObjectError
             If the reference array determined by `ref` is not an array API compatible array object.
+
+    Examples
+    --------
+    
     """
     kw_arrays = kw_arrays or {}
 
@@ -93,7 +98,7 @@ def array_spec(
 
     # iterator of all arrays
     all_arrays = chain(arrays, kw_arrays.values())
-    if filter_array_like:
+    if filter_arraylike:
         all_arrays = (a for a in all_arrays if api.is_array_api_obj(a))
 
     if ref is None:
@@ -108,7 +113,7 @@ def array_spec(
             )
         except Exception as e:
             raise GetArrayNamespaceError(
-                "Failed to determine the `array namespace` from the provided inputs."
+                "Failed to determine the `compatibility namespace` from the provided inputs."
             ) from e
 
     if isinstance(ref, str):
@@ -129,7 +134,7 @@ def array_spec(
                     f"non-negative index for the array inputs, got {ref!r}."
                 ) from None
         except StopIteration:
-            if filter_array_like:
+            if filter_arraylike:
                 raise IndexError(
                     "Parameter `ref` of `array_spec()` is out of range "
                     f"for the array-like inputs, got {ref!r}."
@@ -144,7 +149,7 @@ def array_spec(
             f"`int` or `NoneType`, got {type(ref)}."
         )
 
-    if not filter_array_like and not api.is_array_api_obj(ref_arr):
+    if not filter_arraylike and not api.is_array_api_obj(ref_arr):
         raise NotArrayAPIObjectError(
             f"Reference array must be an array API compatible array object, got {ref_arr!r}."
         )
@@ -161,7 +166,7 @@ def array_spec(
         )
     except Exception as e:
         raise GetArrayNamespaceError(
-            "Failed to determine the `array namespace` from the reference array."
+            "Failed to determine the `compatibility namespace` from the reference array."
         ) from e
 
 
@@ -171,13 +176,13 @@ _arr_spec_var = ContextVar("arr_spec")
 
 def context_spec() -> ArraySpec:
     """
-    Get the `array namespace`, `dtype` and `device` associated with the most recent :func:`unify_array_args`-decorated function call in the current context.
-    If there is no such function call in the current context, return the default `array namespace`, `dtype` and `device` from :func:`default.default_spec`.
+    Get the `compatibility namespace`, `dtype` and `device` associated with the most recent :func:`unify_array_args`-decorated function call in the current context.
+    If there is no such function call in the current context, return the default `compatibility namespace`, `dtype` and `device` from :func:`default.default_spec`.
 
     Returns
     -------
         ArraySpec
-            An :class:`ArraySpec` named tuple containing the determined `xp`(`array namespace`), `dtype` and `device`.
+            An :class:`ArraySpec` named tuple containing the determined `cxp`(`compatibility namespace`), `dtype` and `device`.
 
     Raises
     ------
@@ -189,37 +194,33 @@ def context_spec() -> ArraySpec:
         return default_spec()
 
 
-def context_namespace() -> CompatNamespace:
-    """
-    Get the `array namespace` associated with the most recent :func:`unify_array_args`-decorated function call in the current context.
-    If there is no such function call in the current context, return the default `array namespace` from :func:`default.default_spec`.
-
-    Returns
-    -------
-        CompatNamespace
-            The `array namespace`. # FIXME
-
-    Raises
-    ------
-        Refer to :func:`default.default_spec` for possible exceptions.
-    """
-    return context_spec().cxp
+@overload
+def as_context(obj: NDArray[dtypeT], /, *, unify_dtype: Literal[False], unify_device: bool = ..., copy: bool = ..., arraylike_only: bool = ...) -> CompatArray[dtypeT, Literal["cpu"]]: ...
+@overload
+def as_context(obj: ArrayLike[dtypeT], /, *, unify_dtype: Literal[False], unify_device: bool = ..., copy: bool = ..., arraylike_only: bool = ...) -> CompatArray[dtypeT, Any]: ...
+@overload
+def as_context(obj: ArrayLike[Any], /, *, unify_dtype: Literal[True] = ..., unify_device: bool = ..., copy: bool = ..., arraylike_only: bool = ...) -> CompatArray[Any, Any]: ...
+@overload
+def as_context(obj: object, /, *, unify_dtype: bool = ..., unify_device: bool = ..., copy: bool = ..., arraylike_only: Literal[False] = ...) -> CompatArray[Any, Any]: ...
+@overload
+def as_context(obj: T, /, *, unify_dtype: bool = ..., unify_device: bool = ..., copy: bool = ..., arraylike_only: Literal[True]) -> T: ...
 
 
-def as_context_array(
+def as_context(
     obj: object,
     /,
     unify_dtype: bool = True,
     unify_device: bool = True,
-    copy: bool = False
+    copy: bool = False,
+    arraylike_only: bool = False
 ) -> Any:
     """
-    Convert the given object to an array in the current context `array namespace`, with the `dtype` and `device` unified to the current context if specified.
+    Convert the given object to a :class:`CompatArray` array in the current context `compatibility namespace`, with the `dtype` and `device` unified to the current context if specified.
 
     Parameters
     ----------
         obj : object
-            The object to be converted to an array.
+            The object to be converted to a :class:`CompatArray` array.
 
         unify_dtype : bool, default to `True`
             Whether to unify the `dtype` of the converted array to that of the current context.
@@ -230,67 +231,33 @@ def as_context_array(
         copy : bool, default to `False`
             Whether to return a copy of the array if it is already in the current context namespace.
 
+        arraylike_only : bool, default to `False`
+            Whether to only convert array-like objects to arrays in the current context namespace, and return the object itself if it is not array-like.
+
     Returns
     -------
-        Any
-        The converted array representation of the object in the current context `array namespace`, with the `dtype` and `device` unified to the current context if specified.
+        CompatArray[Any, Any]
+            The converted array representation of the object in the current context `compatibility namespace`, with the current context `dtype` and `device` if specified.
+        object
+            If :param:`arraylike_only` is `True` and the object is not array-like.
 
     Raises
     ------
         Refer to :func:`convert.as_array`, :func:`context_spec` for possible exceptions.
     """
-    arr_spec = context_spec()
-    return as_array(
-        obj, arr_spec.xp,
-        arr_spec.dtype if unify_dtype else None,
-        arr_spec.device if unify_device else None,
-        copy
-    )
-
-
-@overload
-def as_context_array_if_like(
-    obj: ArrayLike,
-    /,
-    unify_dtype: bool = ...,
-    unify_device: bool = ...,
-    copy: bool = ...
-) -> Any: ...
-@overload
-def as_context_array_if_like(obj: T, /) -> T: ...
-
-
-def as_context_array_if_like(
-    obj: object,
-    /,
-    unify_dtype: bool = True,
-    unify_device: bool = True,
-    copy: bool = False
-) -> Any:
-    """
-    Convert an array-like object to an array in the current context `array namespace`, with the `dtype` and `device` unified to the current context if specified. Otherwise return the object itself.
-
-    Returns
-    -------
-        Any
-        The converted array representation of the object in the current context `array namespace` if it is array-like, with the `dtype` and `device` unified to the current context if specified; otherwise, return the object itself.
-
-    Raises
-    ------
-        Refer to :func:`as_context_array` for possible exceptions.
-
-    Notes
-    -----
-    - All parameters follow the usage conventions of :func:`as_context_array`.
-    """
-    if api.is_array_api_obj(obj):
-        return as_context_array(obj, unify_dtype=unify_dtype, unify_device=unify_device, copy=copy)
-    return obj
+    spec = context_spec()
+    return wrap_arraylike(as_array(
+        obj, spec.cxp,
+        dtype=spec.dtype if unify_dtype else None,
+        device=spec.device if unify_device else None,
+        copy=copy,
+        arraylike_only=arraylike_only
+    ), xp=spec.cxp)
 
 
 class array_context:
     """
-    **Context Manager** to set the context `array namespace`, `dtype` and `device` for the enclosed block of code.
+    **Context Manager** to set the context `compatibility namespace`, `dtype` and `device` for the enclosed block of code.
     """
     @classmethod
     def from_array_spec(cls, arr_spec: ArraySpec, /):
@@ -300,103 +267,105 @@ class array_context:
         Parameters
         ----------
             arr_spec : ArraySpec
-                An :class:`ArraySpec` named tuple containing the `xp`(`array namespace`), `dtype` and `device`.
+                An :class:`ArraySpec` named tuple containing the `cxp`(`compatibility namespace`), `dtype` and `device`.
         """
-        return cls(xp=arr_spec.xp, dtype=arr_spec.dtype, device=arr_spec.device)
+        return cls(xp=arr_spec.cxp, dtype=arr_spec.dtype, device=arr_spec.device)
 
     def __init__(
         self,
-        xp: Optional[Union[Namespace, ArrayLibraryName]] = None,
-        dtype: Optional[DTypeT] = None,
-        device: Optional[DeviceT] = None
+        xp: Optional[Union[object, ArrayLibraryName]] = None,
+        dtype: Optional[DType] = None,
+        device: Optional[Device] = None
     ):
         """
         Initialize the context manager with the specified `array namespace`, `dtype` and `device`.
 
         Parameters
         ----------
-            xp : Optional[Union[Namespace, ArrayLibraryName]], default to `None`
+            xp : Optional[Union[object, ArrayLibraryName]], default to `None`
                 The target `array namespace` or array library name for the context.
-                - `None`: Use the `array namespace` from the context;
-                - _others_: See also :param:`xp` in :func:`convert.as_array`.
+                - `None`: Use the `compatibility namespace` from the context;
 
             dtype : Optional[DTypeT], default to `None`
-                See also :param:`dtype` in :func:`convert.as_array`.
+                The target `dtype` for the context.
+                - `None`: Use the `dtype` from the context.
 
             device : Optional[DeviceT], default to `None`
-                See also :param:`device` in :func:`convert.as_array`.
+                The target `device` for the context.
+                - `None`: Use the `device` from the context.
         """
-        self.xp = to_xp(xp) if xp is not None else context_spec().xp
-        self.dtype = dtype
-        self.device = device
+        spec = context_spec()
+        self.cur_spec = ArraySpec.create(
+            to_xp(xp) if xp is not None else spec.cxp,
+            dtype if dtype is not None else spec.dtype,
+            device if device is not None else spec.device
+        )
 
     def __enter__(self):
         """Set the context variable to the specified namespace, dtype and device when entering the context."""
-        self._token = _arr_spec_var.set(ArraySpec(
-            xp=self.xp,
-            dtype=self.dtype,
-            device=self.device
-        ))
-        return self
+        self._token = _arr_spec_var.set(self.cur_spec)
+        return self.cur_spec
 
     def __exit__(self, *args):
         """Reset the context variable to its previous value when exiting the context."""
         _arr_spec_var.reset(self._token)
 
 
-def unify_array_args(
+def unify_args(
     ref: Optional[Union[str, int]] = 0,
-    filter_array_like: bool = True,
+    /,
+    filter_arraylike: bool = True,
     api_version: Optional[str] = None,
     use_compat: Optional[bool] = None,
     unify_dtype: bool = False,
     unify_device: bool = True,
+    arraylike_only: bool = True,
     strict: bool = True
 ):
     """
-    **Decorator** to unify array arguments of a function to the same `array namespace`, `dtype` and `device` determined by the provided array arguments and the reference array.
+    **Decorator** to unify arguments of a function to the same `compatibility namespace`, `dtype` and `device` determined by the provided array arguments and the reference array.
 
     Parameters
     ----------
         ref : Optional[Union[str, int]], default to `None`
-            Reference array to determine the `array namespace`, `dtype` and `device`.
+            Reference array to determine the `compatibility namespace`, `dtype` and `device`.
             See also :param:`ref` in :func:`array_spec`.
 
-        filter_array_like : bool, default to `False`
-            Whether to filter the provided inputs to all array-likes via :func:`array_api_compat.is_array_api_obj` when determining the `array namespace`.
+        filter_arraylike : bool, default to `False`
+            Whether to filter the provided inputs to all array-likes via :func:`array_api_compat.is_array_api_obj` when determining the `compatibility namespace`.
 
         api_version : Optional[str], default to `None`
-            The target array API version for the returned `array namespace`. See also :param:`api_version` in :func:`array_api_compat.array_namespace`.
+            See also :param:`api_version` in :func:`array_spec`.
 
         use_compat : Optional[bool], default to `None`
-            See also :param:`use_compat` in :func:`array_api_compat.array_namespace`.
-            - `None`: Return the native namespace if it is already Array API–compatible, otherwise return a compat wrapper;
-            - `True`: Always return the compat-wrapped namespace;
-            - `False`: Return the native namespace.
+            See also :param:`use_compat` in :func:`array_spec`.
 
         unify_dtype : bool, default to `False`
-            Whether to unify the `dtype` of all array arguments to that of the reference array.
+            Whether to unify the `dtype` of arguments to that of the reference array.
 
         unify_device : bool, default to `True`
-            Whether to unify the `device` of all array arguments to that of the reference array.
+            Whether to unify the `device` of arguments to that of the reference array.
+
+        arraylike_only : bool, default to `True`
+            Whether to only convert array-like objects to arrays in the determined namespace, and return the object itself if it is not array-like.
 
         strict : bool, default to `True`
-            Whether to raise exceptions when failing to determine the `array namespace`.
-            - `True`: Raise exceptions when failing to determine the `array namespace` from the provided inputs or the reference array;
-            - `False`: Fall back to the default `array namespace` if an error occurs. If all default array libraries are missing, just run the function without conversion.
+            Whether to raise exceptions when failing to determine the `compatibility namespace`.
+            - `True`: Raise exceptions when failing to determine the `compatibility namespace` from the provided inputs or the reference array;
+            - `False`: Fall back to the default `compatibility namespace` if an error occurs. If all default array libraries are missing, just run the function without conversion.
 
     Raises
     ------
-        Refer to :func:`default.default_spec`, :func:`as_context_array_if_like` for possible exceptions.
+        Refer to :func:`default.default_spec`, :func:`as_context` for possible exceptions.
     """
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
             # determine the namespace, dtype and device for the array inputs
             try:
-                arr_spec = array_spec(
+                spec = array_spec(
                     *args, kw_arrays=kwargs, ref=ref,
-                    filter_array_like=filter_array_like,
+                    filter_arraylike=filter_arraylike,
                     api_version=api_version,
                     use_compat=use_compat
                 )
@@ -405,17 +374,17 @@ def unify_array_args(
                     raise e
                 try:
                     # fall back to the default namespace
-                    arr_spec = default_spec()
+                    spec = default_spec()
                 except MissingDependencyError:
                     # just run the function without conversion
                     return func(*args, **kwargs)
 
-            with array_context.from_array_spec(arr_spec):
+            with array_context.from_array_spec(spec):
                 out_args = tuple(
-                    as_context_array_if_like(a, unify_dtype, unify_device, False) for a in args
+                    as_context(a, unify_dtype=unify_dtype, unify_device=unify_device, arraylike_only=arraylike_only) for a in args
                 )
                 out_kwargs = {
-                    k: as_context_array_if_like(v, unify_dtype, unify_device, False)
+                    k: as_context(v, unify_dtype=unify_dtype, unify_device=unify_device, arraylike_only=arraylike_only)
                     for k, v in kwargs.items()
                 }
                 return func(*out_args, **out_kwargs)

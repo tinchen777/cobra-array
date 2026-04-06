@@ -9,7 +9,7 @@ Functions
 Classes
 -------
 - :class:`CompatArray`: A backend-agnostic array abstraction compliant with the `Python Array API standard`.
-- :class::class:`CompatNamespace`: A wrapper around an `array namespace` providing a unified, backend-agnostic functional interface.
+- :class:`CompatNamespace`: A wrapper around an `array namespace` providing a unified, backend-agnostic functional interface.
 """
 
 from ._array import (CompatArray, wrap_arraylike, unwrap)

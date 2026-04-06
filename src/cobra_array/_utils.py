@@ -90,4 +90,4 @@ def is_compat_namespace(xp: object) -> bool:
     """
     Returns `True` if input is a `compatibility namespace` wrapped by :class:`CompatNamespace`
     """
-    return "(compat)" in getattr(xp, __name__, "")
+    return "(compat)" in getattr(xp, "__name__", "")

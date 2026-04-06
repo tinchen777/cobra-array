@@ -9,24 +9,25 @@ Attributes
 ----------
 - :attr:`DEFAULT_DTYPE`: The default data type for arrays.
 - :attr:`DEFAULT_DEVICE`: The default device for arrays.
-- :attr:`TORCH_COMPAT_NAMESPACE`: The compatibility namespace for `PyTorch`.
-- :attr:`NUMPY_COMPAT_NAMESPACE`: The compatibility namespace for `NumPy`.
+- :attr:`TORCH_COMPAT_NAMESPACE`: The `compatibility namespace` for `PyTorch`.
+- :attr:`NUMPY_COMPAT_NAMESPACE`: The `compatibility namespace` for `NumPy`.
 Functions
 ---------
 - :func:`default_spec`: Get the default array specification.
-- :func:`as_default`: Convert an array-like object to an array in the default context.
+- :func:`as_default`: Convert an array-like object to a :class:`CompatArray` array in the default context.
 """
 
 from __future__ import annotations
 from typing import (Any, Literal, TYPE_CHECKING, NamedTuple, overload)
 
-from .compat import CompatNamespace
+from .compat import (CompatNamespace, wrap_arraylike)
 from .convert import as_array
 from .array_api import (numpy_xp, torch_xp)
 from .exceptions import MissingDependencyError
 
 if TYPE_CHECKING:
     from numpy.typing import NDArray
+    from .compat import CompatArray
     from .types import (ArrayLike, DType, dtypeT, T)
 
 
@@ -42,10 +43,10 @@ class ArraySpec(NamedTuple):
     device: Any
 
     @classmethod
-    def create(cls, cxp: object, dtype: Any, device: Any) -> ArraySpec:
-        """Create an `ArraySpec` instance, convert the `cxp` to a :class:`CompatNamespace` instance if it is not already one."""
+    def create(cls, xp: object, dtype: Any, device: Any) -> ArraySpec:
+        """Create an `ArraySpec` instance, convert the `xp` to a :class:`CompatNamespace` instance if it is not already one."""
         return cls(
-            cxp=CompatNamespace(cxp),
+            cxp=CompatNamespace(xp),
             dtype=dtype,
             device=device,
         )
@@ -60,9 +61,7 @@ TORCH_COMPAT_NAMESPACE = CompatNamespace(torch_xp)
 
 def default_spec() -> ArraySpec:
     """
-    Try to get a suitable `array namespace` from the available array libraries in order of `PyTorch` > `NumPy`, and return it along with the default `dtype` and `device`.
-    
-    The `array namespace` 
+    Try to get a suitable `compatibility namespace` from the available array libraries in order of `PyTorch` > `NumPy`, and return it along with the default `dtype` and `device`.
 
     Returns
     -------
@@ -83,13 +82,13 @@ def default_spec() -> ArraySpec:
 
 
 @overload
-def as_default(obj: NDArray[dtypeT], /, *, unify_dtype: Literal[False], unify_device: bool = ..., copy: bool = ..., arraylike_only: bool = ...) -> ArrayLike[dtypeT]: ...
+def as_default(obj: NDArray[dtypeT], /, *, unify_dtype: Literal[False], unify_device: bool = ..., copy: bool = ..., arraylike_only: bool = ...) -> CompatArray[dtypeT, Literal["cpu"]]: ...
 @overload
-def as_default(obj: ArrayLike[dtypeT], /, *, unify_dtype: Literal[False], unify_device: bool = ..., copy: bool = ..., arraylike_only: bool = ...) -> ArrayLike[dtypeT]: ...
+def as_default(obj: ArrayLike[dtypeT], /, *, unify_dtype: Literal[False], unify_device: bool = ..., copy: bool = ..., arraylike_only: bool = ...) -> CompatArray[dtypeT, Any]: ...
 @overload
-def as_default(obj: ArrayLike[Any], /, *, unify_dtype: Literal[True] = ..., unify_device: bool = ..., copy: bool = ..., arraylike_only: bool = ...) -> ArrayLike[Any]: ...
+def as_default(obj: ArrayLike[Any], /, *, unify_dtype: Literal[True] = ..., unify_device: bool = ..., copy: bool = ..., arraylike_only: bool = ...) -> CompatArray[Any, Any]: ...
 @overload
-def as_default(obj: object, /, *, unify_dtype: bool = ..., unify_device: bool = ..., copy: bool = ..., arraylike_only: Literal[False] = ...) -> ArrayLike[Any]: ...
+def as_default(obj: object, /, *, unify_dtype: bool = ..., unify_device: bool = ..., copy: bool = ..., arraylike_only: Literal[False] = ...) -> CompatArray[Any, Any]: ...
 @overload
 def as_default(obj: T, /, *, unify_dtype: bool = ..., unify_device: bool = ..., copy: bool = ..., arraylike_only: Literal[True]) -> T: ...
 
@@ -103,12 +102,12 @@ def as_default(
     arraylike_only: bool = False
 ) -> Any:
     """
-    Convert an array-like object to an array in default `array namespace` with the default `dtype` and `device` if specified.
+    Convert an array-like object to a :class:`CompatArray` array in default `compatibility namespace` with the default `dtype` and `device` if specified.
 
     Parameters
     ----------
         obj : object
-            The object to be converted to an array.
+            The object to be converted to a :class:`CompatArray` array.
 
         unify_dtype : bool, default to `True`
             Whether to unify the `dtype` of the converted array to that of the default context.
@@ -124,8 +123,8 @@ def as_default(
 
     Returns
     -------
-        ArrayLike[Any]
-            The converted array representation of the object in the default context `array namespace`, with the default `dtype` and `device` if specified.
+        CompatArray[Any, Any]
+            The converted array representation of the object in the default context `compatibility namespace`, with the default `dtype` and `device` if specified.
         object
             If :param:`arraylike_only` is `True` and the object is not array-like.
 
@@ -133,11 +132,11 @@ def as_default(
     ------
         Refer to :func:`convert.as_array`, :func:`default.default_spec` for possible exceptions.
     """
-    arr_spec = default_spec()
-    return as_array(
-        obj, arr_spec.cxp,
-        dtype=arr_spec.dtype if unify_dtype else None,
-        device=arr_spec.device if unify_device else None,
+    spec = default_spec()
+    return wrap_arraylike(as_array(
+        obj, spec.cxp,
+        dtype=spec.dtype if unify_dtype else None,
+        device=spec.device if unify_device else None,
         copy=copy,
         arraylike_only=arraylike_only
-    )
+    ), xp=spec.cxp)

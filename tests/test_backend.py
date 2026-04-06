@@ -1,71 +1,139 @@
 import sys
-sys.path.insert(0, "/data/tianzhen/my_packages/cobra-array/src")
-# sys.path.insert(0, "/Users/apple/Develop/Python_WorkSpace/my_packages/cobra-array/src")
+from typing import Any, cast
 
-from cobra_array._core import array_spec, unify_array_args, context_namespace, as_context_array
 import numpy as np
-import torch
-import array_api_compat as api
+import pytest
+
+sys.path.insert(0, "/data/tianzhen/my_packages/cobra-array/src")
+
+from cobra_array import array_context, array_spec, as_context, context_spec, unify_args
+from cobra_array.array_api import CUDA_AVAILABLE, resolve_device
+from cobra_array.compat import CompatArray
+from cobra_array.default import default_spec
+from cobra_array.exceptions import (
+    CUDAUnavailableError,
+    DeviceNotSupportedError,
+    NoArrayInputsError,
+    NotArrayAPIObjectError,
+)
 
 
-def test_array_namespace():
-    a = torch.tensor([[1, 2], [3, 4], [5, 6]])
-    b = np.array([[1, 2, 3], [4, 5, 6]])
-    c = [[1, 2], [3, 4], [5, 6]]
-    d = "hello"
-    e = iter(a)
-    f = torch.tensor([[1, 2], [3, 4], [5, 6]])
-
-    arr_spec = array_spec(c, f, kw_arrays={"d": d}, ref=0, filter_array_like=True)
-    # xp, arr = array_namespace(f, a, kw_arrays={"a": a}, ref=2)
-    print(arr_spec.xp)
-    print(arr_spec.dtype)
-    print(arr_spec.device)
+def test_array_spec_no_inputs_raises():
+    with pytest.raises(NoArrayInputsError):
+        array_spec()
 
 
-def test_unify_array_args():
-    a = torch.tensor([[1, 2], [3, 4], [5, 6], [7, 8]])
-    b = np.array([[1, 2, 3], [4, 5, 6]])
-    bb = np.array(1)
-    aa = torch.tensor(1)
-    c = [[1, 2], [3, 4], [5, 6]]
-    d = "hello"
-    e = iter(a)
-    f = torch.tensor([[1, 2], [3, 4], [5, 6]])
-    
-    
-    print(a.dtype)
-    print(b.dtype)
-    
+def test_array_spec_ref_none_returns_namespace_only():
+    spec = array_spec(np.array([1, 2, 3]), ref=None)
+    assert spec.cxp is not None
+    assert spec.dtype is None
+    assert spec.device is None
 
-    @unify_array_args(1, unify_device=False, filter_array_like=True)
-    def func(*args, **kwargs):
-        print(args)
-        print(kwargs)
-        xp = context_namespace()
-        print(xp.__name__)
-        
-        # print(a.size, b.size)
-        print(len(aa))
-        
-        # print(xp.shape(a))
-        # print(api.device(b))
 
-        
-        
+def test_array_spec_ref_int_and_str():
+    arr = np.array([1, 2, 3], dtype=np.float32)
+    spec_by_int = array_spec(arr, ref=0)
+    spec_by_str = array_spec(kw_arrays={"x": arr}, ref="x")
+    assert spec_by_int.dtype == arr.dtype
+    assert str(spec_by_int.device) == "cpu"
+    assert spec_by_str.dtype == arr.dtype
 
-        new = [1, 2, 3]
-        new = as_context_array(new)
-        print(repr(new))
 
-        a1 = xp.mean(args[0], axis=1)
-        print(a1)
-        # raise ValueError("Test unify_array_args")
+def test_array_spec_invalid_ref_type_raises():
+    with pytest.raises(TypeError):
+        array_spec(np.array([1]), ref=cast(Any, 1.5))
 
-    func(c, b, a)
+
+def test_array_spec_invalid_ref_index_raises():
+    with pytest.raises(IndexError):
+        array_spec(np.array([1]), ref=2)
+
+
+def test_array_spec_non_array_ref_raises_when_not_filtering():
+    with pytest.raises(NotArrayAPIObjectError):
+        array_spec([1, 2, 3], ref=0, filter_arraylike=False)
+
+
+def test_context_spec_falls_back_to_default():
+    spec = context_spec()
+    dspec = default_spec()
+    assert spec.cxp.xp_name == dspec.cxp.xp_name
+
+
+def test_array_context_override_and_restore():
+    before = context_spec()
+    with array_context(xp="numpy", dtype=np.float32, device="cpu") as spec:
+        current = context_spec()
+        assert current.cxp.xp_name == spec.cxp.xp_name
+        assert current.dtype == np.float32
+        assert str(current.device) == "cpu"
+    after = context_spec()
+    assert after.cxp.xp_name == before.cxp.xp_name
+
+
+def test_as_context_converts_under_current_context():
+    with array_context(xp="numpy", dtype=np.float32, device="cpu"):
+        out = as_context([1, 2, 3], unify_dtype=True, unify_device=True)
+    assert isinstance(out, CompatArray)
+    assert out.dtype == np.dtype(np.float32)
+
+
+def test_as_context_arraylike_only_passthrough():
+    marker = object()
+    with array_context(xp="numpy"):
+        out = as_context(marker, arraylike_only=True)
+    assert out is marker
+
+
+def test_unify_args_strict_true_raises_for_non_array_inputs():
+    @unify_args(filter_arraylike=True, strict=True)
+    def fn(a, b):
+        return a, b
+
+    with pytest.raises(IndexError):
+        fn("x", {"y": 1})
+
+
+def test_unify_args_strict_false_fallback_and_convert():
+    @unify_args(filter_arraylike=True, strict=False, arraylike_only=False)
+    def fn(a):
+        return a, context_spec().cxp.xp_name
+
+    out, xp_name = fn([1, 2, 3])
+    assert isinstance(out, CompatArray)
+    assert xp_name in ("NumPy", "PyTorch")
+
+
+def test_resolve_device_basic_and_numpy_constraints():
+    assert resolve_device(None) is None
+    assert resolve_device("cpu", xp="numpy") == "cpu"
+    with pytest.raises(DeviceNotSupportedError):
+        resolve_device("cuda:0", xp="numpy")
+
+
+def test_resolve_device_torch_checks():
+    with pytest.raises(DeviceNotSupportedError):
+        resolve_device("not-a-device", xp="torch")
+
+    if CUDA_AVAILABLE:
+        assert resolve_device("cuda", xp="torch") == "cuda"
+    else:
+        with pytest.raises(CUDAUnavailableError):
+            resolve_device("cuda", xp="torch")
 
 
 if __name__ == "__main__":
-    test_array_namespace()
-    print("=====")
-    test_unify_array_args()
+    test_array_context_override_and_restore()
+    test_as_context_converts_under_current_context()
+    test_as_context_arraylike_only_passthrough()
+    test_unify_args_strict_true_raises_for_non_array_inputs()
+    test_unify_args_strict_false_fallback_and_convert()
+    test_resolve_device_basic_and_numpy_constraints()
+    test_resolve_device_torch_checks()
+    test_array_context_override_and_restore()
+    test_as_context_converts_under_current_context()
+    test_as_context_arraylike_only_passthrough()
+    test_unify_args_strict_true_raises_for_non_array_inputs()
+    test_unify_args_strict_false_fallback_and_convert()
+    test_resolve_device_basic_and_numpy_constraints()
+    test_resolve_device_torch_checks()

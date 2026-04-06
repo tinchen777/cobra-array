@@ -1,124 +1,58 @@
 import sys
-sys.path.insert(0, "/data/tianzhen/my_packages/cobra-array/src")
-# sys.path.insert(0, "/Users/apple/Develop/Python_WorkSpace/my_packages/cobra-array/src")
+from typing import Any, cast
 
-from cobra_array.compat import CompatArray, CompatNamespace
-from cobra_array.convert import to_xp
 import numpy as np
-from numpy.typing import NDArray
-import torch
-import time
-import array_api_compat as api
-from array_api_compat.common._typing import Namespace
-import array_api_strict
-import inspect
+import pytest
+
+sys.path.insert(0, "/data/tianzhen/my_packages/cobra-array/src")
+
+import cobra_array._utils as utils
+from cobra_array._utils import array_namespace_alias, is_array_namespace, is_compat_namespace
+from cobra_array.compat import CompatArray, CompatNamespace, unwrap, wrap_arraylike
+from cobra_array.exceptions import NotArrayAPIObjectError, UnsupportedNamespaceError
 
 
-class A(CompatNamespace):
-    ...
+def test_array_namespace_alias_numpy():
+    assert array_namespace_alias(np) == "NumPy"
 
 
-def test_class():
-    a = torch.tensor([[1, 2], [3, 4], [5, 6]])
-    b = np.array([[11, 12, 13], [14, 15, 16]], dtype=float)
-    # b = np.array([1, 1])
-    c = [[21, 22], [23, 24], [25, 26]]
-    d = "hello"
-    e = iter(a)
-
-    np_m = api.array_namespace(b)
-    torch_m = api.array_namespace(a)
-
-    
-    ba = CompatArray.from_other(b, xp="numpy")
-    ba = CompatArray.from_other(ba, xp="torch")
-    ba = CompatArray(ba)
-    
-    # ba = ba.astype(np.float128)
-
-  
-    
-    bxp = ba.xp
-    if isinstance(bxp, Namespace):
-        print("Strict Namespace")
-    
-    # print(bxp.__array_namespace__())
-    
-    print(type(bxp), bxp.__name__)
-    xx = CompatNamespace(bxp)
-    print(type(xx), xx.__name__)
-    
-    print(xx.xp_name)
-    
-    f = xx.asarray([1, 2, 3], dtype=xx.float32)
-    
-    print(f, type(f), f.dtype)
-    
-    f = xx.full((2, 3), 0.7)
-    print("f", f, type(f), f.dtype)
-    o = xx.asarray(f)
-    print("o", o, type(o), o.dtype)
-    oo = o.arr
-    print("oo", oo, type(oo), oo.dtype)
-    
-    f += oo
-    
-    print(f)
-    
-    
-    
-    
-    
-    
-    
-
-    print(ba)
-    print(ba.arr)
-    print(bxp)
-    print(ba.to_numpy())
-    # print(ba.to_tensor())
-    print(ba.to_list())
-    print("=====" * 10)
-    # f = ba.astype(np.float128, copy=False, device="cuda")
-    # print("astype", f)
-    f = ba.abs()
-    print("abs", f)
-    f = ba.acos()
-    print("acos", f)
-    f = ba.acosh()
-    print("acosh", f)
-    f = ba.add(ba)
-    print("add", f)
-    f = ba.asin()
-    print("asin", f)
-    f = ba.asinh()
-    print("asinh", f)
-    f = ba.atan()
-    print("atan", f)
-    f = ba.atan2(ba)
-    print("atan2", f)
-    f = ba.atanh()
-    print("atanh", f)
-    # f = ba.ceil()
-    # print("ceil", f)
-    # f = ba.clip(12, 15)
-    # print("clip", f)
-    
-    f = abs(ba)
-    f = ba + ba
-    print(f)
-    
-    f = ba.cumulative_sum(axis=1)
-    
-    f = ba.unique_all()
-    print(f)
-   
-    print(f.counts, type(f.counts), f.counts.dtype)
-    print(f.indices, type(f.indices), f.indices.dtype)
-    print(f.inverse_indices, type(f.inverse_indices), f.inverse_indices.dtype)
-    print(f.values, type(f.values), f.values.dtype)
+def test_array_namespace_alias_invalid_raises():
+    with pytest.raises(UnsupportedNamespaceError):
+        array_namespace_alias(object())
 
 
+def test_is_array_namespace_true_and_false():
+    assert is_array_namespace(np) is True
+    assert is_array_namespace(object()) is False
 
-if __name__ == "__main__":
-    test_class()
+
+def test_is_compat_namespace_true_and_false():
+    cxp = CompatNamespace(np)
+    assert is_compat_namespace(cxp) is True
+    assert is_compat_namespace(np) is False
+
+
+def test_warn_falls_back_to_python_warning(monkeypatch):
+    monkeypatch.setattr(utils, "_WARN_AVAILABLE", False)
+    with pytest.warns(UserWarning):
+        utils.warn("hello", category=UserWarning)
+
+
+def test_unwrap_and_wrap_arraylike():
+    arr = np.array([1, 2, 3])
+    wrapped = wrap_arraylike(arr)
+    assert isinstance(wrapped, CompatArray)
+    assert unwrap(wrapped) is arr
+    assert wrap_arraylike("x") == "x"
+    assert unwrap("x") == "x"
+
+
+def test_compatnamespace_wraps_namespace():
+    cxp = CompatNamespace(np)
+    assert isinstance(cxp, CompatNamespace)
+    assert cxp.xp is np
+
+
+def test_compatarray_invalid_init_raises():
+    with pytest.raises(NotArrayAPIObjectError):
+        CompatArray(cast(Any, "not-an-array"))

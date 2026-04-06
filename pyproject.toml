@@ -5,21 +5,31 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "cobra-array"
 dynamic = ["version"]
-description = "XXX"
+description = "A backend-agnostic array utility library that unifies array conversion, context control, and cross-library operations across `NumPy`/`PyTorch`-style ecosystems."
 readme = "README.md"
 license-files = ["LICENSE"]
 authors = [
     {name = "Zhen Tian", email = "zhen.tian.cs@gmail.com"}
 ]
-requires-python = ""
+requires-python = ">=3.9"
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+]
 dependencies = [
-
+    "array-api-compat>=1.11.2"
 ]
 
 [project.optional-dependencies]
 dev = [
     "pytest",
     "pytest-cov",
+    "numpy>=1.21,<2.0",
 ]
 
 [project.urls]
@@ -33,9 +43,3 @@ version = {attr = "cobra_array.__version__"}
 [tool.setuptools.packages.find]
 where = ["src"]
 include = ["cobra_array*"]
-
-[tool.setuptools.package-data]
-cobra_array = [
-    "draw/fonts/*.ttf",
-    "draw/fonts/*.TTF"
-]
