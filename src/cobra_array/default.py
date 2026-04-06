@@ -55,8 +55,8 @@ class ArraySpec(NamedTuple):
 # get defaults
 DEFAULT_DTYPE = float
 DEFAULT_DEVICE = "cpu"
-NUMPY_COMPAT_NAMESPACE = CompatNamespace(numpy_xp)
-TORCH_COMPAT_NAMESPACE = CompatNamespace(torch_xp)
+NUMPY_COMPAT_NAMESPACE = CompatNamespace(numpy_xp) if numpy_xp is not None else None
+TORCH_COMPAT_NAMESPACE = CompatNamespace(torch_xp) if torch_xp is not None else None
 
 
 def default_spec() -> ArraySpec:
