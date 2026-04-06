@@ -11,11 +11,11 @@ from cobra_array.compat import CompatArray, unwrap, wrap_arraylike
 from cobra_array.exceptions import CompatArrayAttributeError, NotArrayAPIObjectError
 
 
-def _arr_1d() -> CompatArray:
+def _arr_1d():
     return CompatArray(np.array([1.0, 2.0, 3.0], dtype=np.float32))
 
 
-def _arr_2d() -> CompatArray:
+def _arr_2d():
     return CompatArray(np.array([[1.0, 2.0], [3.0, 4.0]], dtype=np.float32))
 
 
@@ -55,7 +55,9 @@ def test_to_numpy_to_list_and_array_protocol():
 
 def test_to_device_on_numpy_backend():
     a = _arr_1d()
-    moved = a.to_device("cpu")
+    moved = a.to_device("cpu:0")
+    
+    f = a.astype(int, device="cpu: 0")  # type: ignore[call-arg]
 
     assert isinstance(moved, np.ndarray)
     assert moved.tolist() == a.to_list()

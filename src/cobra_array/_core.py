@@ -22,7 +22,7 @@ from .exceptions import (
 if TYPE_CHECKING:
     from numpy.typing import NDArray
     from .compat import CompatArray
-    from .types import (T, dtypeT, DType, Device, ArrayLike, ArrayLibraryName)
+    from .types import (T, dtypeT, DType, AnyDevice, ArrayLike, ArrayLibraryName)
 
 
 def array_spec(
@@ -85,10 +85,6 @@ def array_spec(
             If `ref` is not `None`, a string, or an integer.
         NotArrayAPIObjectError
             If the reference array determined by `ref` is not an array API compatible array object.
-
-    Examples
-    --------
-    
     """
     kw_arrays = kw_arrays or {}
 
@@ -197,11 +193,11 @@ def context_spec() -> ArraySpec:
 @overload
 def as_context(obj: NDArray[dtypeT], /, *, unify_dtype: Literal[False], unify_device: bool = ..., copy: bool = ..., arraylike_only: bool = ...) -> CompatArray[dtypeT, Literal["cpu"]]: ...
 @overload
-def as_context(obj: ArrayLike[dtypeT], /, *, unify_dtype: Literal[False], unify_device: bool = ..., copy: bool = ..., arraylike_only: bool = ...) -> CompatArray[dtypeT, Any]: ...
+def as_context(obj: ArrayLike[dtypeT], /, *, unify_dtype: Literal[False], unify_device: bool = ..., copy: bool = ..., arraylike_only: bool = ...) -> CompatArray[dtypeT, AnyDevice]: ...
 @overload
-def as_context(obj: ArrayLike[Any], /, *, unify_dtype: Literal[True] = ..., unify_device: bool = ..., copy: bool = ..., arraylike_only: bool = ...) -> CompatArray[Any, Any]: ...
+def as_context(obj: ArrayLike[Any], /, *, unify_dtype: Literal[True] = ..., unify_device: bool = ..., copy: bool = ..., arraylike_only: bool = ...) -> CompatArray[Any, AnyDevice]: ...
 @overload
-def as_context(obj: object, /, *, unify_dtype: bool = ..., unify_device: bool = ..., copy: bool = ..., arraylike_only: Literal[False] = ...) -> CompatArray[Any, Any]: ...
+def as_context(obj: object, /, *, unify_dtype: bool = ..., unify_device: bool = ..., copy: bool = ..., arraylike_only: Literal[False] = ...) -> CompatArray[Any, AnyDevice]: ...
 @overload
 def as_context(obj: T, /, *, unify_dtype: bool = ..., unify_device: bool = ..., copy: bool = ..., arraylike_only: Literal[True]) -> T: ...
 
@@ -236,7 +232,7 @@ def as_context(
 
     Returns
     -------
-        CompatArray[Any, Any]
+        CompatArray[Any, AnyDevice]
             The converted array representation of the object in the current context `compatibility namespace`, with the current context `dtype` and `device` if specified.
         object
             If :param:`arraylike_only` is `True` and the object is not array-like.
@@ -275,7 +271,7 @@ class array_context:
         self,
         xp: Optional[Union[object, ArrayLibraryName]] = None,
         dtype: Optional[DType] = None,
-        device: Optional[Device] = None
+        device: Optional[AnyDevice] = None
     ):
         """
         Initialize the context manager with the specified `array namespace`, `dtype` and `device`.
@@ -286,11 +282,11 @@ class array_context:
                 The target `array namespace` or array library name for the context.
                 - `None`: Use the `compatibility namespace` from the context;
 
-            dtype : Optional[DTypeT], default to `None`
+            dtype : Optional[DType], default to `None`
                 The target `dtype` for the context.
                 - `None`: Use the `dtype` from the context.
 
-            device : Optional[DeviceT], default to `None`
+            device : Optional[AnyDevice], default to `None`
                 The target `device` for the context.
                 - `None`: Use the `device` from the context.
         """

@@ -9,7 +9,7 @@ from typing import (Union, List, Tuple, Optional, Any, Literal, overload)
 from ._base import Compat
 from ._array import CompatArray
 from ..types import (
-    DTypeT, DeviceT, dtypeT, DType, Device,
+    DTypeT, DeviceT, dtypeT, DType, AnyDevice,
     ValueT, Value, ArrayLike, ArrayOrAny
 )
 
@@ -19,28 +19,32 @@ class CompatNamespace(Compat):
 
     # === Creation functions ===
     @overload
-    def asarray(self, obj: NDArray[dtypeT], /, *, dtype: None = ..., device: Optional[Device] = ..., copy: Optional[bool] = ...) -> CompatArray[dtypeT, Literal["cpu"]]: ...
+    def asarray(self, obj: NDArray[dtypeT], /, *, dtype: None = ..., device: Optional[AnyDevice] = ..., copy: Optional[bool] = ...) -> CompatArray[dtypeT, Literal["cpu"]]: ...
     @overload
-    def asarray(self, obj: ArrayLike[dtypeT], /, *, dtype: None = ..., device: None = ..., copy: Optional[bool] = ...) -> CompatArray[dtypeT, Any]: ...
+    def asarray(self, obj: ArrayLike[dtypeT], /, *, dtype: None = ..., device: None = ..., copy: Optional[bool] = ...) -> CompatArray[dtypeT, AnyDevice]: ...
     @overload
-    def asarray(self, obj: object, /, *, dtype: None = ..., device: None = ..., copy: Optional[bool] = ...) -> CompatArray[Any, Any]: ...
+    def asarray(self, obj: object, /, *, dtype: None = ..., device: None = ..., copy: Optional[bool] = ...) -> CompatArray[Any, AnyDevice]: ...
     @overload
     def asarray(self, obj: object, /, *, dtype: None = ..., device: DeviceT, copy: Optional[bool] = ...) -> CompatArray[Any, DeviceT]: ...
     @overload
-    def asarray(self, obj: NDArray[Any], /, *, dtype: DTypeT, device: Optional[Device] = ..., copy: Optional[bool] = ...) -> CompatArray[DTypeT, Literal["cpu"]]: ...
+    def asarray(self, obj: object, /, *, dtype: None = ..., device: AnyDevice, copy: Optional[bool] = ...) -> CompatArray[Any, AnyDevice]: ...
     @overload
-    def asarray(self, obj: object, /, *, dtype: DTypeT, device: None = ..., copy: Optional[bool] = ...) -> CompatArray[DTypeT, Any]: ...
+    def asarray(self, obj: NDArray[Any], /, *, dtype: DTypeT, device: Optional[AnyDevice] = ..., copy: Optional[bool] = ...) -> CompatArray[DTypeT, Literal["cpu"]]: ...
+    @overload
+    def asarray(self, obj: object, /, *, dtype: DTypeT, device: None = ..., copy: Optional[bool] = ...) -> CompatArray[DTypeT, AnyDevice]: ...
     @overload
     def asarray(self, obj: object, /, *, dtype: DTypeT, device: DeviceT, copy: Optional[bool] = ...) -> CompatArray[DTypeT, DeviceT]: ...
+    @overload
+    def asarray(self, obj: object, /, *, dtype: DTypeT, device: AnyDevice, copy: Optional[bool] = ...) -> CompatArray[DTypeT, AnyDevice]: ...
 
     def asarray(
         self,
         obj: object,
         /, *,
         dtype: Optional[DType] = None,
-        device: Optional[Device] = None,
+        device: Optional[AnyDevice] = None,
         copy: Optional[bool] = None
-    ) -> CompatArray[Any, Any]:
+    ) -> CompatArray[Any, AnyDevice]:
         """
         Convert the input to a :class:`CompatArray` array.
 
@@ -59,7 +63,7 @@ class CompatNamespace(Compat):
                 3. If one or more values are `complex` numbers, the output data type must be the default `complex` floating-point data type;
                 4. If one or more values are `floats`, the output data type must be the default real-valued floating-point data type.
 
-            device : Optional[Device], default to `None`
+            device : Optional[AnyDevice], default to `None`
                 Device on which to place the created array.
                 - `None`: If :param:`obj` is an array, the output array device must be inferred from :param:`obj`.
 
@@ -83,11 +87,15 @@ class CompatNamespace(Compat):
     @overload
     def arange(self, start: int, /, stop: Optional[int] = ..., step: int = ..., *, dtype: None = ..., device: DeviceT) -> CompatArray[int, DeviceT]: ...
     @overload
+    def arange(self, start: int, /, stop: Optional[int] = ..., step: int = ..., *, dtype: None = ..., device: AnyDevice) -> CompatArray[int, AnyDevice]: ...
+    @overload
     def arange(self, start: Union[int, float], /, stop: Optional[Union[int, float]] = ..., step: Union[int, float] = ..., *, dtype: None = ..., device: DeviceT) -> CompatArray[float, DeviceT]: ...
+    @overload
+    def arange(self, start: Union[int, float], /, stop: Optional[Union[int, float]] = ..., step: Union[int, float] = ..., *, dtype: None = ..., device: AnyDevice) -> CompatArray[float, AnyDevice]: ...
     @overload
     def arange(self, start: Union[int, float], /, stop: Optional[Union[int, float]] = ..., step: Union[int, float] = ..., *, dtype: DTypeT, device: None = ...) -> CompatArray[DTypeT, Literal["cpu"]]: ...
     @overload
-    def arange(self, start: Union[int, float], /, stop: Optional[Union[int, float]] = ..., step: Union[int, float] = ..., *, dtype: DTypeT, device: Device) -> CompatArray[DTypeT, Device]: ...
+    def arange(self, start: Union[int, float], /, stop: Optional[Union[int, float]] = ..., step: Union[int, float] = ..., *, dtype: DTypeT, device: AnyDevice) -> CompatArray[DTypeT, AnyDevice]: ...
 
     def arange(
         self,
@@ -97,8 +105,8 @@ class CompatNamespace(Compat):
         step: Union[int, float] = 1,
         *,
         dtype: Optional[DType] = None,
-        device: Optional[Device] = None
-    ) -> CompatArray[Any, Any]:
+        device: Optional[AnyDevice] = None
+    ) -> CompatArray[Any, AnyDevice]:
         """
         Returns evenly spaced values within the half-open interval `[start, stop)` as a one-dimensional :class:`CompatArray` array.
 
@@ -122,7 +130,7 @@ class CompatNamespace(Compat):
                     - all integers: the output data type must be the default `integer` data type;
                     - one or more floats: the output data type must be the default real-valued floating-point data type.
 
-            device : Optional[Device], default to `None`
+            device : Optional[AnyDevice], default to `None`
                  Device on which to place the created array.
 
         Returns
@@ -138,17 +146,21 @@ class CompatNamespace(Compat):
     @overload
     def empty(self, shape: Union[int, Tuple[int, ...]], *, dtype: None = ..., device: DeviceT) -> CompatArray[float, DeviceT]: ...
     @overload
+    def empty(self, shape: Union[int, Tuple[int, ...]], *, dtype: None = ..., device: AnyDevice) -> CompatArray[float, AnyDevice]: ...
+    @overload
     def empty(self, shape: Union[int, Tuple[int, ...]], *, dtype: DTypeT, device: None = ...) -> CompatArray[DTypeT, Literal["cpu"]]: ...
     @overload
     def empty(self, shape: Union[int, Tuple[int, ...]], *, dtype: DTypeT, device: DeviceT) -> CompatArray[DTypeT, DeviceT]: ...
+    @overload
+    def empty(self, shape: Union[int, Tuple[int, ...]], *, dtype: DTypeT, device: AnyDevice) -> CompatArray[DTypeT, AnyDevice]: ...
 
     def empty(
         self,
         shape: Union[int, Tuple[int, ...]],
         *,
         dtype: Optional[DType] = None,
-        device: Optional[Device] = None
-    ) -> CompatArray[Any, Any]:
+        device: Optional[AnyDevice] = None
+    ) -> CompatArray[Any, AnyDevice]:
         """
         Returns an uninitialized :class:`CompatArray` array having a specified shape.
 
@@ -161,7 +173,7 @@ class CompatNamespace(Compat):
                  Output array data type.
                  - `None`: The output array data type must be the default real-valued floating-point data type.
 
-            device : Optional[Device], default to `None`
+            device : Optional[AnyDevice], default to `None`
                  Device on which to place the created array.
 
         Returns
@@ -172,23 +184,27 @@ class CompatNamespace(Compat):
         ...
 
     @overload
-    def empty_like(self, x: NDArray[dtypeT], /, *, dtype: None = ..., device: Optional[Device] = ...) -> CompatArray[dtypeT, Literal["cpu"]]: ...
+    def empty_like(self, x: NDArray[dtypeT], /, *, dtype: None = ..., device: Optional[AnyDevice] = ...) -> CompatArray[dtypeT, Literal["cpu"]]: ...
     @overload
-    def empty_like(self, x: ArrayLike[dtypeT], /, *, dtype: None = ..., device: None = ...) -> CompatArray[dtypeT, Any]: ...
+    def empty_like(self, x: ArrayLike[dtypeT], /, *, dtype: None = ..., device: None = ...) -> CompatArray[dtypeT, AnyDevice]: ...
     @overload
     def empty_like(self, x: ArrayLike[dtypeT], /, *, dtype: None = ..., device: DeviceT) -> CompatArray[dtypeT, DeviceT]: ...
     @overload
-    def empty_like(self, x: ArrayLike[Any], /, *, dtype: DTypeT, device: None = ...) -> CompatArray[DTypeT, Any]: ...
+    def empty_like(self, x: ArrayLike[dtypeT], /, *, dtype: None = ..., device: AnyDevice) -> CompatArray[dtypeT, AnyDevice]: ...
+    @overload
+    def empty_like(self, x: ArrayLike[Any], /, *, dtype: DTypeT, device: None = ...) -> CompatArray[DTypeT, AnyDevice]: ...
     @overload
     def empty_like(self, x: ArrayLike[Any], /, *, dtype: DTypeT, device: DeviceT) -> CompatArray[DTypeT, DeviceT]: ...
+    @overload
+    def empty_like(self, x: ArrayLike[Any], /, *, dtype: DTypeT, device: AnyDevice) -> CompatArray[DTypeT, AnyDevice]: ...
 
     def empty_like(
         self,
         x: ArrayLike[Any],
         /, *,
         dtype: Optional[DType] = None,
-        device: Optional[Device] = None
-    ) -> CompatArray[Any, Any]:
+        device: Optional[AnyDevice] = None
+    ) -> CompatArray[Any, AnyDevice]:
         """
         Returns an uninitialized :class:`CompatArray` array with the same shape as an input array :param:`x`.
 
@@ -201,7 +217,7 @@ class CompatNamespace(Compat):
                  Output array data type.
                  - `None`: The output array data type must be inferred from :param:`x`.
 
-            device : Optional[Device], default to `None`
+            device : Optional[AnyDevice], default to `None`
                  Device on which to place the created array.
                  - `None`: The output array device must be inferred from :param:`x`.
 
@@ -217,9 +233,13 @@ class CompatNamespace(Compat):
     @overload
     def eye(self, n_rows: int, n_cols: Optional[int] = ..., /, *, k: int = ..., dtype: None = ..., device: DeviceT) -> CompatArray[float, DeviceT]: ...
     @overload
+    def eye(self, n_rows: int, n_cols: Optional[int] = ..., /, *, k: int = ..., dtype: None = ..., device: AnyDevice) -> CompatArray[float, AnyDevice]: ...
+    @overload
     def eye(self, n_rows: int, n_cols: Optional[int] = ..., /, *, k: int = ..., dtype: DTypeT, device: None = ...) -> CompatArray[DTypeT, Literal["cpu"]]: ...
     @overload
     def eye(self, n_rows: int, n_cols: Optional[int] = ..., /, *, k: int = ..., dtype: DTypeT, device: DeviceT) -> CompatArray[DTypeT, DeviceT]: ...
+    @overload
+    def eye(self, n_rows: int, n_cols: Optional[int] = ..., /, *, k: int = ..., dtype: DTypeT, device: AnyDevice) -> CompatArray[DTypeT, AnyDevice]: ...
 
     def eye(
         self,
@@ -228,8 +248,8 @@ class CompatNamespace(Compat):
         /, *,
         k: int = 0,
         dtype: Optional[DType] = None,
-        device: Optional[Device] = None
-    ) -> CompatArray[Any, Any]:
+        device: Optional[AnyDevice] = None
+    ) -> CompatArray[Any, AnyDevice]:
         """
         Returns a two-dimensional :class:`CompatArray` array with ones on the :param:`k`th diagonal and zeros elsewhere.
 
@@ -252,7 +272,7 @@ class CompatNamespace(Compat):
                  Output array data type.
                  - `None`: The output array data type must be the default real-valued floating-point data type.
 
-            device : Optional[Device], default to `None`
+            device : Optional[AnyDevice], default to `None`
                  Device on which to place the created array.
 
         Returns
@@ -265,21 +285,25 @@ class CompatNamespace(Compat):
     @overload
     def from_dlpack(self, x: NDArray[dtypeT], /, *, device: None = ..., copy: Optional[bool] = ...) -> CompatArray[dtypeT, Literal["cpu"]]: ...
     @overload
-    def from_dlpack(self, x: ArrayLike[dtypeT], /, *, device: None = ..., copy: Optional[bool] = ...) -> CompatArray[dtypeT, Any]: ...
+    def from_dlpack(self, x: ArrayLike[dtypeT], /, *, device: None = ..., copy: Optional[bool] = ...) -> CompatArray[dtypeT, AnyDevice]: ...
     @overload
-    def from_dlpack(self, x: object, /, *, device: None = ..., copy: Optional[bool] = ...) -> CompatArray[Any, Any]: ...
+    def from_dlpack(self, x: object, /, *, device: None = ..., copy: Optional[bool] = ...) -> CompatArray[Any, AnyDevice]: ...
     @overload
     def from_dlpack(self, x: ArrayLike[dtypeT], /, *, device: DeviceT, copy: Optional[bool] = ...) -> CompatArray[dtypeT, DeviceT]: ...
     @overload
+    def from_dlpack(self, x: ArrayLike[dtypeT], /, *, device: AnyDevice, copy: Optional[bool] = ...) -> CompatArray[dtypeT, AnyDevice]: ...
+    @overload
     def from_dlpack(self, x: object, /, *, device: DeviceT, copy: Optional[bool] = ...) -> CompatArray[Any, DeviceT]: ...
+    @overload
+    def from_dlpack(self, x: object, /, *, device: AnyDevice, copy: Optional[bool] = ...) -> CompatArray[Any, AnyDevice]: ...
 
     def from_dlpack(
         self,
         x: object,
         /, *,
-        device: Optional[Device] = None,
+        device: Optional[AnyDevice] = None,
         copy: Optional[bool] = None
-    ) -> CompatArray[Any, Any]:
+    ) -> CompatArray[Any, AnyDevice]:
         """
         Returns a new :class:`CompatArray` array containing the data from another (array) object with a `__dlpack__` method.
 
@@ -288,7 +312,7 @@ class CompatNamespace(Compat):
             x : object
                 Input (array) object.
 
-            device : Optional[Device], default to `None`
+            device : Optional[AnyDevice], default to `None`
                 Device on which to place the created array.
                 - `None`:  If :param:`x` supports `DLPack`, the output array must be on the same device as :param:`x`.
 
@@ -310,9 +334,13 @@ class CompatNamespace(Compat):
     @overload
     def full(self, shape: Union[int, Tuple[int, ...]], fill_value: ValueT, *, dtype: None = ..., device: DeviceT) -> CompatArray[ValueT, DeviceT]: ...
     @overload
+    def full(self, shape: Union[int, Tuple[int, ...]], fill_value: ValueT, *, dtype: None = ..., device: AnyDevice) -> CompatArray[ValueT, AnyDevice]: ...
+    @overload
     def full(self, shape: Union[int, Tuple[int, ...]], fill_value: Value, *, dtype: DTypeT, device: None = ...) -> CompatArray[DTypeT, Literal["cpu"]]: ...
     @overload
     def full(self, shape: Union[int, Tuple[int, ...]], fill_value: Value, *, dtype: DTypeT, device: DeviceT) -> CompatArray[DTypeT, DeviceT]: ...
+    @overload
+    def full(self, shape: Union[int, Tuple[int, ...]], fill_value: Value, *, dtype: DTypeT, device: AnyDevice) -> CompatArray[DTypeT, AnyDevice]: ...
 
     def full(
         self,
@@ -320,8 +348,8 @@ class CompatNamespace(Compat):
         fill_value: Value,
         *,
         dtype: Optional[DType] = None,
-        device: Optional[Device] = None
-    ) -> CompatArray[Any, Any]:
+        device: Optional[AnyDevice] = None
+    ) -> CompatArray[Any, AnyDevice]:
         """
         Returns a new :class:`CompatArray` array having a specified :param:`shape` and filled with :param:`fill_value`.
 
@@ -342,7 +370,7 @@ class CompatNamespace(Compat):
                     - _complex_: The output array data type must be the default `complex` floating-point data type;
                     - _bool_: The output array data type must be `bool`.
 
-            device : Optional[Device], default to `None`
+            device : Optional[AnyDevice], default to `None`
                 Device on which to place the created array.
 
         Returns
@@ -353,15 +381,19 @@ class CompatNamespace(Compat):
         ...
 
     @overload
-    def full_like(self, x: NDArray[dtypeT], /, fill_value: Value, *, dtype: None = ..., device: Optional[Device] = ...) -> CompatArray[dtypeT, Literal["cpu"]]: ...
+    def full_like(self, x: NDArray[dtypeT], /, fill_value: Value, *, dtype: None = ..., device: Optional[AnyDevice] = ...) -> CompatArray[dtypeT, Literal["cpu"]]: ...
     @overload
-    def full_like(self, x: ArrayLike[dtypeT], /, fill_value: Value, *, dtype: None = ..., device: None = ...) -> CompatArray[dtypeT, Any]: ...
+    def full_like(self, x: ArrayLike[dtypeT], /, fill_value: Value, *, dtype: None = ..., device: None = ...) -> CompatArray[dtypeT, AnyDevice]: ...
     @overload
     def full_like(self, x: ArrayLike[dtypeT], /, fill_value: Value, *, dtype: None = ..., device: DeviceT) -> CompatArray[dtypeT, DeviceT]: ...
     @overload
-    def full_like(self, x: ArrayLike[Any], /, fill_value: Value, *, dtype: DTypeT, device: None = ...) -> CompatArray[DTypeT, Any]: ...
+    def full_like(self, x: ArrayLike[dtypeT], /, fill_value: Value, *, dtype: None = ..., device: AnyDevice) -> CompatArray[dtypeT, AnyDevice]: ...
+    @overload
+    def full_like(self, x: ArrayLike[Any], /, fill_value: Value, *, dtype: DTypeT, device: None = ...) -> CompatArray[DTypeT, AnyDevice]: ...
     @overload
     def full_like(self, x: ArrayLike[Any], /, fill_value: Value, *, dtype: DTypeT, device: DeviceT) -> CompatArray[DTypeT, DeviceT]: ...
+    @overload
+    def full_like(self, x: ArrayLike[Any], /, fill_value: Value, *, dtype: DTypeT, device: AnyDevice) -> CompatArray[DTypeT, AnyDevice]: ...
 
     def full_like(
         self,
@@ -370,8 +402,8 @@ class CompatNamespace(Compat):
         fill_value: Value,
         *,
         dtype: Optional[DType] = None,
-        device: Optional[Device] = None
-    ) -> CompatArray[Any, Any]:
+        device: Optional[AnyDevice] = None
+    ) -> CompatArray[Any, AnyDevice]:
         """
         Returns a :class:`CompatArray` array with the same shape as an input array :param:`x` and filled with :param:`fill_value`.
 
@@ -387,7 +419,7 @@ class CompatNamespace(Compat):
                  Output array data type.
                  - `None`: The output array data type must be inferred from :param:`x`.
 
-            device : Optional[Device], default to `None`
+            device : Optional[AnyDevice], default to `None`
                  Device on which to place the created array.
                  - `None`: The output array device must be inferred from :param:`x`.
 
@@ -403,9 +435,13 @@ class CompatNamespace(Compat):
     @overload
     def linspace(self, start: Union[int, float, complex], stop: Union[int, float, complex], /, num: int, *, dtype: None = ..., device: DeviceT, endpoint: bool = ...) -> CompatArray[float, DeviceT]: ...
     @overload
+    def linspace(self, start: Union[int, float, complex], stop: Union[int, float, complex], /, num: int, *, dtype: None = ..., device: AnyDevice, endpoint: bool = ...) -> CompatArray[float, AnyDevice]: ...
+    @overload
     def linspace(self, start: Union[int, float, complex], stop: Union[int, float, complex], /, num: int, *, dtype: DTypeT, device: None = ..., endpoint: bool = ...) -> CompatArray[DTypeT, Literal["cpu"]]: ...
     @overload
     def linspace(self, start: Union[int, float, complex], stop: Union[int, float, complex], /, num: int, *, dtype: DTypeT, device: DeviceT, endpoint: bool = ...) -> CompatArray[DTypeT, DeviceT]: ...
+    @overload
+    def linspace(self, start: Union[int, float, complex], stop: Union[int, float, complex], /, num: int, *, dtype: DTypeT, device: AnyDevice, endpoint: bool = ...) -> CompatArray[DTypeT, AnyDevice]: ...
 
     def linspace(
         self,
@@ -415,9 +451,9 @@ class CompatNamespace(Compat):
         num: int,
         *,
         dtype: Optional[DType] = None,
-        device: Optional[Device] = None,
+        device: Optional[AnyDevice] = None,
         endpoint: bool = True
-    ) -> CompatArray[Any, Any]:
+    ) -> CompatArray[Any, AnyDevice]:
         """
         Returns evenly spaced numbers over a specified interval.
 
@@ -444,7 +480,7 @@ class CompatNamespace(Compat):
                     - either one or both are `complex` numbers: The output data type must be the default `complex` floating-point data type;
                     - both are real-valued: The output data type must be the default real-valued floating-point data type.
 
-            device : Optional[Device], default to `None`
+            device : Optional[AnyDevice], default to `None`
                 The device on which to place the output array.
 
             endpoint : bool, default to `True`
@@ -457,24 +493,28 @@ class CompatNamespace(Compat):
         """
         ...
 
-    def meshgrid(self, *arrays: ArrayLike[Any], indexing: Literal["xy", "ij"] = "xy") -> List[CompatArray[Any, Any]]: ...
+    def meshgrid(self, *arrays: ArrayLike[Any], indexing: Literal["xy", "ij"] = "xy") -> List[CompatArray[Any, AnyDevice]]: ...
 
     @overload
     def ones(self, shape: Union[int, Tuple[int, ...]], *, dtype: None = ..., device: None = ...) -> CompatArray[float, Literal["cpu"]]: ...
     @overload
     def ones(self, shape: Union[int, Tuple[int, ...]], *, dtype: None = ..., device: DeviceT) -> CompatArray[float, DeviceT]: ...
     @overload
+    def ones(self, shape: Union[int, Tuple[int, ...]], *, dtype: None = ..., device: AnyDevice) -> CompatArray[float, AnyDevice]: ...
+    @overload
     def ones(self, shape: Union[int, Tuple[int, ...]], *, dtype: DTypeT, device: None = ...) -> CompatArray[DTypeT, Literal["cpu"]]: ...
     @overload
     def ones(self, shape: Union[int, Tuple[int, ...]], *, dtype: DTypeT, device: DeviceT) -> CompatArray[DTypeT, DeviceT]: ...
+    @overload
+    def ones(self, shape: Union[int, Tuple[int, ...]], *, dtype: DTypeT, device: AnyDevice) -> CompatArray[DTypeT, AnyDevice]: ...
 
     def ones(
         self,
         shape: Union[int, Tuple[int, ...]],
         *,
         dtype: Optional[DType] = None,
-        device: Optional[Device] = None
-    ) -> CompatArray[Any, Any]:
+        device: Optional[AnyDevice] = None
+    ) -> CompatArray[Any, AnyDevice]:
         """
         Returns a :class:`CompatArray` array having a specified shape and filled with ones.
 
@@ -487,7 +527,7 @@ class CompatNamespace(Compat):
                  Output array data type.
                  - `None`: The output array data type must be the default real-valued floating-point data type.
 
-            device : Optional[Device], default to `None`
+            device : Optional[AnyDevice], default to `None`
                  Device on which to place the created array.
 
         Returns
@@ -498,23 +538,27 @@ class CompatNamespace(Compat):
         ...
 
     @overload
-    def ones_like(self, x: NDArray[dtypeT], /, *, dtype: None = ..., device: Optional[Device] = ...) -> CompatArray[dtypeT, Literal["cpu"]]: ...
+    def ones_like(self, x: NDArray[dtypeT], /, *, dtype: None = ..., device: Optional[AnyDevice] = ...) -> CompatArray[dtypeT, Literal["cpu"]]: ...
     @overload
-    def ones_like(self, x: ArrayLike[dtypeT], /, *, dtype: None = ..., device: None = ...) -> CompatArray[dtypeT, Any]: ...
+    def ones_like(self, x: ArrayLike[dtypeT], /, *, dtype: None = ..., device: None = ...) -> CompatArray[dtypeT, AnyDevice]: ...
     @overload
     def ones_like(self, x: ArrayLike[dtypeT], /, *, dtype: None = ..., device: DeviceT) -> CompatArray[dtypeT, DeviceT]: ...
     @overload
-    def ones_like(self, x: ArrayLike[Any], /, *, dtype: DTypeT, device: None = ...) -> CompatArray[DTypeT, Any]: ...
+    def ones_like(self, x: ArrayLike[dtypeT], /, *, dtype: None = ..., device: AnyDevice) -> CompatArray[dtypeT, AnyDevice]: ...
+    @overload
+    def ones_like(self, x: ArrayLike[Any], /, *, dtype: DTypeT, device: None = ...) -> CompatArray[DTypeT, AnyDevice]: ...
     @overload
     def ones_like(self, x: ArrayLike[Any], /, *, dtype: DTypeT, device: DeviceT) -> CompatArray[DTypeT, DeviceT]: ...
+    @overload
+    def ones_like(self, x: ArrayLike[Any], /, *, dtype: DTypeT, device: AnyDevice) -> CompatArray[DTypeT, AnyDevice]: ...
 
     def ones_like(
         self,
         x: ArrayLike[Any],
         /, *,
         dtype: Optional[DType] = None,
-        device: Optional[Device] = None
-    ) -> CompatArray[Any, Any]:
+        device: Optional[AnyDevice] = None
+    ) -> CompatArray[Any, AnyDevice]:
         """
         Returns a :class:`CompatArray` array filled with ones with the same shape as an input array :param:`x`.
 
@@ -527,7 +571,7 @@ class CompatNamespace(Compat):
                  Output array data type.
                  - `None`: The output array data type must be inferred from :param:`x`.
 
-            device : Optional[Device], default to `None`
+            device : Optional[AnyDevice], default to `None`
                  Device on which to place the created array.
                  - `None`: The output array device must be inferred from :param:`x`.
 
@@ -541,9 +585,9 @@ class CompatNamespace(Compat):
     @overload
     def tril(self, x: NDArray[dtypeT], /, *, k: int = 0) -> CompatArray[dtypeT, Literal["cpu"]]: ...
     @overload
-    def tril(self, x: ArrayLike[dtypeT], /, *, k: int = 0) -> CompatArray[dtypeT, Any]: ...
+    def tril(self, x: ArrayLike[dtypeT], /, *, k: int = 0) -> CompatArray[dtypeT, AnyDevice]: ...
 
-    def tril(self, x: ArrayLike[Any], /, *, k: int = 0) -> CompatArray[Any, Any]:
+    def tril(self, x: ArrayLike[Any], /, *, k: int = 0) -> CompatArray[Any, AnyDevice]:
         """
         Returns the lower triangular part of a matrix (or a stack of matrices) :param:`x`.
 
@@ -571,14 +615,14 @@ class CompatNamespace(Compat):
     @overload
     def triu(self, x: NDArray[dtypeT], /, *, k: int = 0) -> CompatArray[dtypeT, Literal["cpu"]]: ...
     @overload
-    def triu(self, x: ArrayLike[dtypeT], /, *, k: int = 0) -> CompatArray[dtypeT, Any]: ...
+    def triu(self, x: ArrayLike[dtypeT], /, *, k: int = 0) -> CompatArray[dtypeT, AnyDevice]: ...
 
     def triu(
         self,
         x: ArrayLike[Any],
         /, *,
         k: int = 0
-    ) -> CompatArray[Any, Any]:
+    ) -> CompatArray[Any, AnyDevice]:
         """
         Returns the upper triangular part of a matrix (or a stack of matrices) :param:`x`.
 
@@ -608,17 +652,21 @@ class CompatNamespace(Compat):
     @overload
     def zeros(self, shape: Union[int, Tuple[int, ...]], *, dtype: None = ..., device: DeviceT) -> CompatArray[float, DeviceT]: ...
     @overload
+    def zeros(self, shape: Union[int, Tuple[int, ...]], *, dtype: None = ..., device: AnyDevice) -> CompatArray[float, AnyDevice]: ...
+    @overload
     def zeros(self, shape: Union[int, Tuple[int, ...]], *, dtype: DTypeT, device: None = ...) -> CompatArray[DTypeT, Literal["cpu"]]: ...
     @overload
     def zeros(self, shape: Union[int, Tuple[int, ...]], *, dtype: DTypeT, device: DeviceT) -> CompatArray[DTypeT, DeviceT]: ...
+    @overload
+    def zeros(self, shape: Union[int, Tuple[int, ...]], *, dtype: DTypeT, device: AnyDevice) -> CompatArray[DTypeT, AnyDevice]: ...
 
     def zeros(
         self,
         shape: Union[int, Tuple[int, ...]],
         *,
         dtype: Optional[DType] = None,
-        device: Optional[Device] = None
-    ) -> CompatArray[Any, Any]:
+        device: Optional[AnyDevice] = None
+    ) -> CompatArray[Any, AnyDevice]:
         """
         Returns a :class:`CompatArray` array having a specified shape and filled with zeros.
 
@@ -631,7 +679,7 @@ class CompatNamespace(Compat):
                  Output array data type.
                  - `None`: The output array data type must be the default real-valued floating-point data type.
 
-            device : Optional[Device], default to `None`
+            device : Optional[AnyDevice], default to `None`
                  Device on which to place the created array.
 
         Returns
@@ -642,23 +690,27 @@ class CompatNamespace(Compat):
         ...
 
     @overload
-    def zeros_like(self, x: NDArray[dtypeT], /, *, dtype: None = ..., device: Optional[Device] = ...) -> CompatArray[dtypeT, Literal["cpu"]]: ...
+    def zeros_like(self, x: NDArray[dtypeT], /, *, dtype: None = ..., device: Optional[AnyDevice] = ...) -> CompatArray[dtypeT, Literal["cpu"]]: ...
     @overload
-    def zeros_like(self, x: ArrayLike[dtypeT], /, *, dtype: None = ..., device: None = ...) -> CompatArray[dtypeT, Any]: ...
+    def zeros_like(self, x: ArrayLike[dtypeT], /, *, dtype: None = ..., device: None = ...) -> CompatArray[dtypeT, AnyDevice]: ...
     @overload
     def zeros_like(self, x: ArrayLike[dtypeT], /, *, dtype: None = ..., device: DeviceT) -> CompatArray[dtypeT, DeviceT]: ...
     @overload
-    def zeros_like(self, x: ArrayLike[Any], /, *, dtype: DTypeT, device: None = ...) -> CompatArray[DTypeT, Any]: ...
+    def zeros_like(self, x: ArrayLike[dtypeT], /, *, dtype: None = ..., device: AnyDevice) -> CompatArray[dtypeT, AnyDevice]: ...
+    @overload
+    def zeros_like(self, x: ArrayLike[Any], /, *, dtype: DTypeT, device: None = ...) -> CompatArray[DTypeT, AnyDevice]: ...
     @overload
     def zeros_like(self, x: ArrayLike[Any], /, *, dtype: DTypeT, device: DeviceT) -> CompatArray[DTypeT, DeviceT]: ...
+    @overload
+    def zeros_like(self, x: ArrayLike[Any], /, *, dtype: DTypeT, device: AnyDevice) -> CompatArray[DTypeT, AnyDevice]: ...
 
     def zeros_like(
         self,
         x: ArrayLike[Any],
         /, *,
         dtype: Optional[DType] = None,
-        device: Optional[Device] = None
-    ) -> CompatArray[Any, Any]:
+        device: Optional[AnyDevice] = None
+    ) -> CompatArray[Any, AnyDevice]:
         """
         Returns a :class:`CompatArray` array filled with zeros with the same shape as an input array :param:`x`.
 
@@ -671,7 +723,7 @@ class CompatNamespace(Compat):
                  Output array data type.
                  - `None`: The output array data type must be inferred from :param:`x`.
 
-            device : Optional[Device], default to `None`
+            device : Optional[AnyDevice], default to `None`
                  Device on which to place the created array.
                  - `None`: The output array device must be inferred from :param:`x`.
 
@@ -698,14 +750,14 @@ class CompatNamespace(Compat):
     def result_type(self, *arrays_and_dtypes: Union[ArrayOrAny, DType]) -> DType: ...
 
     # === Manipulation functions ===
-    def broadcast_arrays(self, *arrays: ArrayLike[Any]) -> List[CompatArray[Any, Any]]: ...
+    def broadcast_arrays(self, *arrays: ArrayLike[Any]) -> List[CompatArray[Any, AnyDevice]]: ...
 
     @overload
     def broadcast_to(self, x: NDArray[dtypeT], shape: Tuple[int, ...]) -> CompatArray[dtypeT, Literal["cpu"]]: ...
     @overload
-    def broadcast_to(self, x: ArrayLike[dtypeT], shape: Tuple[int, ...]) -> CompatArray[dtypeT, Any]: ...
+    def broadcast_to(self, x: ArrayLike[dtypeT], shape: Tuple[int, ...]) -> CompatArray[dtypeT, AnyDevice]: ...
 
-    def broadcast_to(self, x: ArrayLike[Any], shape: Tuple[int, ...]) -> CompatArray[Any, Any]:
+    def broadcast_to(self, x: ArrayLike[Any], shape: Tuple[int, ...]) -> CompatArray[Any, AnyDevice]:
         """
         Broadcasts an array to a specified shape.
 
@@ -732,7 +784,7 @@ class CompatNamespace(Compat):
         arrays: Union[Tuple[ArrayLike[Any], ...], List[ArrayLike[Any]]],
         /, *,
         axis: Optional[int] = 0
-    ) -> CompatArray[Any, Any]:
+    ) -> CompatArray[Any, AnyDevice]:
         """
         Joins a sequence of arrays along an existing axis.
 
@@ -759,7 +811,7 @@ class CompatNamespace(Compat):
         arrays: Union[Tuple[ArrayLike[Any], ...], List[ArrayLike[Any]]],
         /, *,
         axis: int = 0
-    ) -> CompatArray[Any, Any]:
+    ) -> CompatArray[Any, AnyDevice]:
         """
         Joins a sequence of arrays along a new axis.
 

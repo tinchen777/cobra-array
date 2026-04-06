@@ -19,17 +19,19 @@ ValueT = TypeVar("ValueT", bound=Value)
 
 # === DType and Device ===
 DType = Any
-# FIXME 无法推断
-DeviceLiteral = Literal["cpu", "cuda", "xpu", "mkldnn", "opengl", "opencl", "ideep", "hip", "ve", "ort", "mlc", "xla", "lazy", "vulkan", "meta", "hpu"]
-Device = Union[DeviceLiteral, torch.device, str]
+DeviceLiteral = Literal["cpu", "cuda", "cuda:0", "cuda:1", "cuda:2", "cuda:3", "xpu", "mkldnn", "opengl", "opencl", "ideep", "hip", "ve", "ort", "mlc", "xla", "lazy", "vulkan", "meta", "hpu"]
+Device = Union[DeviceLiteral, torch.device]
+AnyDevice = Union[Device, str]
 
 dtypeT = TypeVar("dtypeT", bound=DType)
 deviceT = TypeVar("deviceT", bound=Device)
+anydeviceT = TypeVar("anydeviceT", bound=AnyDevice)
 DTypeT = TypeVar("DTypeT", bound=DType)
 DeviceT = TypeVar("DeviceT", bound=Device)
+AnyDeviceT = TypeVar("AnyDeviceT", bound=AnyDevice)
 
 DTypeT_co = TypeVar("DTypeT_co", bound=DType, covariant=True)
-DeviceT_co = TypeVar("DeviceT_co", bound=Device, covariant=True)
+AnyDeviceT_co = TypeVar("AnyDeviceT_co", bound=AnyDevice, covariant=True)
 
 
 # === Array Protocols ===
@@ -51,18 +53,18 @@ ArrayOrbool = Union[ArrayLike[Any], bool]
 ArrayOrInt = Union[ArrayLike[Any], int]
 
 
-class UniqueAllResult(NamedTuple, Generic[DTypeT_co, DeviceT_co]):
-    values: CompatArray[DTypeT_co, DeviceT_co]
-    indices: CompatArray[int, DeviceT_co]
-    inverse_indices: CompatArray[int, DeviceT_co]
-    counts: CompatArray[int, DeviceT_co]
+class UniqueAllResult(NamedTuple, Generic[DTypeT_co, AnyDeviceT_co]):
+    values: CompatArray[DTypeT_co, AnyDeviceT_co]
+    indices: CompatArray[int, AnyDeviceT_co]
+    inverse_indices: CompatArray[int, AnyDeviceT_co]
+    counts: CompatArray[int, AnyDeviceT_co]
 
 
-class UniqueCountsResult(NamedTuple, Generic[DTypeT_co, DeviceT_co]):
-    values: CompatArray[DTypeT_co, DeviceT_co]
-    counts: CompatArray[int, DeviceT_co]
+class UniqueCountsResult(NamedTuple, Generic[DTypeT_co, AnyDeviceT_co]):
+    values: CompatArray[DTypeT_co, AnyDeviceT_co]
+    counts: CompatArray[int, AnyDeviceT_co]
 
 
-class UniqueInverseResult(NamedTuple, Generic[DTypeT_co, DeviceT_co]):
-    values: CompatArray[DTypeT_co, DeviceT_co]
-    inverse_indices: CompatArray[int, DeviceT_co]
+class UniqueInverseResult(NamedTuple, Generic[DTypeT_co, AnyDeviceT_co]):
+    values: CompatArray[DTypeT_co, AnyDeviceT_co]
+    inverse_indices: CompatArray[int, AnyDeviceT_co]

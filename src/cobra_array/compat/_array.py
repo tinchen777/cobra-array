@@ -103,7 +103,7 @@ class CompatArray(Compat):
 
         Parameters
         ----------
-            device : Device
+            device : AnyDevice
                 A device object or name.
 
             stream : Optional[Union[int, Any]], default to `None`

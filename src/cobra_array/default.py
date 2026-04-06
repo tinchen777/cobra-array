@@ -18,7 +18,7 @@ Functions
 """
 
 from __future__ import annotations
-from typing import (Any, Literal, TYPE_CHECKING, NamedTuple, overload)
+from typing import (Any, Literal, TYPE_CHECKING, Optional, NamedTuple, overload)
 
 from .compat import (CompatNamespace, wrap_arraylike)
 from .convert import as_array
@@ -28,7 +28,7 @@ from .exceptions import MissingDependencyError
 if TYPE_CHECKING:
     from numpy.typing import NDArray
     from .compat import CompatArray
-    from .types import (ArrayLike, DType, dtypeT, T)
+    from .types import (ArrayLike, DType, dtypeT, T, AnyDevice)
 
 
 class ArraySpec(NamedTuple):
@@ -36,14 +36,14 @@ class ArraySpec(NamedTuple):
     A named tuple to hold the specifications of an array.
     - `cxp`: CompatNamespace
     - `dtype`: DType
-    - `device`: Any
+    - `device`: AnyDevice
     """
     cxp: CompatNamespace
-    dtype: DType
-    device: Any
+    dtype: Optional[DType]
+    device: Optional[AnyDevice]
 
     @classmethod
-    def create(cls, xp: object, dtype: Any, device: Any) -> ArraySpec:
+    def create(cls, xp: object, dtype: Optional[DType], device: Optional[AnyDevice]) -> ArraySpec:
         """Create an `ArraySpec` instance, convert the `xp` to a :class:`CompatNamespace` instance if it is not already one."""
         return cls(
             cxp=CompatNamespace(xp),
@@ -84,11 +84,11 @@ def default_spec() -> ArraySpec:
 @overload
 def as_default(obj: NDArray[dtypeT], /, *, unify_dtype: Literal[False], unify_device: bool = ..., copy: bool = ..., arraylike_only: bool = ...) -> CompatArray[dtypeT, Literal["cpu"]]: ...
 @overload
-def as_default(obj: ArrayLike[dtypeT], /, *, unify_dtype: Literal[False], unify_device: bool = ..., copy: bool = ..., arraylike_only: bool = ...) -> CompatArray[dtypeT, Any]: ...
+def as_default(obj: ArrayLike[dtypeT], /, *, unify_dtype: Literal[False], unify_device: bool = ..., copy: bool = ..., arraylike_only: bool = ...) -> CompatArray[dtypeT, AnyDevice]: ...
 @overload
-def as_default(obj: ArrayLike[Any], /, *, unify_dtype: Literal[True] = ..., unify_device: bool = ..., copy: bool = ..., arraylike_only: bool = ...) -> CompatArray[Any, Any]: ...
+def as_default(obj: ArrayLike[Any], /, *, unify_dtype: Literal[True] = ..., unify_device: bool = ..., copy: bool = ..., arraylike_only: bool = ...) -> CompatArray[Any, AnyDevice]: ...
 @overload
-def as_default(obj: object, /, *, unify_dtype: bool = ..., unify_device: bool = ..., copy: bool = ..., arraylike_only: Literal[False] = ...) -> CompatArray[Any, Any]: ...
+def as_default(obj: object, /, *, unify_dtype: bool = ..., unify_device: bool = ..., copy: bool = ..., arraylike_only: Literal[False] = ...) -> CompatArray[Any, AnyDevice]: ...
 @overload
 def as_default(obj: T, /, *, unify_dtype: bool = ..., unify_device: bool = ..., copy: bool = ..., arraylike_only: Literal[True]) -> T: ...
 
@@ -123,7 +123,7 @@ def as_default(
 
     Returns
     -------
-        CompatArray[Any, Any]
+        CompatArray[Any, AnyDevice]
             The converted array representation of the object in the default context `compatibility namespace`, with the default `dtype` and `device` if specified.
         object
             If :param:`arraylike_only` is `True` and the object is not array-like.
