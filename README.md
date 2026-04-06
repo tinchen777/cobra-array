@@ -1,7 +1,7 @@
 <div align="center">
 
 <h2 id="title">
-🚖 cobra-array 🐱‍🐉<br>
+🍁 cobra-array 🍁<br>
 <sub>Unified Array Utilities with Python Array API Compatibility</sub>
 </h2>
 
