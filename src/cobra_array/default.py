@@ -18,18 +18,16 @@ Functions
 
 Examples
 --------
-- Basic usage:
+- Basic usage::
 
-```python
-from cobra_array.default import default_spec, as_default
+    from cobra_array.default import default_spec, as_default
 
-spec = default_spec()
-spec.cxp.xp_name   # "PyTorch" or "NumPy"
-spec.dtype         # default dtype, e.g. float
-spec.device        # default device, e.g. "cpu"
+    spec = default_spec()
+    spec.cxp.xp_name   # "PyTorch" or "NumPy"
+    spec.dtype         # default dtype, e.g. float
+    spec.device        # default device, e.g. "cpu"
 
-arr = as_default([1, 2, 3])  # PyTorch_Array(tensor([1., 2., 3.], dtype=torch.float64)) or CompatArray([1. 2. 3.])
-```
+    arr = as_default([1, 2, 3])  # PyTorch_Array(tensor([1., 2., 3.], dtype=torch.float64)) or CompatArray([1. 2. 3.])
 """
 
 from __future__ import annotations

@@ -18,23 +18,21 @@ Functions
 
 Examples
 --------
-- Basic usage:
+- Basic usage::
 
-```python
-from cobra_array.array_api import resolve_device, torch_xp, numpy_xp
+    from cobra_array.array_api import resolve_device, torch_xp, numpy_xp
 
-r = resolve_device("cpu")        # "cpu"
-r = resolve_device("cuda:0")     # "cuda:0"
+    r = resolve_device("cpu")        # "cpu"
+    r = resolve_device("cuda:0")     # "cuda:0"
 
-if numpy_xp is not None:
-    r = resolve_device("cpu", xp="numpy")
+    if numpy_xp is not None:
+        r = resolve_device("cpu", xp="numpy")
 
-if torch_xp is not None:
-    r = resolve_device("cpu", xp="torch")
+    if torch_xp is not None:
+        r = resolve_device("cpu", xp="torch")
 
-if torch_xp is not None:
-    r = resolve_device("cpu", xp=torch_xp)
-```
+    if torch_xp is not None:
+        r = resolve_device("cpu", xp=torch_xp)
 """
 
 from __future__ import annotations

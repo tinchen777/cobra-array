@@ -13,22 +13,20 @@ Classes
 
 Examples
 --------
-- Basic usage:
+- Basic usage::
 
-```python
-import numpy as np
-from cobra_array.compat import CompatArray, CompatNamespace, wrap_arraylike, unwrap
+    import numpy as np
+    from cobra_array.compat import CompatArray, CompatNamespace, wrap_arraylike, unwrap
 
-cxp = CompatNamespace(np)
-a = CompatArray(np.asarray([1, 2, 3]))
-b = cxp.asarray([10, 20, 30])
+    cxp = CompatNamespace(np)
+    a = CompatArray(np.asarray([1, 2, 3]))
+    b = cxp.asarray([10, 20, 30])
 
-r = (a + b).to_list()        # [11, 22, 33]
-r = cxp.add(a, b).to_list()  # [11, 22, 33]
+    r = (a + b).to_list()        # [11, 22, 33]
+    r = cxp.add(a, b).to_list()  # [11, 22, 33]
 
-wrapped = wrap_arraylike(np.asarray([4, 5]))
-unwrap(wrapped).tolist()  # [4, 5]
-```
+    wrapped = wrap_arraylike(np.asarray([4, 5]))
+    unwrap(wrapped).tolist()  # [4, 5]
 """
 
 from ._array import (CompatArray, wrap_arraylike, unwrap)

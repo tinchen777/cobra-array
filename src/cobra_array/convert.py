@@ -15,25 +15,21 @@ Functions
 
 Examples
 --------
-- Basic usage:
+- Basic usage::
 
-```python
-import numpy as np
-from cobra_array.convert import to_numpy, to_tensor, to_list, to_xp, as_array
+    import numpy as np
+    from cobra_array.convert import to_numpy, to_tensor, to_list, to_xp, as_array
 
-r = to_numpy([1, 2, 3])            # array([1, 2, 3])
-r = to_list(np.asarray([1, 2, 3]))  # [1, 2, 3]
-r = to_xp("numpy")                # NumPy namespace
-r = as_array([1, 2, 3], "numpy")   # NumPy array
-```
+    r = to_numpy([1, 2, 3])            # array([1, 2, 3])
+    r = to_list(np.asarray([1, 2, 3]))  # [1, 2, 3]
+    r = to_xp("numpy")                # NumPy namespace
+    r = as_array([1, 2, 3], "numpy")   # NumPy array
 
-- When PyTorch is available, the same helpers can be used with the torch namespace:
+- When PyTorch is available, the same helpers can be used with the torch namespace::
 
-```python
-from cobra_array.convert import as_array
+    from cobra_array.convert import as_array
 
-r = as_array([1, 2, 3], "torch")   # PyTorch tensor
-```
+    r = as_array([1, 2, 3], "torch")   # PyTorch tensor
 """
 
 from collections import abc
