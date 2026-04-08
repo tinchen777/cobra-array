@@ -43,7 +43,7 @@ def array_namespace_alias(xp: object) -> str:
     Raises
     ------
         UnsupportedNameSpaceError
-            If the input object is not a supported namespace.
+            If the input object is not a supported `array namespace`.
     """
     if isinstance(xp, ModuleType):
         if api.is_numpy_namespace(xp):

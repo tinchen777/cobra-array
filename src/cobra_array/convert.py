@@ -12,6 +12,28 @@ Functions
 - :func:`to_list`: Convert an object to a built-in `list`.
 - :func:`to_array_namespace` or :func:`to_xp`: Convert an array library name to a `array namespace` or return the `array namespace` directly if is a supported namespace.
 - :func:`as_array`: Convert an object to an array in the specified `array namespace`.
+
+Examples
+--------
+- Basic usage:
+
+```python
+import numpy as np
+from cobra_array.convert import to_numpy, to_tensor, to_list, to_xp, as_array
+
+r = to_numpy([1, 2, 3])            # array([1, 2, 3])
+r = to_list(np.asarray([1, 2, 3]))  # [1, 2, 3]
+r = to_xp("numpy")                # NumPy namespace
+r = as_array([1, 2, 3], "numpy")   # NumPy array
+```
+
+- When PyTorch is available, the same helpers can be used with the torch namespace:
+
+```python
+from cobra_array.convert import as_array
+
+r = as_array([1, 2, 3], "torch")   # PyTorch tensor
+```
 """
 
 from collections import abc
@@ -304,6 +326,41 @@ def as_array(obj, xp, /, *, dtype=None, device=None, copy=False, arraylike_only=
             If an unsupported `array namespace` is specified.
         ArrayConversionError
             If an error occurs during array conversion in the specified `array namespace`.
+
+    Examples
+    --------
+    Convert to NumPy namespace (when available):
+
+    >>> from cobra_array.array_api import numpy_xp
+    >>> if numpy_xp is not None:
+    ...     as_array([1, 2, 3], "numpy")
+    array([1, 2, 3])
+    >>> if numpy_xp is not None:
+    ...     as_array([1, 2, 3], numpy_xp)
+    array([1, 2, 3])
+
+    Convert to PyTorch namespace (when available):
+
+    >>> from cobra_array.array_api import torch_xp
+    >>> if torch_xp is not None:
+    ...     as_array([1, 2, 3], "torch")
+    tensor([1, 2, 3])
+    >>> if torch_xp is not None:
+    ...     as_array([1, 2, 3], torch_xp)
+    tensor([1, 2, 3])
+
+    Pass through non-array-like objects with `arraylike_only=True`:
+
+    >>> marker = object()
+    >>> as_array(marker, "numpy", arraylike_only=True) is marker
+    True
+
+    Unsupported namespace name raises an error:
+
+    >>> as_array([1, 2, 3], "unknown")
+    Traceback (most recent call last):
+        ...
+    cobra_array.exceptions.UnsupportedArrayLibraryNameError: ...
     """
     if arraylike_only and not api.is_array_api_obj(obj):
         return obj

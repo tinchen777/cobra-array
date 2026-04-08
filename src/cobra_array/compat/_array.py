@@ -26,6 +26,61 @@ class CompatArray(Compat):
     - All operations follow the semantics defined by the `Python Array API standard`.
     - Methods correspond directly to standard functions, but are exposed in an object-oriented form.
     - All methods guarantee that any array-like objects in the returned value are automatically wrapped as :class:`CompatArray`. This applies recursively to arrays contained in Python containers (e.g., `tuple`, `list`, `dict`). Non-array objects remain unchanged.
+
+    Examples
+    --------
+    Create a :class:`CompatArray` from a backend array object:
+
+    >>> xp = to_xp("numpy")
+    >>> a = CompatArray(xp.asarray([1, 2, 3]))
+    >>> a
+    NumPy_Array([1 2 3])
+    >>> a.to_list()
+    [1, 2, 3]
+    >>> a.shape
+    (3,)
+    >>> a.xp_name
+    'NumPy'
+
+    Convert Python data with an explicit backend:
+
+    >>> b = CompatArray.from_other([10, 20], xp="numpy")
+    >>> isinstance(b, CompatArray)
+    True
+    >>> b.to_tensor()
+    tensor([10, 20])
+
+    Re-wrapping behavior for existing :class:`CompatArray`:
+
+    >>> CompatArray(b) is b
+    True
+    >>> CompatArray(b, copy=True) is b
+    False
+
+    Call elementwise functions directly:
+
+    >>> x = CompatArray.from_other([1, 2, 3], xp="numpy")
+    >>> y = CompatArray.from_other([10, 20, 30], xp="numpy")
+    >>> x.add(y)
+    NumPy_Array([11 22 33])
+    >>> x.multiply(2)
+    NumPy_Array([2 4 6])
+
+    Use Python operators:
+
+    >>> x + y
+    NumPy_Array([11 22 33])
+    >>> y - x
+    NumPy_Array([ 9 18 27])
+    >>> x * 2
+    NumPy_Array([2 4 6])
+
+    Invalid input raises an exception:
+
+    >>> CompatArray("not-array")
+    Traceback (most recent call last):
+        ...
+    cobra_array.exceptions.NotArrayAPIObjectError: ...
     """
     _arr = None
     _cxp = None

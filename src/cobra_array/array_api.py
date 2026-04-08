@@ -15,6 +15,26 @@ Attributes
 Functions
 ---------
 - :func:`resolve_device`: Get the device string from an object or a device specification string, and check if it is compatible with the specified `array namespace` if provided.
+
+Examples
+--------
+- Basic usage:
+
+```python
+from cobra_array.array_api import resolve_device, torch_xp, numpy_xp
+
+r = resolve_device("cpu")        # "cpu"
+r = resolve_device("cuda:0")     # "cuda:0"
+
+if numpy_xp is not None:
+    r = resolve_device("cpu", xp="numpy")
+
+if torch_xp is not None:
+    r = resolve_device("cpu", xp="torch")
+
+if torch_xp is not None:
+    r = resolve_device("cpu", xp=torch_xp)
+```
 """
 
 from __future__ import annotations
@@ -61,7 +81,7 @@ def resolve_device(
         obj : object
             The input object or device specification string to extract the device information from.
 
-        xp : Optional[Union[Namespace, CompatNamespace, ArrayLibraryName]], default is `None`
+        xp : Optional[Union[Any, ArrayLibraryName]], default is `None`
             The `array namespace` to check the device compatibility against.
             - `None`: No compatibility check will be performed.
 
@@ -80,6 +100,54 @@ def resolve_device(
             If the extracted device is not compatible with the specified `array namespace`.
         CUDAUnavailableError
             If a CUDA device is specified but CUDA is not available for `PyTorch`.
+
+    Examples
+    --------
+    Basic parsing and normalization:
+
+    >>> resolve_device("cpu")
+    'cpu'
+    >>> resolve_device(" CUDA:0 ")
+    'cuda:0'
+    >>> resolve_device(None)
+    None
+
+    Namespace compatibility checks:
+
+    >>> resolve_device("cpu")
+    'cpu'
+    >>> resolve_device("cpu", xp="numpy")
+    'cpu'
+    >>> resolve_device("cpu", xp="torch")
+    'cpu'
+
+    Unsupported device for NumPy:
+
+    >>> resolve_device("cuda:0", xp="numpy")
+    Traceback (most recent call last):
+        ...
+    cobra_array.exceptions.DeviceNotSupportedError: ...
+
+    Unsupported device type for PyTorch:
+
+    >>> resolve_device("quantum", xp="torch")
+    Traceback (most recent call last):
+        ...
+    cobra_array.exceptions.DeviceNotSupportedError: ...
+
+    CUDA path for PyTorch (works with or without CUDA runtime):
+
+    >>> from cobra_array.array_api import CUDA_AVAILABLE
+    >>> result = None
+    >>> if not CUDA_AVAILABLE:
+    ...     try:
+    ...         resolve_device("cuda:0", xp="torch")
+    ...     except CUDAUnavailableError:
+    ...         result = "CUDAUnavailableError"
+    ... else:
+    ...     result = resolve_device("cuda:0", xp="torch")
+    >>> result in {"cuda:0", "CUDAUnavailableError"}
+    True
     """
     # source
     if obj is None:

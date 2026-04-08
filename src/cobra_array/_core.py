@@ -85,6 +85,32 @@ def array_spec(
             If `ref` is not `None`, a string, or an integer.
         NotArrayAPIObjectError
             If the reference array determined by `ref` is not an array API compatible array object.
+
+    Examples
+    --------
+    Infer namespace from positional arrays:
+
+    >>> import numpy as np
+    >>> spec = array_spec(np.asarray([1, 2]), np.asarray([3, 4]))
+    >>> spec.cxp.xp_name
+    'NumPy'
+    >>> spec.dtype is None and spec.device is None
+    True
+
+    Use a keyword argument as reference to carry dtype and device:
+
+    >>> ref_arr = np.asarray([1, 2], dtype=np.float32)
+    >>> spec = array_spec(kw_arrays={"x": ref_arr}, ref="x")
+    >>> str(spec.dtype)
+    'float32'
+    >>> str(spec.device)
+    'cpu'
+
+    Filter non-array-like inputs when selecting reference by index:
+
+    >>> spec = array_spec("skip", np.asarray([1, 2]), ref=0, filter_arraylike=True)
+    >>> spec.cxp.xp_name
+    'NumPy'
     """
     kw_arrays = kw_arrays or {}
 
@@ -240,6 +266,12 @@ def as_context(
     Raises
     ------
         Refer to :func:`convert.as_array`, :func:`context_spec` for possible exceptions.
+
+    Examples
+    --------
+    >>> from cobra_array import as_context
+    >>> as_context([1, 2, 3])
+    PyTorch_Array(tensor([1., 2., 3.], dtype=torch.float64))
     """
     spec = context_spec()
     return wrap_arraylike(as_array(
@@ -254,6 +286,40 @@ def as_context(
 class array_context:
     """
     **Context Manager** to set the context `compatibility namespace`, `dtype` and `device` for the enclosed block of code.
+
+    Examples
+    --------
+    Set a temporary context explicitly:
+
+    >>> from cobra_array import array_context
+    >>> with array_context(xp="numpy", dtype=None, device="cpu") as spec:
+    ...     spec.cxp.xp_name
+    'NumPy'
+
+    Convert data in the active context:
+
+    >>> with array_context(xp="numpy", dtype=None, device="cpu"):
+    ...     as_context([1, 2, 3], unify_dtype=False)
+    NumPy_Array([1 2 3])
+
+    Build a context from :class:`ArraySpec`:
+
+    >>> import numpy as np
+    >>> spec = array_spec(np.asarray([1, 2], dtype=np.float32), ref=0)
+    >>> with array_context.from_array_spec(spec) as cur:
+    ...     str(cur.dtype)
+    'float32'
+
+    Nested contexts override temporarily and then restore outer context:
+
+    >>> from cobra_array import context_spec
+    >>> with array_context(xp="numpy", dtype=None, device="cpu"):
+    ...     before = context_spec().dtype
+    ...     with array_context(dtype=float):
+    ...         middle = context_spec().dtype
+    ...     after = context_spec().dtype
+    ...     (before is None, middle is float, after is None)
+    (True, True, True)
     """
     @classmethod
     def from_array_spec(cls, arr_spec: ArraySpec, /):
@@ -309,7 +375,7 @@ class array_context:
 
 def unify_args(
     ref: Optional[Union[str, int]] = 0,
-    /,
+    /, *,
     filter_arraylike: bool = True,
     api_version: Optional[str] = None,
     use_compat: Optional[bool] = None,
@@ -353,6 +419,18 @@ def unify_args(
     Raises
     ------
         Refer to :func:`default.default_spec`, :func:`as_context` for possible exceptions.
+
+    Examples
+    --------
+    Use `unify_args` as a decorator to normalize array arguments before the function body runs:
+
+    >>> import numpy as np
+    >>> from cobra_array import unify_args
+    >>> @unify_args(ref=0, unify_dtype=False, unify_device=False)
+    ... def add(x, y):
+    ...     return x + y
+    >>> add(np.asarray([1, 2]), y=np.asarray([3, 4]))
+    NumPy_Array([4 6])
     """
     def decorator(func):
         @wraps(func)

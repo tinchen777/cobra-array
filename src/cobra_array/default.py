@@ -15,6 +15,21 @@ Functions
 ---------
 - :func:`default_spec`: Get the default array specification.
 - :func:`as_default`: Convert an array-like object to a :class:`CompatArray` array in the default context.
+
+Examples
+--------
+- Basic usage:
+
+```python
+from cobra_array.default import default_spec, as_default
+
+spec = default_spec()
+spec.cxp.xp_name   # "PyTorch" or "NumPy"
+spec.dtype         # default dtype, e.g. float
+spec.device        # default device, e.g. "cpu"
+
+arr = as_default([1, 2, 3])  # PyTorch_Array(tensor([1., 2., 3.], dtype=torch.float64)) or CompatArray([1. 2. 3.])
+```
 """
 
 from __future__ import annotations
@@ -53,7 +68,7 @@ class ArraySpec(NamedTuple):
 
 
 # get defaults
-DEFAULT_DTYPE = float
+DEFAULT_DTYPE = None
 DEFAULT_DEVICE = "cpu"
 NUMPY_COMPAT_NAMESPACE = CompatNamespace(numpy_xp) if numpy_xp is not None else None
 TORCH_COMPAT_NAMESPACE = CompatNamespace(torch_xp) if torch_xp is not None else None
@@ -131,6 +146,12 @@ def as_default(
     Raises
     ------
         Refer to :func:`convert.as_array`, :func:`default.default_spec` for possible exceptions.
+
+    Examples
+    --------
+    >>> from cobra_array.default import as_default
+    >>> as_default([1, 2, 3])
+    PyTorch_Array(tensor([1., 2., 3.], dtype=torch.float64))
     """
     spec = default_spec()
     return wrap_arraylike(as_array(

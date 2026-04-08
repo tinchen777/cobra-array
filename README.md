@@ -46,14 +46,11 @@ pip install cobra-array
 
     data = [[1, 2], [3, 4]]
 
-    arr_np = to_numpy(data, dtype=np.float32)
-    print(type(arr_np), arr_np.dtype)  # numpy.ndarray float32
+    arr_np = to_numpy(data, dtype=np.float32)  # numpy.ndarray float32
 
     arr_torch = to_tensor(data, device="cpu")
-    print(type(arr_torch), arr_torch.device)
 
-    back_to_list = to_list(arr_np)
-    print(back_to_list)  # [[1.0, 2.0], [3.0, 4.0]]
+    back_to_list = to_list(arr_np)  # [[1.0, 2.0], [3.0, 4.0]]
     ```
 
 - Context-based conversion:
@@ -66,8 +63,6 @@ pip install cobra-array
         x = as_context([1, 2, 3])
         y = as_context(np.array([4, 5]))
         spec = context_spec()
-        print(spec.cxp.xp_name, spec.dtype, spec.device)
-        print(x, y)
     ```
 
 - Auto-unify function arguments:
@@ -82,7 +77,6 @@ pip install cobra-array
         return c.mean()
 
     out = add_and_mean(np.array([1, 2, 3]), [4, 5, 6])
-    print(out)
     ```
 
 - Default backend strategy:
@@ -91,10 +85,8 @@ pip install cobra-array
     from cobra_array.default import as_default, default_spec
 
     spec = default_spec()
-    print(spec.cxp.xp_name, spec.dtype, spec.device)
 
     x = as_default([1, 2, 3], unify_dtype=True, unify_device=True)
-    print(x, x.dtype)
     ```
 
 ## Requirements

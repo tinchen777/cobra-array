@@ -23,6 +23,31 @@ class CompatNamespace(Compat):
     - Functions correspond directly to those defined in the underlying `array namespace`, following the `Python Array API standard`.
     - This namespace complements :class:`CompatArray` by providing a functional interface for operations that are not naturally expressed as methods.
     - All functions guarantee that any array-like objects in the returned value are automatically wrapped as :class:`CompatArray`. This conversion is applied recursively to arrays contained in Python containers (e.g., `tuple`, `list`, `dict`). Non-array objects remain unchanged.
+
+    Examples
+    --------
+    Create a compatibility namespace from a backend namespace:
+
+    >>> import numpy as np
+    >>> cxp = CompatNamespace(np)
+    >>> cxp.xp_name
+    'NumPy'
+
+    Create arrays and call namespace functions:
+
+    >>> a = cxp.asarray([1, 2, 3])
+    >>> b = cxp.asarray([10, 20, 30])
+    >>> a
+    NumPy_Array([1 2 3])
+    >>> cxp.add(a, b).to_list()
+    [11, 22, 33]
+
+    Missing attributes raise an exception:
+
+    >>> cxp.this_attr_does_not_exist
+    Traceback (most recent call last):
+        ...
+    AttributeError: ...
     """
     def __new__(cls, xp, /):
         if isinstance(xp, CompatNamespace):
