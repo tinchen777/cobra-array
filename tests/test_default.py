@@ -19,7 +19,7 @@ def test_default_spec_returns_valid_defaults():
     spec = default_spec()
     assert isinstance(spec, ArraySpec)
     assert isinstance(spec.cxp, CompatNamespace)
-    assert spec.dtype is float
+    assert spec.dtype is None
     assert spec.device == "cpu"
 
 
