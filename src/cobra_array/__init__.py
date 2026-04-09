@@ -12,6 +12,7 @@ Modules
 - :mod:`cobra_array.convert`: Utilities for converting between different array types and namespaces.
 - :mod:`cobra_array.default`: Default utilities for array specifications and namespaces.
 - :mod:`cobra_array.array_api`: Utilities for working with array namespaces and devices.
+
 Functions
 ---------
 - :func:`array_spec`: Get the array specification of an object.
@@ -83,7 +84,7 @@ from ._utils import (
 )
 
 __author__ = "Zhen Tian"
-__version__ = "0.1.2"
+__version__ = "0.1.3"
 
 __all__ = [
     "array_spec",

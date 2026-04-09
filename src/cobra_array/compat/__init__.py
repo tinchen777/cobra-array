@@ -6,6 +6,7 @@ Functions
 ---------
 - :func:`wrap_arraylike`: Wraps an array-like object in a :class:`CompatArray` array if it is an array API object.
 - :func:`unwrap`: Unwraps a :class:`CompatArray` array to get the backend-specific array instance, or returns the object itself if it is not a :class:`CompatArray` array.
+
 Classes
 -------
 - :class:`CompatArray`: A backend-agnostic array abstraction compliant with the `Python Array API standard`.
