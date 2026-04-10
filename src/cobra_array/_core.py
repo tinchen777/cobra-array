@@ -25,11 +25,19 @@ if TYPE_CHECKING:
     from .types import (T, dtypeT, DType, AnyDevice, ArrayLike, ArrayLibraryName)
 
 
+def _fallback_default_spec(fallback: bool, exc: Exception, /, from_: Optional[BaseException] = None) -> ArraySpec:
+    """Return the default array specification when fallback is enabled, otherwise re-raise the original exception."""
+    if fallback:
+        return default_spec()
+    raise exc from from_
+
+
 def array_spec(
     *arrays: object,
     kw_arrays: Optional[Dict[str, object]] = None,
     ref: Optional[Union[str, int]] = None,
     filter_arraylike: bool = False,
+    fallback: bool = False,
     api_version: Optional[str] = None,
     use_compat: Optional[bool] = None
 ) -> ArraySpec:
@@ -53,6 +61,11 @@ def array_spec(
         filter_arraylike : bool, default to `False`
             Whether to filter the provided inputs to all array-likes via :func:`array_api_compat.is_array_api_obj` when determining the `compatibility namespace`.
 
+        fallback : bool, default to `False`
+            Whether to fall back to the default `compatibility namespace` when failing to determine the `compatibility namespace` from the provided inputs or the reference array.
+            - `True`: Return the default `compatibility namespace` from :func:`default.default_spec` when an error occurs;
+            - `False`: Raise the original exception when an error occurs.
+
         api_version : Optional[str], default to `None`
             The target array API version for the returned `compatibility namespace`. See also :param:`api_version` in :func:`array_api_compat.array_namespace`.
 
@@ -73,10 +86,12 @@ def array_spec(
 
     Raises
     ------
+        Refer to :func:`default.default_spec` for possible exceptions.
+
         NoArrayInputsError
-            If no array inputs are provided in `arrays` and `kw_arrays`.
+            If no array inputs are provided in `arrays` and `kw_arrays`, and :param:`fallback` is `False`.
         GetArrayNamespaceError
-            If an error occurs while determining the `compatibility namespace` from the provided inputs or the reference array.
+            If an error occurs while determining the `compatibility namespace` from the provided inputs or the reference array, and :param:`fallback` is `False`.
         KeyError
             If `ref` is a string but not a key in `kw_arrays`.
         IndexError
@@ -84,7 +99,7 @@ def array_spec(
         TypeError
             If `ref` is not `None`, a string, or an integer.
         NotArrayAPIObjectError
-            If the reference array determined by `ref` is not an array API compatible array object.
+            If the reference array determined by `ref` is not an array API compatible array object, and :param:`fallback` is `False`.
 
     Examples
     --------
@@ -116,7 +131,10 @@ def array_spec(
 
     if len(arrays) == 0 and len(kw_arrays) == 0:
         # no arrays provided
-        raise NoArrayInputsError("Expected at least one array input.")
+        return _fallback_default_spec(
+            fallback,
+            NoArrayInputsError("Expected at least one array input.")
+        )
 
     # iterator of all arrays
     all_arrays = chain(arrays, kw_arrays.values())
@@ -134,9 +152,13 @@ def array_spec(
                 ), None, None
             )
         except Exception as e:
-            raise GetArrayNamespaceError(
-                "Failed to determine the `compatibility namespace` from the provided inputs."
-            ) from e
+            return _fallback_default_spec(
+                fallback,
+                GetArrayNamespaceError(
+                    "Failed to determine the `compatibility namespace` from "
+                    "the provided inputs."
+                ), from_=e
+            )
 
     if isinstance(ref, str):
         # use the specified kw_array as reference array to determine the namespace
@@ -172,8 +194,11 @@ def array_spec(
         )
 
     if not filter_arraylike and not api.is_array_api_obj(ref_arr):
-        raise NotArrayAPIObjectError(
-            f"Reference array must be an array API compatible array object, got {ref_arr!r}."
+        return _fallback_default_spec(
+            fallback,
+            NotArrayAPIObjectError(
+                f"Reference array must be an array API compatible array object, got {ref_arr!r}."
+            )
         )
 
     dtype = getattr(ref_arr, "dtype", None)
@@ -187,19 +212,28 @@ def array_spec(
             ), dtype, device
         )
     except Exception as e:
-        raise GetArrayNamespaceError(
-            "Failed to determine the `compatibility namespace` from the reference array."
-        ) from e
+        return _fallback_default_spec(
+            fallback,
+            GetArrayNamespaceError(
+                f"Failed to determine the `compatibility namespace` from the reference array {ref_arr!r}."
+            ), from_=e
+        )
 
 
 # initialize the context variable for array specification
 _arr_spec_var = ContextVar("arr_spec")
 
 
-def context_spec() -> ArraySpec:
+def context_spec(fallback: bool = True) -> ArraySpec:
     """
     Get the `compatibility namespace`, `dtype` and `device` associated with the most recent :func:`unify_array_args`-decorated function call in the current context.
-    If there is no such function call in the current context, return the default `compatibility namespace`, `dtype` and `device` from :func:`default.default_spec`.
+
+    Parameters
+    ----------
+        fallback : bool, default to `True`
+            Whether to fall back to the default `compatibility namespace` when there is no such function call in the current context.
+            - `True`: Return the default `compatibility namespace` from :func:`default.default_spec` when the error occurs;
+            - `False`: Raise `LookupError` when the error occurs.
 
     Returns
     -------
@@ -209,23 +243,26 @@ def context_spec() -> ArraySpec:
     Raises
     ------
         Refer to :func:`default.default_spec` for possible exceptions.
+
+        LookupError
+            If there is no :func:`unify_array_args`-decorated function call in the current context, and :param:`fallback` is `False`.
     """
     try:
         return _arr_spec_var.get()
-    except LookupError:
-        return default_spec()
+    except LookupError as e:
+        return _fallback_default_spec(fallback, e)
 
 
 @overload
-def as_context(obj: NDArray[dtypeT], /, *, unify_dtype: Literal[False], unify_device: bool = ..., copy: bool = ..., arraylike_only: bool = ...) -> CompatArray[dtypeT, Literal["cpu"]]: ...
+def as_context(obj: NDArray[dtypeT], /, *, unify_dtype: Literal[False], unify_device: bool = ..., copy: bool = ..., arraylike_only: bool = ..., fallback: bool = ...) -> CompatArray[dtypeT, Literal["cpu"]]: ...
 @overload
-def as_context(obj: ArrayLike[dtypeT], /, *, unify_dtype: Literal[False], unify_device: bool = ..., copy: bool = ..., arraylike_only: bool = ...) -> CompatArray[dtypeT, AnyDevice]: ...
+def as_context(obj: ArrayLike[dtypeT], /, *, unify_dtype: Literal[False], unify_device: bool = ..., copy: bool = ..., arraylike_only: bool = ..., fallback: bool = ...) -> CompatArray[dtypeT, AnyDevice]: ...
 @overload
-def as_context(obj: ArrayLike[Any], /, *, unify_dtype: Literal[True] = ..., unify_device: bool = ..., copy: bool = ..., arraylike_only: bool = ...) -> CompatArray[Any, AnyDevice]: ...
+def as_context(obj: ArrayLike[Any], /, *, unify_dtype: Literal[True] = ..., unify_device: bool = ..., copy: bool = ..., arraylike_only: bool = ..., fallback: bool = ...) -> CompatArray[Any, AnyDevice]: ...
 @overload
-def as_context(obj: object, /, *, unify_dtype: bool = ..., unify_device: bool = ..., copy: bool = ..., arraylike_only: Literal[False] = ...) -> CompatArray[Any, AnyDevice]: ...
+def as_context(obj: object, /, *, unify_dtype: bool = ..., unify_device: bool = ..., copy: bool = ..., arraylike_only: Literal[False] = ..., fallback: bool = ...) -> CompatArray[Any, AnyDevice]: ...
 @overload
-def as_context(obj: T, /, *, unify_dtype: bool = ..., unify_device: bool = ..., copy: bool = ..., arraylike_only: Literal[True]) -> T: ...
+def as_context(obj: T, /, *, unify_dtype: bool = ..., unify_device: bool = ..., copy: bool = ..., arraylike_only: Literal[True], fallback: bool = ...) -> T: ...
 
 
 def as_context(
@@ -234,7 +271,8 @@ def as_context(
     unify_dtype: bool = True,
     unify_device: bool = True,
     copy: bool = False,
-    arraylike_only: bool = False
+    arraylike_only: bool = False,
+    fallback: bool = True
 ) -> Any:
     """
     Convert the given object to a :class:`CompatArray` array in the current context `compatibility namespace`, with the `dtype` and `device` unified to the current context if specified.
@@ -256,6 +294,11 @@ def as_context(
         arraylike_only : bool, default to `False`
             Whether to only convert array-like objects to arrays in the current context namespace, and return the object itself if it is not array-like.
 
+        fallback : bool, default to `True`
+            Whether to fall back to the default `compatibility namespace` when there is no such function call in the current context.
+            - `True`: Return the default `compatibility namespace` from :func:`default.default_spec` when the error occurs;
+            - `False`: Raise `LookupError` when the error occurs.
+
     Returns
     -------
         CompatArray[Any, AnyDevice]
@@ -273,7 +316,7 @@ def as_context(
     >>> as_context([1, 2, 3])
     PyTorch_Array(tensor([1., 2., 3.], dtype=torch.float64))
     """
-    spec = context_spec()
+    spec = context_spec(fallback=fallback)
     return wrap_arraylike(as_array(
         obj, spec.cxp,
         dtype=spec.dtype if unify_dtype else None,
@@ -356,7 +399,7 @@ class array_context:
                 The target `device` for the context.
                 - `None`: Use the `device` from the context.
         """
-        spec = context_spec()
+        spec = context_spec(fallback=True)
         self.cur_spec = ArraySpec.create(
             to_xp(xp) if xp is not None else spec.cxp,
             dtype if dtype is not None else spec.dtype,
@@ -382,7 +425,7 @@ def unify_args(
     unify_dtype: bool = False,
     unify_device: bool = True,
     arraylike_only: bool = True,
-    strict: bool = True
+    fallback: bool = True
 ):
     """
     **Decorator** to unify arguments of a function to the same `compatibility namespace`, `dtype` and `device` determined by the provided array arguments and the reference array.
@@ -411,10 +454,10 @@ def unify_args(
         arraylike_only : bool, default to `True`
             Whether to only convert array-like objects to arrays in the determined namespace, and return the object itself if it is not array-like.
 
-        strict : bool, default to `True`
-            Whether to raise exceptions when failing to determine the `compatibility namespace`.
-            - `True`: Raise exceptions when failing to determine the `compatibility namespace` from the provided inputs or the reference array;
-            - `False`: Fall back to the default `compatibility namespace` if an error occurs. If all default array libraries are missing, just run the function without conversion.
+        fallback : bool, default to `True`
+            Whether to raise exceptions when failing to determine the `compatibility namespace` from the provided inputs or the reference array.
+            - `True`: Fall back to the default `compatibility namespace` from :func:`default.default_spec` when an error occurs;
+            - `False`: Just run the function without conversion when an error occurs.
 
     Raises
     ------
@@ -440,18 +483,13 @@ def unify_args(
                 spec = array_spec(
                     *args, kw_arrays=kwargs, ref=ref,
                     filter_arraylike=filter_arraylike,
+                    fallback=fallback,
                     api_version=api_version,
                     use_compat=use_compat
                 )
-            except Exception as e:
-                if strict:
-                    raise e
-                try:
-                    # fall back to the default namespace
-                    spec = default_spec()
-                except MissingDependencyError:
-                    # just run the function without conversion
-                    return func(*args, **kwargs)
+            except Exception:
+                # just run the function without conversion
+                return func(*args, **kwargs)
 
             with array_context.from_array_spec(spec):
                 out_args = tuple(
