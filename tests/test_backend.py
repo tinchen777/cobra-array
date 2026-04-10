@@ -101,6 +101,7 @@ def test_unify_args_strict_false_fallback_and_convert():
         return a, default_spec().cxp.xp_name
 
     out, xp_name = fn([1, 2, 3])
+
     assert isinstance(out, CompatArray)
     assert out.cxp.xp_name == xp_name
     assert xp_name in ("NumPy", "PyTorch")
@@ -125,17 +126,18 @@ def test_resolve_device_torch_checks():
 
 
 if __name__ == "__main__":
-    test_array_context_override_and_restore()
-    test_as_context_converts_under_current_context()
-    test_as_context_arraylike_only_passthrough()
-    test_unify_args_strict_true_raises_for_non_array_inputs()
+    # test_array_context_override_and_restore()
+    # test_as_context_converts_under_current_context()
+    # test_as_context_arraylike_only_passthrough()
+    # test_unify_args_strict_true_raises_for_non_array_inputs()
+    # test_unify_args_strict_false_fallback_and_convert()
+    # test_resolve_device_basic_and_numpy_constraints()
+    # test_resolve_device_torch_checks()
+    # test_array_context_override_and_restore()
+    # test_as_context_converts_under_current_context()
+    # test_as_context_arraylike_only_passthrough()
+    # test_unify_args_strict_true_raises_for_non_array_inputs()
+    # test_unify_args_strict_false_fallback_and_convert()
+    # test_resolve_device_basic_and_numpy_constraints()
+    # test_resolve_device_torch_checks()
     test_unify_args_strict_false_fallback_and_convert()
-    test_resolve_device_basic_and_numpy_constraints()
-    test_resolve_device_torch_checks()
-    test_array_context_override_and_restore()
-    test_as_context_converts_under_current_context()
-    test_as_context_arraylike_only_passthrough()
-    test_unify_args_strict_true_raises_for_non_array_inputs()
-    test_unify_args_strict_false_fallback_and_convert()
-    test_resolve_device_basic_and_numpy_constraints()
-    test_resolve_device_torch_checks()

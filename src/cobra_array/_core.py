@@ -93,9 +93,11 @@ def array_spec(
         GetArrayNamespaceError
             If an error occurs while determining the `compatibility namespace` from the provided inputs or the reference array, and :param:`fallback` is `False`.
         KeyError
-            If `ref` is a string but not a key in `kw_arrays`.
+            If `ref` is a string but not a key in `kw_arrays`, and :param:`fallback` is `False`.
         IndexError
-            If `ref` is an integer but out of range for the array inputs.
+            If `ref` is an integer but out of range for the array inputs, and :param:`fallback` is `False`.
+        ValueError
+            If `ref` is an integer but negative.
         TypeError
             If `ref` is not `None`, a string, or an integer.
         NotArrayAPIObjectError
@@ -165,28 +167,35 @@ def array_spec(
         try:
             ref_arr = kw_arrays[ref]
         except KeyError:
-            raise KeyError(
-                f"Parameter `ref` of `array_spec()` must be a key in `kw_arrays`, got {ref!r}."
-            ) from None
+            return _fallback_default_spec(
+                fallback,
+                KeyError(
+                    "Parameter `ref` of `array_spec()` must be a key in "
+                    f"`kw_arrays`, got {ref!r}."
+                )
+            )
     elif isinstance(ref, int):
         # use the specified array as reference array to determine the namespace
         try:
             ref_arr = next(islice(all_arrays, ref, ref + 1))
         except ValueError:
-            raise IndexError(
+            raise ValueError(
                     "Parameter `ref` of `array_spec()` must be a "
                     f"non-negative index for the array inputs, got {ref!r}."
                 ) from None
         except StopIteration:
-            if filter_arraylike:
+            try:
+                if filter_arraylike:
+                    raise IndexError(
+                        "Parameter `ref` of `array_spec()` is out of range "
+                        f"for the array-like inputs, got {ref!r}."
+                    ) from None
                 raise IndexError(
-                    "Parameter `ref` of `array_spec()` is out of range "
-                    f"for the array-like inputs, got {ref!r}."
+                    "Parameter `ref` of `array_spec()` must be in the range "
+                    f"[0, {len(arrays) + len(kw_arrays)}) for the array inputs, got {ref!r}."
                 ) from None
-            raise IndexError(
-                "Parameter `ref` of `array_spec()` must be in the range "
-                f"[0, {len(arrays) + len(kw_arrays)}) for the array inputs, got {ref!r}."
-            ) from None
+            except IndexError as e:
+                return _fallback_default_spec(fallback, e)
     else:
         raise TypeError(
             "Parameter `ref` of `array_spec()` must be `str`, "
