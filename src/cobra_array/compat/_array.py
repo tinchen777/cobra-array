@@ -310,9 +310,16 @@ class CompatArray(Compat):
     @property
     def arr(self):
         """
-        The backend-specific array instance managed by :class:`CompatArray`.
+        The backend-specific array instance wrapped by `self`.
         """
         return self._arr
+
+    @property
+    def cxp(self):
+        """
+        The `compatibility namespace` associated with `self`.
+        """
+        return self._cxp
 
     @property
     def dtype(self):

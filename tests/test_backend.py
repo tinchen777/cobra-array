@@ -86,7 +86,7 @@ def test_as_context_arraylike_only_passthrough():
 
 
 def test_unify_args_strict_true_raises_for_non_array_inputs():
-    @unify_args(filter_arraylike=True, fallback=True)
+    @unify_args(filter_arraylike=True, fallback=False)
     def fn(a, b):
         return a, b
 
@@ -96,12 +96,13 @@ def test_unify_args_strict_true_raises_for_non_array_inputs():
 
 
 def test_unify_args_strict_false_fallback_and_convert():
-    @unify_args(filter_arraylike=True, fallback=False, arraylike_only=False)
+    @unify_args(filter_arraylike=True, fallback=True, arraylike_only=False)
     def fn(a):
-        return a, context_spec().cxp.xp_name
+        return a, default_spec().cxp.xp_name
 
     out, xp_name = fn([1, 2, 3])
     assert isinstance(out, CompatArray)
+    assert out.cxp.xp_name == xp_name
     assert xp_name in ("NumPy", "PyTorch")
 
 

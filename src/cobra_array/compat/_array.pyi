@@ -8,6 +8,7 @@ from numpy.typing import NDArray
 from typing import (Union, List, Tuple, Optional, Any, Sequence, Generic, TypeVar, Literal, overload)
 
 from ._base import Compat
+from ._namespace import CompatNamespace
 from ..types import (
     T, DTypeT, DeviceT, dtypeT, deviceT, DType, AnyDevice,
     ArrayLike, ArrayLibraryName,
@@ -1749,6 +1750,8 @@ class CompatArray(Compat, Generic[TT, DT]):
     # === Array attributes ===
     @property
     def arr(self) -> ArrayLike[TT]: ...
+    @property
+    def cxp(self) -> CompatNamespace: ...
     @property
     def dtype(self) -> TT: ...
     @property

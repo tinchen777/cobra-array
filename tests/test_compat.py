@@ -251,3 +251,11 @@ def test_some_pyi_annotated_methods_via_dynamic_dispatch():
 
     assert r.shape == (4,)
     assert t.shape == (2, 1)
+
+
+def test_cxp_of_compatarray_matches_array_namespace():
+    a = _arr_1d()
+    cxp = a.cxp
+
+    assert cxp is not None
+    assert cxp.xp_name == a.xp_name
