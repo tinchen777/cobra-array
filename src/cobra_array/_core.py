@@ -15,7 +15,6 @@ from .default import (ArraySpec, default_spec)
 from .exceptions import (
     NoArrayInputsError,
     GetArrayNamespaceError,
-    MissingDependencyError,
     NotArrayAPIObjectError
 )
 
