@@ -84,7 +84,7 @@ from ._utils import (
 )
 
 __author__ = "Zhen Tian"
-__version__ = "0.1.4"
+__version__ = "0.1.5"
 
 __all__ = [
     "array_spec",

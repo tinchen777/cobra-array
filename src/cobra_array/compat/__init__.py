@@ -1,6 +1,6 @@
 # src/cobra_array/compat/__init__.py
 """
-Compatibility utilities for :pkg:`cobra_color`.
+Compatibility utilities for :pkg:`cobra_array`.
 
 Functions
 ---------
