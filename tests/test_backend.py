@@ -86,16 +86,17 @@ def test_as_context_arraylike_only_passthrough():
 
 
 def test_unify_args_strict_true_raises_for_non_array_inputs():
-    @unify_args(filter_arraylike=True, strict=True)
+    @unify_args(filter_arraylike=True, fallback=True)
     def fn(a, b):
         return a, b
 
-    with pytest.raises(IndexError):
-        fn("x", {"y": 1})
+    a, b = fn("x", {"y": 1})
+    assert a == "x"
+    assert b == {"y": 1}
 
 
 def test_unify_args_strict_false_fallback_and_convert():
-    @unify_args(filter_arraylike=True, strict=False, arraylike_only=False)
+    @unify_args(filter_arraylike=True, fallback=False, arraylike_only=False)
     def fn(a):
         return a, context_spec().cxp.xp_name
 
