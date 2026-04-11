@@ -32,11 +32,8 @@ Examples
     from cobra_array.convert import to_numpy, to_tensor, to_list
 
     data = [[1, 2], [3, 4]]
-
     arr_np = to_numpy(data, dtype=np.float32)  # numpy.ndarray float32
-
     arr_torch = to_tensor(data, device="cpu")
-
     back_to_list = to_list(arr_np)  # [[1.0, 2.0], [3.0, 4.0]]
 
 - Context-based conversion::
@@ -66,7 +63,6 @@ Examples
     from cobra_array.default import as_default, default_spec
 
     spec = default_spec()
-
     x = as_default([1, 2, 3], unify_dtype=True, unify_device=True)
 """
 
