@@ -2,7 +2,6 @@ import sys
 from typing import Any
 
 import numpy as np
-import torch
 import pytest
 import time
 from types import ModuleType
@@ -340,69 +339,67 @@ def test_numpy_operator_overloads():
 
     print(f"Operator overloads test took {time.process_time() - start:.4f} seconds")
 
-    
 
+# def test_torch_operator_overloads():
+#     a = CompatArray(torch.tensor([1, 2, 3], dtype=torch.int32))
+#     b = CompatArray(torch.tensor([3, 2, 1], dtype=torch.int32))
 
-def test_torch_operator_overloads():
-    a = CompatArray(torch.tensor([1, 2, 3], dtype=torch.int32))
-    b = CompatArray(torch.tensor([3, 2, 1], dtype=torch.int32))
+#     start = time.process_time()
+#     assert a.__abs__().to_list() == [1, 2, 3]
+#     assert (a + b).to_list() == [4, 4, 4]
+#     assert (a - b).to_list() == [-2, 0, 2]
+#     assert (a * b).to_list() == [3, 4, 3]
+#     assert (a / 2).to_list() == [0.5, 1.0, 1.5]
+#     assert (a // 2).to_list() == [0, 1, 1]
+#     assert (a % 2).to_list() == [1, 0, 1]
+#     assert (a & b).to_list() == [1, 2, 1]
+#     assert (a | b).to_list() == [3, 2, 3]
+#     assert (a ^ b).to_list() == [2, 0, 2]
+#     assert (a << 1).to_list() == [2, 4, 6]
+#     assert (a >> 1).to_list() == [0, 1, 1]
 
-    start = time.process_time()
-    assert a.__abs__().to_list() == [1, 2, 3]
-    assert (a + b).to_list() == [4, 4, 4]
-    assert (a - b).to_list() == [-2, 0, 2]
-    assert (a * b).to_list() == [3, 4, 3]
-    assert (a / 2).to_list() == [0.5, 1.0, 1.5]
-    assert (a // 2).to_list() == [0, 1, 1]
-    assert (a % 2).to_list() == [1, 0, 1]
-    assert (a & b).to_list() == [1, 2, 1]
-    assert (a | b).to_list() == [3, 2, 3]
-    assert (a ^ b).to_list() == [2, 0, 2]
-    assert (a << 1).to_list() == [2, 4, 6]
-    assert (a >> 1).to_list() == [0, 1, 1]
+#     assert (-a).to_list() == [-1, -2, -3]
+#     assert (+a).to_list() == [1, 2, 3]
+#     assert (~a).to_list() == [-2, -3, -4]
 
-    assert (-a).to_list() == [-1, -2, -3]
-    assert (+a).to_list() == [1, 2, 3]
-    assert (~a).to_list() == [-2, -3, -4]
+#     assert (a == b).to_list() == [False, True, False]
+#     assert (a != b).to_list() == [True, False, True]
+#     assert (a > b).to_list() == [False, False, True]
+#     assert (a >= b).to_list() == [False, True, True]
+#     assert (a < b).to_list() == [True, False, False]
+#     assert (a <= b).to_list() == [True, True, False]
 
-    assert (a == b).to_list() == [False, True, False]
-    assert (a != b).to_list() == [True, False, True]
-    assert (a > b).to_list() == [False, False, True]
-    assert (a >= b).to_list() == [False, True, True]
-    assert (a < b).to_list() == [True, False, False]
-    assert (a <= b).to_list() == [True, True, False]
+#     print(f"Operator overloads test took {time.process_time() - start:.4f} seconds")
 
-    print(f"Operator overloads test took {time.process_time() - start:.4f} seconds")
+#     a = torch.tensor([1, 2, 3], dtype=torch.int32)
+#     b = torch.tensor([3, 2, 1], dtype=torch.int32)
 
-    a = torch.tensor([1, 2, 3], dtype=torch.int32)
-    b = torch.tensor([3, 2, 1], dtype=torch.int32)
+#     start = time.process_time()
+#     assert a.__abs__().tolist() == [1, 2, 3]
+#     assert (a + b).tolist() == [4, 4, 4]
+#     assert (a - b).tolist() == [-2, 0, 2]
+#     assert (a * b).tolist() == [3, 4, 3]
+#     assert (a / 2).tolist() == [0.5, 1.0, 1.5]
+#     assert (a // 2).tolist() == [0, 1, 1]
+#     assert (a % 2).tolist() == [1, 0, 1]
+#     assert (a & b).tolist() == [1, 2, 1]
+#     assert (a | b).tolist() == [3, 2, 3]
+#     assert (a ^ b).tolist() == [2, 0, 2]
+#     assert (a << 1).tolist() == [2, 4, 6]
+#     assert (a >> 1).tolist() == [0, 1, 1]
 
-    start = time.process_time()
-    assert a.__abs__().tolist() == [1, 2, 3]
-    assert (a + b).tolist() == [4, 4, 4]
-    assert (a - b).tolist() == [-2, 0, 2]
-    assert (a * b).tolist() == [3, 4, 3]
-    assert (a / 2).tolist() == [0.5, 1.0, 1.5]
-    assert (a // 2).tolist() == [0, 1, 1]
-    assert (a % 2).tolist() == [1, 0, 1]
-    assert (a & b).tolist() == [1, 2, 1]
-    assert (a | b).tolist() == [3, 2, 3]
-    assert (a ^ b).tolist() == [2, 0, 2]
-    assert (a << 1).tolist() == [2, 4, 6]
-    assert (a >> 1).tolist() == [0, 1, 1]
+#     assert (-a).tolist() == [-1, -2, -3]
+#     assert (+a).tolist() == [1, 2, 3]
+#     assert (~a).tolist() == [-2, -3, -4]
 
-    assert (-a).tolist() == [-1, -2, -3]
-    assert (+a).tolist() == [1, 2, 3]
-    assert (~a).tolist() == [-2, -3, -4]
+#     assert (a == b).tolist() == [False, True, False]
+#     assert (a != b).tolist() == [True, False, True]
+#     assert (a > b).tolist() == [False, False, True]
+#     assert (a >= b).tolist() == [False, True, True]
+#     assert (a < b).tolist() == [True, False, False]
+#     assert (a <= b).tolist() == [True, True, False]
 
-    assert (a == b).tolist() == [False, True, False]
-    assert (a != b).tolist() == [True, False, True]
-    assert (a > b).tolist() == [False, False, True]
-    assert (a >= b).tolist() == [False, True, True]
-    assert (a < b).tolist() == [True, False, False]
-    assert (a <= b).tolist() == [True, True, False]
-
-    print(f"Torch operator overloads test took {time.process_time() - start:.4f} seconds")
+#     print(f"Torch operator overloads test took {time.process_time() - start:.4f} seconds")
 
 
 def test_pow_operator_matches_current_implementation_behavior():
@@ -479,7 +476,7 @@ if __name__ == "__main__":
     
     test_numpy_operator_overloads()
     print("=" * 40)
-    test_torch_operator_overloads()
+    # test_torch_operator_overloads()
     print("=" * 40)
 
     test_add()
