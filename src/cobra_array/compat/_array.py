@@ -7,7 +7,7 @@ import array_api_compat as api
 from collections import namedtuple
 
 from ._base import Compat
-from ..convert import (to_numpy, to_tensor, to_list, to_xp, as_array)
+from ..convert import (to_numpy, to_tensor, to_list, as_array)
 from ..exceptions import (NotArrayAPIObjectError, CompatArrayAttributeError)
 
 
@@ -105,10 +105,10 @@ class CompatArray(Compat):
         ------
             Refer to :func:`convert.as_array` for possible exceptions.
         """
-        _xp = to_xp(xp)
+        _cxp = to_cxp(xp)
         return cls(
-            as_array(unwrap(obj), _xp, copy=copy),
-            xp=_xp
+            as_array(unwrap(obj), _cxp, copy=copy),
+            xp=_cxp
         )
 
     def __new__(cls, arr, /, *, copy=False, **kwargs):
@@ -197,7 +197,7 @@ class CompatArray(Compat):
                 All the arrays have the same shape.
         """
         result = self._get_xp_attr("unstack")(self._arr, axis=axis)
-        return tuple(CompatArray(arr, xp=self._xp) for arr in result)
+        return tuple(CompatArray(arr, xp=self._cxp) for arr in result)
 
     # === Searching functions ===
     def nonzero(self):
@@ -218,7 +218,7 @@ class CompatArray(Compat):
         - If `self` has a boolean data type, non-zero elements are those elements which are equal to `True`.
         """
         result = self._get_xp_attr("nonzero")(self._arr)
-        return tuple(CompatArray(arr, xp=self._xp) for arr in result)
+        return tuple(CompatArray(arr, xp=self._cxp) for arr in result)
 
     # === Set functions ===
     def unique_all(self):
@@ -238,10 +238,10 @@ class CompatArray(Compat):
         """
         result = self._get_xp_attr("unique_all")(self._arr)
         return UniqueResult(
-            values=CompatArray(result.values, xp=self._xp),
-            indices=CompatArray(result.indices, xp=self._xp),
-            inverse_indices=CompatArray(result.inverse_indices, xp=self._xp),
-            counts=CompatArray(result.counts, xp=self._xp),
+            values=CompatArray(result.values, xp=self._cxp),
+            indices=CompatArray(result.indices, xp=self._cxp),
+            inverse_indices=CompatArray(result.inverse_indices, xp=self._cxp),
+            counts=CompatArray(result.counts, xp=self._cxp),
         )
 
     def unique_counts(self):
@@ -259,10 +259,10 @@ class CompatArray(Compat):
         """
         result = self._get_xp_attr("unique_counts")(self._arr)
         return UniqueResult(
-            values=CompatArray(result.values, xp=self._xp),
+            values=CompatArray(result.values, xp=self._cxp),
             indices=None,
             inverse_indices=None,
-            counts=CompatArray(result.counts, xp=self._xp),
+            counts=CompatArray(result.counts, xp=self._cxp),
         )
 
     def unique_inverse(self):
@@ -280,9 +280,9 @@ class CompatArray(Compat):
         """
         result = self._get_xp_attr("unique_inverse")(self._arr)
         return UniqueResult(
-            values=CompatArray(result.values, xp=self._xp),
+            values=CompatArray(result.values, xp=self._cxp),
             indices=None,
-            inverse_indices=CompatArray(result.inverse_indices, xp=self._xp),
+            inverse_indices=CompatArray(result.inverse_indices, xp=self._cxp),
             counts=None,
         )
 
@@ -291,7 +291,7 @@ class CompatArray(Compat):
         """
         Return a copy of `self` via :func:`convert.as_array`.
         """
-        return CompatArray.from_other(self._arr, xp=self._xp, copy=True)
+        return CompatArray.from_other(self._arr, xp=self._cxp, copy=True)
 
     def _get_attr(self, name: str):
         """Try to get the attribute `name` from `self`."""
@@ -379,7 +379,7 @@ class CompatArray(Compat):
             result = self._get_xp_attr("T")(self._arr)
         except (AttributeError, TypeError):
             result = self._get_attr("T")
-        return CompatArray(result, xp=self._xp)
+        return CompatArray(result, xp=self._cxp)
 
     @property
     def mT(self):
@@ -391,7 +391,7 @@ class CompatArray(Compat):
             result = self._get_xp_attr("mT")(self._arr)
         except (AttributeError, TypeError):
             result = self._get_attr("mT")
-        return CompatArray(result, xp=self._xp)
+        return CompatArray(result, xp=self._cxp)
 
     def __array__(self):
         """Allow implicit NumPy conversion."""

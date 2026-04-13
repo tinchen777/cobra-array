@@ -94,7 +94,7 @@ class CompatNamespace(Compat):
             *tuple(unwrap(arr) for arr in arrays),
             indexing=indexing
         )
-        return [CompatArray(arr, xp=self._xp) for arr in result]
+        return [CompatArray(arr, xp=self) for arr in result]
 
     # === Data Type functions ===
     def can_cast(self, from_, to, /):
@@ -234,7 +234,7 @@ class CompatNamespace(Compat):
                 Each array must have the same dtype as its corresponding input array.
         """
         result = self._get_xp_attr("broadcast_arrays")(*tuple(unwrap(arr) for arr in arrays))
-        return [CompatArray(arr, xp=self._xp) for arr in result]
+        return [CompatArray(arr, xp=self) for arr in result]
 
     # === Constants ===
     @property
@@ -321,10 +321,10 @@ class CompatNamespace(Compat):
         if callable(attr):
             def wrapper(*args, **kwargs):
                 if not args and not kwargs:
-                    return wrap_arraylike(attr(), xp=self._xp)
+                    return wrap_arraylike(attr(), xp=self)
 
                 new_args = tuple(unwrap(a) for a in args)
                 new_kwargs = {k: unwrap(v) for k, v in kwargs.items()} if kwargs else kwargs
-                return wrap_arraylike(attr(*new_args, **new_kwargs), xp=self._xp)
+                return wrap_arraylike(attr(*new_args, **new_kwargs), xp=self)
             return wrapper
         raise CompatNamespaceAttributeError(f"`CompatNamespace` `{self._xp_name}` does not support attribute `{name}`.")

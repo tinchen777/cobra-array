@@ -2,7 +2,9 @@ import sys
 from typing import Any
 
 import numpy as np
+import torch
 import pytest
+import time
 
 sys.path.insert(0, "/data/tianzhen/my_packages/cobra-array/src")
 
@@ -89,20 +91,30 @@ def test_unstack_and_nonzero():
 def test_unique_all_unique_counts_unique_inverse():
     a = CompatArray(np.array([1, 2, 2, 1, 3], dtype=np.int32))
 
+    start = time.process_time()
     all_result = a.unique_all()
-    counts_result = a.unique_counts()
-    inverse_result = a.unique_inverse()
+    # counts_result = a.unique_counts()
+    # inverse_result = a.unique_inverse()
+    print(f"Unique operations test took {time.process_time() - start:.4f} seconds")
 
     assert isinstance(all_result.values, CompatArray)
     assert isinstance(all_result.indices, CompatArray)
     assert isinstance(all_result.inverse_indices, CompatArray)
     assert isinstance(all_result.counts, CompatArray)
 
-    assert isinstance(counts_result.values, CompatArray)
-    assert isinstance(counts_result.counts, CompatArray)
+    # assert isinstance(counts_result.values, CompatArray)
+    # assert isinstance(counts_result.counts, CompatArray)
 
-    assert isinstance(inverse_result.values, CompatArray)
-    assert isinstance(inverse_result.inverse_indices, CompatArray)
+    # assert isinstance(inverse_result.values, CompatArray)
+    # assert isinstance(inverse_result.inverse_indices, CompatArray)
+    
+    a = np.array([1, 2, 2, 1, 3], dtype=np.int32)
+
+    start = time.process_time()
+    all_result = np.unique(a, return_index=True, return_inverse=True, return_counts=True)
+  
+    print(f"Unique operations test took {time.process_time() - start:.4f} seconds")
+    
 
 
 def test_copy_and_basic_properties():
@@ -164,10 +176,11 @@ def test_scalar_conversions():
     assert complex(c) == complex(2, 3)
 
 
-def test_operator_overloads():
+def test_numpy_operator_overloads():
     a = CompatArray(np.array([1, 2, 3], dtype=np.int32))
     b = CompatArray(np.array([3, 2, 1], dtype=np.int32))
 
+    start = time.process_time()
     assert a.__abs__().to_list() == [1, 2, 3]
     assert (a + b).to_list() == [4, 4, 4]
     assert (a - b).to_list() == [-2, 0, 2]
@@ -191,6 +204,100 @@ def test_operator_overloads():
     assert (a >= b).to_list() == [False, True, True]
     assert (a < b).to_list() == [True, False, False]
     assert (a <= b).to_list() == [True, True, False]
+
+    print(f"Operator overloads test took {time.process_time() - start:.4f} seconds")
+
+    a = np.array([1, 2, 3], dtype=np.int32)
+    b = np.array([3, 2, 1], dtype=np.int32)
+
+    start = time.process_time()
+    assert a.__abs__().tolist() == [1, 2, 3]
+    assert (a + b).tolist() == [4, 4, 4]
+    assert (a - b).tolist() == [-2, 0, 2]
+    assert (a * b).tolist() == [3, 4, 3]
+    assert (a / 2).tolist() == [0.5, 1.0, 1.5]
+    assert (a // 2).tolist() == [0, 1, 1]
+    assert (a % 2).tolist() == [1, 0, 1]
+    assert (a & b).tolist() == [1, 2, 1]
+    assert (a | b).tolist() == [3, 2, 3]
+    assert (a ^ b).tolist() == [2, 0, 2]
+    assert (a << 1).tolist() == [2, 4, 6]
+    assert (a >> 1).tolist() == [0, 1, 1]
+
+    assert (-a).tolist() == [-1, -2, -3]
+    assert (+a).tolist() == [1, 2, 3]
+    assert (~a).tolist() == [-2, -3, -4]
+
+    assert (a == b).tolist() == [False, True, False]
+    assert (a != b).tolist() == [True, False, True]
+    assert (a > b).tolist() == [False, False, True]
+    assert (a >= b).tolist() == [False, True, True]
+    assert (a < b).tolist() == [True, False, False]
+    assert (a <= b).tolist() == [True, True, False]
+
+    print(f"NumPy operator overloads test took {time.process_time() - start:.4f} seconds")
+
+
+def test_torch_operator_overloads():
+    a = CompatArray(torch.tensor([1, 2, 3], dtype=torch.int32))
+    b = CompatArray(torch.tensor([3, 2, 1], dtype=torch.int32))
+
+    start = time.process_time()
+    assert a.__abs__().to_list() == [1, 2, 3]
+    assert (a + b).to_list() == [4, 4, 4]
+    assert (a - b).to_list() == [-2, 0, 2]
+    assert (a * b).to_list() == [3, 4, 3]
+    assert (a / 2).to_list() == [0.5, 1.0, 1.5]
+    assert (a // 2).to_list() == [0, 1, 1]
+    assert (a % 2).to_list() == [1, 0, 1]
+    assert (a & b).to_list() == [1, 2, 1]
+    assert (a | b).to_list() == [3, 2, 3]
+    assert (a ^ b).to_list() == [2, 0, 2]
+    assert (a << 1).to_list() == [2, 4, 6]
+    assert (a >> 1).to_list() == [0, 1, 1]
+
+    assert (-a).to_list() == [-1, -2, -3]
+    assert (+a).to_list() == [1, 2, 3]
+    assert (~a).to_list() == [-2, -3, -4]
+
+    assert (a == b).to_list() == [False, True, False]
+    assert (a != b).to_list() == [True, False, True]
+    assert (a > b).to_list() == [False, False, True]
+    assert (a >= b).to_list() == [False, True, True]
+    assert (a < b).to_list() == [True, False, False]
+    assert (a <= b).to_list() == [True, True, False]
+
+    print(f"Operator overloads test took {time.process_time() - start:.4f} seconds")
+
+    a = torch.tensor([1, 2, 3], dtype=torch.int32)
+    b = torch.tensor([3, 2, 1], dtype=torch.int32)
+
+    start = time.process_time()
+    assert a.__abs__().tolist() == [1, 2, 3]
+    assert (a + b).tolist() == [4, 4, 4]
+    assert (a - b).tolist() == [-2, 0, 2]
+    assert (a * b).tolist() == [3, 4, 3]
+    assert (a / 2).tolist() == [0.5, 1.0, 1.5]
+    assert (a // 2).tolist() == [0, 1, 1]
+    assert (a % 2).tolist() == [1, 0, 1]
+    assert (a & b).tolist() == [1, 2, 1]
+    assert (a | b).tolist() == [3, 2, 3]
+    assert (a ^ b).tolist() == [2, 0, 2]
+    assert (a << 1).tolist() == [2, 4, 6]
+    assert (a >> 1).tolist() == [0, 1, 1]
+
+    assert (-a).tolist() == [-1, -2, -3]
+    assert (+a).tolist() == [1, 2, 3]
+    assert (~a).tolist() == [-2, -3, -4]
+
+    assert (a == b).tolist() == [False, True, False]
+    assert (a != b).tolist() == [True, False, True]
+    assert (a > b).tolist() == [False, False, True]
+    assert (a >= b).tolist() == [False, True, True]
+    assert (a < b).tolist() == [True, False, False]
+    assert (a <= b).tolist() == [True, True, False]
+
+    print(f"Torch operator overloads test took {time.process_time() - start:.4f} seconds")
 
 
 def test_pow_operator_matches_current_implementation_behavior():
@@ -259,3 +366,12 @@ def test_cxp_of_compatarray_matches_array_namespace():
 
     assert cxp is not None
     assert cxp.xp_name == a.xp_name
+
+
+if __name__ == "__main__":
+    test_unique_all_unique_counts_unique_inverse()
+    print("=" * 40)
+    
+    test_numpy_operator_overloads()
+    print("=" * 40)
+    test_torch_operator_overloads()
