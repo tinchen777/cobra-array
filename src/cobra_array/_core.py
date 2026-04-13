@@ -500,9 +500,9 @@ def unify_args(
                 return func(*args, **kwargs)
 
             with array_context.from_array_spec(spec):
-                out_args = tuple(
+                out_args = [
                     as_context(a, unify_dtype=unify_dtype, unify_device=unify_device, arraylike_only=arraylike_only) for a in args
-                )
+                ]
                 out_kwargs = {
                     k: as_context(v, unify_dtype=unify_dtype, unify_device=unify_device, arraylike_only=arraylike_only)
                     for k, v in kwargs.items()

@@ -5,12 +5,14 @@ import numpy as np
 import torch
 import pytest
 import time
+from types import ModuleType
 
 sys.path.insert(0, "/data/tianzhen/my_packages/cobra-array/src")
 
 from cobra_array.array_api import torch_xp
 from cobra_array.compat import CompatArray, unwrap, wrap_arraylike
 from cobra_array.exceptions import CompatArrayAttributeError, NotArrayAPIObjectError
+from cobra_array.compat._array import UniqueResult
 
 
 def _arr_1d():
@@ -90,17 +92,49 @@ def test_unstack_and_nonzero():
 
 def test_unique_all_unique_counts_unique_inverse():
     a = CompatArray(np.array([1, 2, 2, 1, 3], dtype=np.int32))
+    
+    print(type(a) is CompatArray)
+    
+    start = time.process_time()
+    all_result = a.cxp.unique_all(a)
+    # counts_result = a.unique_counts()
+    # inverse_result = a.unique_inverse()
+    
+    # print(all_result.values)
+    
+    # assert isinstance(all_result.values, np.ndarray)
+    # assert isinstance(all_result.indices, np.ndarray)
+    # assert isinstance(all_result.inverse_indices, np.ndarray)
+    # assert isinstance(all_result.counts, np.ndarray)
+
+    print(f"(cxp1)Unique operations test took {time.process_time() - start:.5f} seconds")
+    
 
     start = time.process_time()
     all_result = a.unique_all()
     # counts_result = a.unique_counts()
     # inverse_result = a.unique_inverse()
-    print(f"Unique operations test took {time.process_time() - start:.4f} seconds")
+    
+    # assert isinstance(all_result.values, CompatArray)
+    # assert isinstance(all_result.indices, CompatArray)
+    # assert isinstance(all_result.inverse_indices, CompatArray)
+    # assert isinstance(all_result.counts, CompatArray)
 
-    assert isinstance(all_result.values, CompatArray)
-    assert isinstance(all_result.indices, CompatArray)
-    assert isinstance(all_result.inverse_indices, CompatArray)
-    assert isinstance(all_result.counts, CompatArray)
+    print(f"Unique operations test took {time.process_time() - start:.5f} seconds")
+
+    start = time.process_time()
+    all_result = a.cxp.unique_all(a)
+    # counts_result = a.unique_counts()
+    # inverse_result = a.unique_inverse()
+    
+    # print(all_result.values)
+    
+    # assert isinstance(all_result.values, np.ndarray)
+    # assert isinstance(all_result.indices, np.ndarray)
+    # assert isinstance(all_result.inverse_indices, np.ndarray)
+    # assert isinstance(all_result.counts, np.ndarray)
+
+    print(f"(cxp)Unique operations test took {time.process_time() - start:.5f} seconds")
 
     # assert isinstance(counts_result.values, CompatArray)
     # assert isinstance(counts_result.counts, CompatArray)
@@ -112,9 +146,76 @@ def test_unique_all_unique_counts_unique_inverse():
 
     start = time.process_time()
     all_result = np.unique(a, return_index=True, return_inverse=True, return_counts=True)
-  
-    print(f"Unique operations test took {time.process_time() - start:.4f} seconds")
     
+    UniqueResult(
+        CompatArray(all_result[0], xp=np),
+        CompatArray(all_result[1], xp=np),
+        CompatArray(all_result[2], xp=np),
+        CompatArray(all_result[3], xp=np)
+    )
+    
+    print(f"(RAW)Unique operations test took {time.process_time() - start:.5f} seconds")
+    
+    # start = time.process_time()
+    # all_result = torch_xp.unique(torch.tensor(a), return_inverse=True, return_counts=True)
+  
+    # print(f"API operations test took {time.process_time() - start:.4f} seconds")
+    
+    from array_api_compat import get_namespace
+    xp = get_namespace(a)
+
+    start = time.process_time()
+    all_result = xp.unique_all(a)
+    
+    UniqueResult(
+        CompatArray(all_result.values, xp=xp),
+        CompatArray(all_result.indices, xp=xp),
+        CompatArray(all_result.inverse_indices, xp=xp),
+        CompatArray(all_result.counts, xp=xp)
+    )
+    assert isinstance(all_result.values, xp.ndarray)
+    assert isinstance(all_result.indices, xp.ndarray)
+    assert isinstance(all_result.inverse_indices, xp.ndarray)
+    assert isinstance(all_result.counts, xp.ndarray)
+    
+    print(f"API operations test took {time.process_time() - start:.5f} seconds")
+    
+    print(type(xp) is ModuleType)
+
+
+def test_add():
+
+    a = CompatArray(np.array([1, 2, 2, 1, 3], dtype=np.int32))
+    print(type(a) is CompatArray)
+
+    start = time.time()
+    all_result = a.add(1)
+    all_result = a.add(1)
+    # counts_result = a.unique_counts()
+    # inverse_result = a.unique_inverse()
+
+    print(f"add operations test took {time.time() - start:.5f} seconds")
+
+    start = time.time()
+    all_result = a.cxp.add(a, 1)
+    all_result = a.cxp.add(a, 1)
+
+    print(f"(cxp)add operations test took {time.time() - start:.5f} seconds")
+    
+    a = np.array([1, 2, 2, 1, 3], dtype=np.int32)
+
+    start = time.time()
+    all_result = np.add(a, 1)
+
+    print(f"(RAW)add operations test took {time.time() - start:.5f} seconds")
+
+    from array_api_compat import get_namespace
+    xp = get_namespace(a)
+
+    start = time.time()
+    all_result = xp.add(a, 1)
+
+    print(f"API operations test took {time.time() - start:.5f} seconds")
 
 
 def test_copy_and_basic_properties():
@@ -177,35 +278,7 @@ def test_scalar_conversions():
 
 
 def test_numpy_operator_overloads():
-    a = CompatArray(np.array([1, 2, 3], dtype=np.int32))
-    b = CompatArray(np.array([3, 2, 1], dtype=np.int32))
-
-    start = time.process_time()
-    assert a.__abs__().to_list() == [1, 2, 3]
-    assert (a + b).to_list() == [4, 4, 4]
-    assert (a - b).to_list() == [-2, 0, 2]
-    assert (a * b).to_list() == [3, 4, 3]
-    assert (a / 2).to_list() == [0.5, 1.0, 1.5]
-    assert (a // 2).to_list() == [0, 1, 1]
-    assert (a % 2).to_list() == [1, 0, 1]
-    assert (a & b).to_list() == [1, 2, 1]
-    assert (a | b).to_list() == [3, 2, 3]
-    assert (a ^ b).to_list() == [2, 0, 2]
-    assert (a << 1).to_list() == [2, 4, 6]
-    assert (a >> 1).to_list() == [0, 1, 1]
-
-    assert (-a).to_list() == [-1, -2, -3]
-    assert (+a).to_list() == [1, 2, 3]
-    assert (~a).to_list() == [-2, -3, -4]
-
-    assert (a == b).to_list() == [False, True, False]
-    assert (a != b).to_list() == [True, False, True]
-    assert (a > b).to_list() == [False, False, True]
-    assert (a >= b).to_list() == [False, True, True]
-    assert (a < b).to_list() == [True, False, False]
-    assert (a <= b).to_list() == [True, True, False]
-
-    print(f"Operator overloads test took {time.process_time() - start:.4f} seconds")
+    
 
     a = np.array([1, 2, 3], dtype=np.int32)
     b = np.array([3, 2, 1], dtype=np.int32)
@@ -236,6 +309,38 @@ def test_numpy_operator_overloads():
     assert (a <= b).tolist() == [True, True, False]
 
     print(f"NumPy operator overloads test took {time.process_time() - start:.4f} seconds")
+    
+    a = CompatArray(np.array([1, 2, 3], dtype=np.int32))
+    b = CompatArray(np.array([3, 2, 1], dtype=np.int32))
+    
+    start = time.process_time()
+    assert a.__abs__().to_list() == [1, 2, 3]
+    assert (a + b).to_list() == [4, 4, 4]
+    assert (a - b).to_list() == [-2, 0, 2]
+    assert (a * b).to_list() == [3, 4, 3]
+    assert (a / 2).to_list() == [0.5, 1.0, 1.5]
+    assert (a // 2).to_list() == [0, 1, 1]
+    assert (a % 2).to_list() == [1, 0, 1]
+    assert (a & b).to_list() == [1, 2, 1]
+    assert (a | b).to_list() == [3, 2, 3]
+    assert (a ^ b).to_list() == [2, 0, 2]
+    assert (a << 1).to_list() == [2, 4, 6]
+    assert (a >> 1).to_list() == [0, 1, 1]
+
+    assert (-a).to_list() == [-1, -2, -3]
+    assert (+a).to_list() == [1, 2, 3]
+    assert (~a).to_list() == [-2, -3, -4]
+
+    assert (a == b).to_list() == [False, True, False]
+    assert (a != b).to_list() == [True, False, True]
+    assert (a > b).to_list() == [False, False, True]
+    assert (a >= b).to_list() == [False, True, True]
+    assert (a < b).to_list() == [True, False, False]
+    assert (a <= b).to_list() == [True, True, False]
+
+    print(f"Operator overloads test took {time.process_time() - start:.4f} seconds")
+
+    
 
 
 def test_torch_operator_overloads():
@@ -375,3 +480,6 @@ if __name__ == "__main__":
     test_numpy_operator_overloads()
     print("=" * 40)
     test_torch_operator_overloads()
+    print("=" * 40)
+
+    test_add()

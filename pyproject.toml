@@ -30,6 +30,7 @@ dev = [
     "pytest",
     "pytest-cov",
     "numpy>=1.21,<2.0",
+    "torch>=1.10,<2.0",
 ]
 
 [project.urls]

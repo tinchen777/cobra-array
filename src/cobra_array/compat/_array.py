@@ -108,16 +108,17 @@ class CompatArray(Compat):
         _cxp = to_cxp(xp)
         return cls(
             as_array(unwrap(obj), _cxp, copy=copy),
-            xp=_cxp
+            xp=_cxp, check=False
         )
 
     def __new__(cls, arr, /, *, copy=False, **kwargs):
-        if isinstance(arr, CompatArray):
+        if type(arr) is cls:
             # for `CompatArray` input
             return arr.copy() if copy else arr
 
+        _check = kwargs.get("check", True)
         # for non-`CompatArray` input
-        if not api.is_array_api_obj(arr):
+        if _check and not api.is_array_api_obj(arr):
             raise NotArrayAPIObjectError(
                 f"Parameter `arr` of `CompatArray` must be an array API compatible array object, got {type(arr)}."
             )
@@ -135,6 +136,8 @@ class CompatArray(Compat):
         Convert `self` to a `NumPy array`.
         See also :func:`convert.to_numpy`.
         """
+        if self._xp_name == "NumPy" and not copy:
+            return self._arr
         return to_numpy(self._arr, copy=copy)
 
     def to_tensor(self, *, device=None, copy=False):
@@ -142,6 +145,8 @@ class CompatArray(Compat):
         Convert `self` to a `PyTorch tensor`.
         See also :func:`convert.to_tensor`.
         """
+        if self._xp_name == "PyTorch" and not copy and (device is None or device == self.device):
+            return self._arr
         return to_tensor(self._arr, device=device, copy=copy)
 
     def to_list(self, *, copy=False):
@@ -197,7 +202,7 @@ class CompatArray(Compat):
                 All the arrays have the same shape.
         """
         result = self._get_xp_attr("unstack")(self._arr, axis=axis)
-        return tuple(CompatArray(arr, xp=self._cxp) for arr in result)
+        return tuple([CompatArray(arr, xp=self._cxp, check=False) for arr in result])
 
     # === Searching functions ===
     def nonzero(self):
@@ -218,7 +223,7 @@ class CompatArray(Compat):
         - If `self` has a boolean data type, non-zero elements are those elements which are equal to `True`.
         """
         result = self._get_xp_attr("nonzero")(self._arr)
-        return tuple(CompatArray(arr, xp=self._cxp) for arr in result)
+        return tuple([CompatArray(arr, xp=self._cxp) for arr in result])
 
     # === Set functions ===
     def unique_all(self):
@@ -238,10 +243,10 @@ class CompatArray(Compat):
         """
         result = self._get_xp_attr("unique_all")(self._arr)
         return UniqueResult(
-            values=CompatArray(result.values, xp=self._cxp),
-            indices=CompatArray(result.indices, xp=self._cxp),
-            inverse_indices=CompatArray(result.inverse_indices, xp=self._cxp),
-            counts=CompatArray(result.counts, xp=self._cxp),
+            values=CompatArray(result.values, xp=self._cxp, check=False),
+            indices=CompatArray(result.indices, xp=self._cxp, check=False),
+            inverse_indices=CompatArray(result.inverse_indices, xp=self._cxp, check=False),
+            counts=CompatArray(result.counts, xp=self._cxp, check=False),
         )
 
     def unique_counts(self):
@@ -259,10 +264,10 @@ class CompatArray(Compat):
         """
         result = self._get_xp_attr("unique_counts")(self._arr)
         return UniqueResult(
-            values=CompatArray(result.values, xp=self._cxp),
+            values=CompatArray(result.values, xp=self._cxp, check=False),
             indices=None,
             inverse_indices=None,
-            counts=CompatArray(result.counts, xp=self._cxp),
+            counts=CompatArray(result.counts, xp=self._cxp, check=False),
         )
 
     def unique_inverse(self):
@@ -280,9 +285,9 @@ class CompatArray(Compat):
         """
         result = self._get_xp_attr("unique_inverse")(self._arr)
         return UniqueResult(
-            values=CompatArray(result.values, xp=self._cxp),
+            values=CompatArray(result.values, xp=self._cxp, check=False),
             indices=None,
-            inverse_indices=CompatArray(result.inverse_indices, xp=self._cxp),
+            inverse_indices=CompatArray(result.inverse_indices, xp=self._cxp, check=False),
             counts=None,
         )
 
@@ -379,7 +384,7 @@ class CompatArray(Compat):
             result = self._get_xp_attr("T")(self._arr)
         except (AttributeError, TypeError):
             result = self._get_attr("T")
-        return CompatArray(result, xp=self._cxp)
+        return CompatArray(result, xp=self._cxp, check=False)
 
     @property
     def mT(self):
@@ -391,19 +396,19 @@ class CompatArray(Compat):
             result = self._get_xp_attr("mT")(self._arr)
         except (AttributeError, TypeError):
             result = self._get_attr("mT")
-        return CompatArray(result, xp=self._cxp)
+        return CompatArray(result, xp=self._cxp, check=False)
 
     def __array__(self):
         """Allow implicit NumPy conversion."""
         return self.to_numpy()
 
     def __getattr__(self, name: str):
-        attr = self._get_cxp_attr(name)
+        attr = self._get_xp_attr(name)
 
         if callable(attr) and not isinstance(attr, type):
-            def wrapper(*args, **kwargs):
-                return attr(self._arr, *args, **kwargs)
-            return wrapper
+            wrapped = _make_wrapper(self._xp_name, attr, self._cxp, self._arr)
+            self.__dict__[name] = wrapped
+            return wrapped
         raise CompatArrayAttributeError(f"`CompatArray` `{self._xp_name}` does not support attribute `{name}`.")
 
     def __len__(self):
@@ -540,7 +545,7 @@ def unwrap(obj):
     """
     Unwraps a :class:`CompatArray` array to get the backend-specific array instance, or returns the object itself if it is not a :class:`CompatArray` array.
     """
-    return obj.arr if isinstance(obj, CompatArray) else obj
+    return obj.arr if type(obj) is CompatArray else obj
 
 
 def wrap_arraylike(arr, xp=None):
@@ -549,8 +554,8 @@ def wrap_arraylike(arr, xp=None):
     """
     if api.is_array_api_obj(arr):
         if xp is None:
-            return CompatArray(arr)
-        return CompatArray(arr, xp=xp)
+            return CompatArray(arr, check=False)
+        return CompatArray(arr, xp=xp, check=False)
     return arr
 
 
@@ -559,3 +564,26 @@ def to_cxp(xp):
     from ._namespace import CompatNamespace
 
     return CompatNamespace(xp)
+
+
+def _make_wrapper(xp_name, attr, cxp, first, /):
+    """Make a wrapper function for the attribute `name` of the `array namespace`."""
+    wrap_ = lambda x: wrap_arraylike(x, xp=cxp)
+    unwrap_ = unwrap
+
+    def wrapper(*args, **kwargs):
+        if xp_name == "NumPy":
+            return wrap_(attr(first, *args, **kwargs))
+
+        n = len(args)
+        if n == 0 and not kwargs:
+            return wrap_(attr(first))
+        if n == 1 and not kwargs:
+            return wrap_(attr(first, unwrap_(args[0])))
+        new_args = [unwrap_(a) for a in args]
+        if kwargs:
+            new_kwargs = {k: unwrap_(v) for k, v in kwargs.items()}
+            return wrap_(attr(first, *new_args, **new_kwargs))
+        return wrap_(attr(first, *new_args))
+    wrapper.__name__ = getattr(attr, "__name__", "wrapper")
+    return wrapper

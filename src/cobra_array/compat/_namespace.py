@@ -50,7 +50,7 @@ class CompatNamespace(Compat):
     AttributeError: ...
     """
     def __new__(cls, xp, /):
-        if isinstance(xp, CompatNamespace):
+        if type(xp) is cls:
             # for `CompatNamespace` input
             return xp
         # for `Namespace` input
@@ -91,7 +91,7 @@ class CompatNamespace(Compat):
                 Each returned array should have the same data type as the input arrays.
         """
         result = self._get_xp_attr("meshgrid")(
-            *tuple(unwrap(arr) for arr in arrays),
+            *[unwrap(arr) for arr in arrays],
             indexing=indexing
         )
         return [CompatArray(arr, xp=self) for arr in result]
@@ -170,7 +170,7 @@ class CompatNamespace(Compat):
         """
         return self._get_xp_attr("iinfo")(unwrap(type_))
 
-    def isdtype(self, dtype, kind) -> bool:
+    def isdtype(self, dtype, kind):
         """
         Returns a boolean indicating whether a provided :param:`dtype` is of a specified data type :param:`kind`.
 
@@ -214,7 +214,7 @@ class CompatNamespace(Compat):
             DType
                 The dtype resulting from an operation involving the input arrays, scalars, and/or dtypes.
         """
-        return self._get_xp_attr("result_type")(*tuple(unwrap(arr) for arr in arrays_and_dtypes))
+        return self._get_xp_attr("result_type")(*[unwrap(arr) for arr in arrays_and_dtypes])
 
     # === Manipulation functions ===
     def broadcast_arrays(self, *arrays):
@@ -233,7 +233,7 @@ class CompatNamespace(Compat):
                 Each array must have the same shape.
                 Each array must have the same dtype as its corresponding input array.
         """
-        result = self._get_xp_attr("broadcast_arrays")(*tuple(unwrap(arr) for arr in arrays))
+        result = self._get_xp_attr("broadcast_arrays")(*[unwrap(arr) for arr in arrays])
         return [CompatArray(arr, xp=self) for arr in result]
 
     # === Constants ===
@@ -315,16 +315,37 @@ class CompatNamespace(Compat):
     def __name__(self):
         return "(compat)" + getattr(self._xp, "__name__", type(self._xp).__name__)
 
-    def __getattr__(self, name: str):
+    def __getattr__(self, name):
         attr = self._get_xp_attr(name)
 
         if callable(attr):
-            def wrapper(*args, **kwargs):
-                if not args and not kwargs:
-                    return wrap_arraylike(attr(), xp=self)
-
-                new_args = tuple(unwrap(a) for a in args)
-                new_kwargs = {k: unwrap(v) for k, v in kwargs.items()} if kwargs else kwargs
-                return wrap_arraylike(attr(*new_args, **new_kwargs), xp=self)
-            return wrapper
+            wrapped = _make_wrapper(self._xp_name, attr, self)
+            self.__dict__[name] = wrapped
+            return wrapped
         raise CompatNamespaceAttributeError(f"`CompatNamespace` `{self._xp_name}` does not support attribute `{name}`.")
+
+
+def _make_wrapper(xp_name, attr, cxp, /):
+    """Make a wrapper function for the attribute `name` of the `array namespace`."""
+    wrap_ = lambda x: wrap_arraylike(x, xp=cxp)
+    unwrap_ = unwrap
+
+    def wrapper(*args, **kwargs):
+        if xp_name == "NumPy":
+            return wrap_(attr(*args, **kwargs))
+
+        n = len(args)
+        if n == 0 and not kwargs:
+            return wrap_(attr())
+        if n == 1 and not kwargs:
+            return wrap_(attr(unwrap_(args[0])))
+        if n == 2 and not kwargs:
+            a0, a1 = args
+            return wrap_(attr(unwrap_(a0), unwrap_(a1)))
+        new_args = [unwrap_(a) for a in args]
+        if kwargs:
+            new_kwargs = {k: unwrap_(v) for k, v in kwargs.items()}
+            return wrap_(attr(*new_args, **new_kwargs))
+        return wrap_(attr(*new_args))
+    wrapper.__name__ = getattr(attr, "__name__", "wrapper")
+    return wrapper
