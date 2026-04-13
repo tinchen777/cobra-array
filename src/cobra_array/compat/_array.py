@@ -7,7 +7,7 @@ import array_api_compat as api
 from collections import namedtuple
 
 from ._base import Compat
-from ..convert import (to_numpy, to_tensor, to_list, as_array)
+from ..convert import (to_numpy, to_tensor, to_list, to_xp, as_array)
 from ..exceptions import (NotArrayAPIObjectError, CompatArrayAttributeError)
 
 
@@ -105,10 +105,10 @@ class CompatArray(Compat):
         ------
             Refer to :func:`convert.as_array` for possible exceptions.
         """
-        _cxp = to_cxp(xp)
+        _xp = to_xp(xp)
         return cls(
-            as_array(unwrap(obj), _cxp, copy=copy),
-            xp=_cxp, check=False
+            as_array(unwrap(obj), _xp, copy=copy),
+            xp=_xp, check=False
         )
 
     def __new__(cls, arr, /, *, copy=False, **kwargs):
