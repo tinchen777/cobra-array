@@ -236,6 +236,137 @@ class CompatNamespace(Compat):
         result = self._get_xp_attr("broadcast_arrays")(*[unwrap(arr) for arr in arrays])
         return [CompatArray(arr, xp=self) for arr in result]
 
+    # === Linear Algebra Extension ===
+    def vector_norm(self, x, /, *, axis=None, keepdims=False, ord=2):
+        """
+        Computes the vector norm of a vector (or batch of vectors) :param:`x`.
+
+        Parameters
+        ----------
+            x : ArrayLike[Any]
+                The input array. Should have a floating-point data type.
+
+            axis : Optional[Union[int, Tuple[int, ...]]], default to `None`
+                - _int_: :param:`axis` specifies the axis (dimension) along which to compute vector norms;
+                - _tuple_: :param:`axis` specifies the axes (dimensions) along which to compute batched vector norms;
+                - `None`: The vector norm must be computed over all array values (i.e., equivalent to computing the vector norm of a flattened array).
+
+                Negative indices must be supported.
+
+            keepdims : bool, default to `False`
+                - `True`: The axes (dimensions) specified by :param:`axis` must be included in the result as singleton dimensions, and, accordingly, the result must be compatible with the input array (see Broadcasting);
+                - `False`: The axes (dimensions) specified by :param:`axis` must not be included in the result.
+
+            ord : Union[int, float, Literal['inf', '-inf']], default to `2`
+                Order of the norm.
+                The following mathematical norms must be supported:
+                - `1`: L1-norm (Manhattan);
+                - `2`: L2-norm (Euclidean);
+                - `"inf"`: infinity norm;
+                - _int_ or _float_ (>=1): p-norm.
+
+                The following non-mathematical “norms” must be supported:
+                - `0`: sum(a != 0);
+                - `-1`: 1./sum(1./abs(a));
+                - `-2`: 1./sqrt(sum(1./a**2));
+                - `"-inf"`: min(abs(a));
+                - _int_ or _float_ (<1): sum(abs(a)**ord)**(1./ord).
+
+        Returns
+        -------
+            CompatArray
+                A :class:`CompatArray` array containing the vector norms.
+                - :param:`axis` is `None`: The returned array must be a zero-dimensional array containing a vector norm;
+                - :param:`axis` is a scalar value (_int_ or _float_): The returned array must have a rank which is one less than the rank of :param:`x`;
+                - :param:`axis` is _tuple_ (`n` elements): The returned array must have a rank which is `n` less than the rank of :param:`x`;
+
+                - :param:`x` is real-valued data type: The returned array must have a real-valued floating-point data type determined by Type Promotion Rules;
+                - :param:`x` is complex-valued data type: The returned array must have a real-valued floating-point data type whose precision matches the precision of :param:`x` (e.g., if :param:`x` is complex128, then the returned array must have a float64 data type).
+        """
+        if ord == "inf":
+            ord = float("inf")
+        elif ord == "-inf":
+            ord = float("-inf")
+
+        result = getattr(self.linalg, "vector_norm")(unwrap(x), axis=axis, keepdims=keepdims, ord=ord)
+        return CompatArray(result, xp=self)
+
+    def matrix_norm(self, x, /, *, keepdims=False, ord="fro"):
+        """
+        Computes the matrix norm of a matrix (or a stack of matrices) :param:`x`.
+
+        Parameters
+        ----------
+            x : ArrayLike[Any]
+                Input array having shape (..., `M`, `N`) and whose innermost two dimensions form `MxN` matrices. Should have a floating-point data type.
+
+            keepdims : bool, default to `False`
+                - `True`: The last two axes (dimensions) must be included in the result as singleton dimensions, and, accordingly, the result must be compatible with the input array (see Broadcasting);
+                - `False`: The last two axes (dimensions) must not be included in the result.
+
+            ord : Optional[Union[int, float, Literal['inf', '-inf', 'fro', 'nuc']]], default to `"fro"`
+                order of the norm.
+                The following mathematical norms must be supported:
+                - `"fro"`: Frobenius norm;
+                - `"nuc"`: nuclear norm;
+                - `1`: max(sum(abs(x), axis=0)). The norm corresponds to the induced matrix norm where `p=1` (i.e., the maximum absolute value column sum);
+                - `2`: largest singular value. The norm corresponds to the induced matrix norm where `p=inf` (i.e., the maximum absolute value row sum);
+                - `"inf"`: max(sum(abs(x), axis=1)). The norm corresponds to the induced matrix norm where `p=2` (i.e., the largest singular value).
+
+                The following non-mathematical “norms” must be supported:
+                - `-1`: min(sum(abs(x), axis=0));
+                - `-2`: smallest singular value;
+                - `"-inf"`: min(sum(abs(x), axis=1)).
+
+        Returns
+        -------
+            CompatArray
+                A :class:`CompatArray` array containing the norms for each `MxN` matrix.
+                - :param:`keepdims` is `False`: The returned array must have a rank which is two less than the rank of :param:`x`;
+
+                - :param:`x` is real-valued data type: The returned array must have a real-valued floating-point data type determined by Type Promotion Rules;
+                - :param:`x` is complex-valued data type: The returned array must have a real-valued floating-point data type whose precision matches the precision of :param:`x` (e.g., if :param:`x` is complex128, then the returned array must have a float64 data type).
+
+        """
+        if ord == "inf":
+            ord = float("inf")
+        elif ord == "-inf":
+            ord = float("-inf")
+
+        result = getattr(self.linalg, "matrix_norm")(unwrap(x), keepdims=keepdims, ord=ord)
+        return CompatArray(result, xp=self)
+
+    @property
+    def linalg(self):
+        """
+        The `linalg` namespace for linear algebra functions.
+        The following functions must be supported in the `linalg` namespace:
+        - `cholesky`(x, /, *, upper=False): Returns the lower (upper) Cholesky decomposition of a complex Hermitian or real symmetric positive-definite matrix x.
+        - `cross`(x1, x2, /, *, axis=-1): Returns the cross product of 3-element vectors.
+        - `det`(x, /): Returns the determinant of a square matrix (or a stack of square matrices) x.
+        - `diagonal`(x, /, *, offset=0): Returns the specified diagonals of a matrix (or a stack of matrices) x.
+        - `eigh`(x, /): Returns an eigenvalue decomposition of a complex Hermitian or real symmetric matrix (or a stack of matrices) x.
+        - `eigvalsh`(x, /): Returns the eigenvalues of a complex Hermitian or real symmetric matrix (or a stack of matrices) x.
+        - `inv`(x, /): Returns the multiplicative inverse of a square matrix (or a stack of square matrices) x.
+        - `matmul`(x1, x2, /): Alias for matmul().
+        - `matrix_norm`(x, /, *, keepdims=False, ord='fro'): Computes the matrix norm of a matrix (or a stack of matrices) x.
+        - `matrix_power`(x, n, /): Raises a square matrix (or a stack of square matrices) x to an integer power n.
+        - `matrix_rank`(x, /, *, rtol=None): Returns the rank (i.e., number of non-zero singular values) of a matrix (or a stack of matrices).
+        - `matrix_transpose`(x, /): Alias for matrix_transpose().
+        - `outer`(x1, x2, /): Returns the outer product of two vectors x1 and x2.
+        - `pinv`(x, /, *, rtol=None): Returns the (Moore-Penrose) pseudo-inverse of a matrix (or a stack of matrices) x.
+        - `qr`(x, /, *, mode='reduced'): Returns the QR decomposition of a full column rank matrix (or a stack of matrices).
+        - `slogdet`(x, /): Returns the sign and the natural logarithm of the absolute value of the determinant of a square matrix (or a stack of square matrices) x.
+        - `solve`(x1, x2, /): Returns the solution of a square system of linear equations with a unique solution.
+        - `svd`(x, /, *, full_matrices=True): Returns a singular value decomposition (SVD) of a matrix (or a stack of matrices) x.
+        - `svdvals`(x, /): Returns the singular values of a matrix (or a stack of matrices) x.
+        - `tensordot`(x1, x2, /, *, axes=2): Alias for tensordot().
+        - `trace`(x, /, *, offset=0, dtype=None): Returns the sum along the specified diagonals of a matrix (or a stack of matrices) x.
+        - `vecdot`(x1, x2, /, *, axis=-1): Alias for vecdot().
+        - `vector_norm`(x, /, *, axis=None, keepdims=False, ord=2): Computes the vector norm of a vector (or batch of vectors) x.
+        """
+        return self._get_xp_attr("linalg")
+
     # === Constants ===
     @property
     def e(self):

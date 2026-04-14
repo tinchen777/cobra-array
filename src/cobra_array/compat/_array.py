@@ -339,7 +339,7 @@ class CompatArray(Compat):
     @property
     def device(self):
         """
-        DeviceT on which `self` is stored.
+        Device on which `self` is stored.
         """
         return api.device(self._arr)
 
@@ -402,7 +402,7 @@ class CompatArray(Compat):
         """Allow implicit NumPy conversion."""
         return self.to_numpy()
 
-    def __getattr__(self, name: str):
+    def __getattr__(self, name):
         attr = self._get_xp_attr(name)
 
         if callable(attr) and not isinstance(attr, type):

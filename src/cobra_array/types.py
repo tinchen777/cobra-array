@@ -24,8 +24,9 @@ Device = Union[DeviceLiteral, torch.device]
 AnyDevice = Union[Device, str]
 
 dtypeT = TypeVar("dtypeT", bound=DType)
-deviceT = TypeVar("deviceT", bound=Device)
-anydeviceT = TypeVar("anydeviceT", bound=AnyDevice)
+deviceT = TypeVar("deviceT", bound=AnyDevice)
+# anydeviceT = TypeVar("anydeviceT", bound=AnyDevice)
+
 DTypeT = TypeVar("DTypeT", bound=DType)
 DeviceT = TypeVar("DeviceT", bound=Device)
 AnyDeviceT = TypeVar("AnyDeviceT", bound=AnyDevice)

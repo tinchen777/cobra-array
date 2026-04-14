@@ -122,11 +122,11 @@ def to_tensor(obj, /, *, dtype=None, device=None, copy=True):
             - `None`: Raises `ConvertNoneTypeError`;
             - _others_: Converted to a `PyTorch tensor` directly.
 
-        dtype : Optional[DTypeT], default to `None`
+        dtype : Optional[DType], default to `None`
             The data type of the resulting `PyTorch tensor`.
             - `None`: Use the default data type of the object.
 
-        device : Optional[DeviceT], default to `None`
+        device : Optional[AnyDevice], default to `None`
             The device on which the resulting `PyTorch tensor` will be allocated.
             - `None`: Use the default device (usually `"cpu"`).
 
@@ -294,11 +294,11 @@ def as_array(obj, xp, /, *, dtype=None, device=None, copy=False, arraylike_only=
             - _ArrayLibraryName_ (`"numpy"` or `"torch"`): Converted to a `NumPy array` or `PyTorch tensor` respectively using the corresponding conversion functions;
             - _Namespace_ or _CompatNamespace_: Converted to an array using the `asarray()` function provided by the namespace module, which must be compatible with the array API standard.
 
-        dtype : Optional[DTypeT], default to `None`
+        dtype : Optional[DType], default to `None`
             The data type of the resulting array.
             - `None`: Use the default data type of the object.
 
-        device : Optional[DeviceT], default to `None`
+        device : Optional[AnyDevice], default to `None`
             The device on which the resulting array will be allocated (only if `array namespace` supports it).
 
         copy : bool, default to `False`

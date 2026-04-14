@@ -4,12 +4,13 @@
 
 from __future__ import annotations
 from numpy.typing import NDArray
+from types import ModuleType
 from typing import (Union, List, Tuple, Optional, Any, Literal, overload)
 
 from ._base import Compat
 from ._array import CompatArray
 from ..types import (
-    DTypeT, DeviceT, dtypeT, DType, AnyDevice,
+    dtypeT, DTypeT, deviceT, DeviceT, DType, AnyDevice,
     ValueT, Value, ArrayLike, ArrayOrAny
 )
 
@@ -802,7 +803,7 @@ class CompatNamespace(Compat):
         Returns
         -------
             CompatArray
-                A :class:`CompatArray` output array containing the concatenated values. 
+                A :class:`CompatArray` output array containing the concatenated values.
         """
         ...
 
@@ -840,6 +841,26 @@ class CompatNamespace(Compat):
                 If the input arrays have the same data type, the output array must have the same data type as the input arrays.
         """
         ...
+
+    # === Linear Algebra Extension ===
+    @overload
+    def vector_norm(self, x: NDArray[Any], /, *, axis: Optional[Union[int, Tuple[int, ...]]] = ..., keepdims: bool = ..., ord: Union[int, float, Literal["inf", "-inf"]] = ...) -> CompatArray[float, Literal["cpu"]]: ...
+    @overload
+    def vector_norm(self, x: CompatArray[Any, deviceT], /, *, axis: Optional[Union[int, Tuple[int, ...]]] = ..., keepdims: bool = ..., ord: Union[int, float, Literal["inf", "-inf"]] = ...) -> CompatArray[float, deviceT]: ...
+    @overload
+    def vector_norm(self, x: ArrayLike[Any], /, *, axis: Optional[Union[int, Tuple[int, ...]]] = ..., keepdims: bool = ..., ord: Union[int, float, Literal["inf", "-inf"]] = ...) -> CompatArray[float, AnyDevice]: ...
+    def vector_norm(self, x: ArrayLike[Any], /, *, axis: Optional[Union[int, Tuple[int, ...]]] = None, keepdims: bool = False, ord: Union[int, float, Literal["inf", "-inf"]] = 2) -> CompatArray[float, AnyDevice]: ...
+
+    @overload
+    def matrix_norm(self, x: NDArray[Any], /, *, keepdims: bool = ..., ord: Optional[Union[int, float, Literal["inf", "-inf", "fro", "nuc"]]] = ...) -> CompatArray[float, Literal["cpu"]]: ...
+    @overload
+    def matrix_norm(self, x: CompatArray[Any, deviceT], /, *, keepdims: bool = ..., ord: Optional[Union[int, float, Literal["inf", "-inf", "fro", "nuc"]]] = ...) -> CompatArray[float, deviceT]: ...
+    @overload
+    def matrix_norm(self, x: ArrayLike[Any], /, *, keepdims: bool = ..., ord: Optional[Union[int, float, Literal["inf", "-inf", "fro", "nuc"]]] = ...) -> CompatArray[float, AnyDevice]: ...
+    def matrix_norm(self, x: ArrayLike[Any], /, *, keepdims: bool = False, ord: Optional[Union[int, float, Literal["inf", "-inf", "fro", "nuc"]]] = "fro") -> CompatArray[float, AnyDevice]: ...
+
+    @property
+    def linalg(self) -> ModuleType: ...
 
     # === Constants ===
     @property
@@ -883,3 +904,5 @@ class CompatNamespace(Compat):
 
     @property
     def __name__(self) -> str: ...
+
+    def __getattr__(self, name: str) -> Any: ...

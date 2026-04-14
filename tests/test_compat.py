@@ -67,10 +67,17 @@ def test_to_device_on_numpy_backend():
 @pytest.mark.skipif(torch_xp is None, reason="PyTorch not available")
 def test_to_tensor_available_backend():
     a = _arr_1d()
+    
+    aa = a.to_device("cpu")
+    
+    aa = CompatArray(a)
+    
     t = a.to_tensor(device="cpu")
 
     assert isinstance(t, torch_xp.Tensor)
     assert tuple(t.shape) == (3,)
+    
+    aa = wrap_arraylike(a)
 
 
 def test_unstack_and_nonzero():
@@ -470,13 +477,46 @@ def test_cxp_of_compatarray_matches_array_namespace():
     assert cxp.xp_name == a.xp_name
 
 
-if __name__ == "__main__":
-    test_unique_all_unique_counts_unique_inverse()
-    print("=" * 40)
-    
-    test_numpy_operator_overloads()
-    print("=" * 40)
-    # test_torch_operator_overloads()
-    print("=" * 40)
+def test_linalg():
+    a = CompatArray(np.array([[1.0, 2.0], [3.0, 4.0]], dtype=np.float32))
+    cxp = a.cxp
+    print(a)
 
-    test_add()
+    f = cxp.vector_norm(a, axis=0, ord="-inf")
+
+    print(f)
+
+    f = cxp.matrix_norm(a, ord="nuc")
+
+    print(f)
+
+def test_linalg2():
+    import torch
+    a = CompatArray(torch.tensor([[1.0, 2.0], [3.0, 4.0]], device="cuda:0"))
+    cxp = a.cxp
+    print(a)
+
+    f = cxp.vector_norm(a, axis=0, ord="-inf")
+
+    print(f.device)
+
+    print(f)
+
+    f = cxp.matrix_norm(a, ord="nuc")
+
+    print(f)
+    print(f.device)
+
+
+if __name__ == "__main__":
+    # test_unique_all_unique_counts_unique_inverse()
+    # print("=" * 40)
+    
+    # test_numpy_operator_overloads()
+    # print("=" * 40)
+    # test_torch_operator_overloads()
+    # print("=" * 40)
+
+    # test_add()
+    
+    test_linalg2()
