@@ -56,16 +56,16 @@ ArrayOrInt = Union[ArrayLike[Any], int]
 
 class UniqueAllResult(NamedTuple, Generic[DTypeT_co, AnyDeviceT_co]):
     values: CompatArray[DTypeT_co, AnyDeviceT_co]
-    indices: CompatArray[int, AnyDeviceT_co]
-    inverse_indices: CompatArray[int, AnyDeviceT_co]
-    counts: CompatArray[int, AnyDeviceT_co]
+    indices: CompatArray[type[int], AnyDeviceT_co]
+    inverse_indices: CompatArray[type[int], AnyDeviceT_co]
+    counts: CompatArray[type[int], AnyDeviceT_co]
 
 
 class UniqueCountsResult(NamedTuple, Generic[DTypeT_co, AnyDeviceT_co]):
     values: CompatArray[DTypeT_co, AnyDeviceT_co]
-    counts: CompatArray[int, AnyDeviceT_co]
+    counts: CompatArray[type[int], AnyDeviceT_co]
 
 
 class UniqueInverseResult(NamedTuple, Generic[DTypeT_co, AnyDeviceT_co]):
     values: CompatArray[DTypeT_co, AnyDeviceT_co]
-    inverse_indices: CompatArray[int, AnyDeviceT_co]
+    inverse_indices: CompatArray[type[int], AnyDeviceT_co]

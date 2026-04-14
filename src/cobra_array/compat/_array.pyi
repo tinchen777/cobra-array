@@ -116,14 +116,14 @@ class CompatArray(Compat, Generic[TT, DT]):
         """
         ...
 
-    def acos(self) -> CompatArray[float, DT]:
+    def acos(self) -> CompatArray[type[float], DT]:
         """
         Computes the element-wise `principal value of the inverse cosine` of `self`.
         - `self` should have a floating-point data type.
         """
         ...
 
-    def acosh(self) -> CompatArray[float, DT]:
+    def acosh(self) -> CompatArray[type[float], DT]:
         """
         Computes the element-wise `inverse hyperbolic cosine` of `self`.
         - `self` should have a floating-point data type.
@@ -137,28 +137,28 @@ class CompatArray(Compat, Generic[TT, DT]):
         """
         ...
 
-    def asin(self) -> CompatArray[float, DT]:
+    def asin(self) -> CompatArray[type[float], DT]:
         """
         Computes the element-wise `principal value of the inverse sine` of `self`.
         - `self` should have a floating-point data type.
         """
         ...
 
-    def asinh(self) -> CompatArray[float, DT]:
+    def asinh(self) -> CompatArray[type[float], DT]:
         """
         Computes the element-wise `inverse hyperbolic sine` of `self`.
         - `self` should have a floating-point data type.
         """
         ...
 
-    def atan(self) -> CompatArray[float, DT]:
+    def atan(self) -> CompatArray[type[float], DT]:
         """
         Computes the element-wise `principal value of the inverse tangent` of `self`.
         - `self` should have a floating-point data type.
         """
         ...
 
-    def atan2(self, other: ArrayOrReal, /) -> CompatArray[float, DT]:
+    def atan2(self, other: ArrayOrReal, /) -> CompatArray[type[float], DT]:
         """
         Computes the element-wise `inverse tangent` of `self / other`, taking into account the signs of both inputs.
         - `self` should have a real-valued floating-point data type.
@@ -166,7 +166,7 @@ class CompatArray(Compat, Generic[TT, DT]):
         """
         ...
 
-    def atanh(self) -> CompatArray[float, DT]:
+    def atanh(self) -> CompatArray[type[float], DT]:
         """
         Computes the element-wise `inverse hyperbolic tangent` of `self`.
         - `self` should have a floating-point data type.
@@ -240,7 +240,7 @@ class CompatArray(Compat, Generic[TT, DT]):
         """
         ...
 
-    def copysign(self, other: ArrayOrReal, /) -> CompatArray[float, DT]:
+    def copysign(self, other: ArrayOrReal, /) -> CompatArray[type[float], DT]:
         """
         Computes the element-wise `copysign` of `self` with `other`.
         - `self` should have a real-valued floating-point data type.
@@ -248,41 +248,41 @@ class CompatArray(Compat, Generic[TT, DT]):
         """
         ...
 
-    def cos(self) -> CompatArray[float, DT]:
+    def cos(self) -> CompatArray[type[float], DT]:
         """
         Computes the element-wise `cosine` of `self`.
         - `self` should have a floating-point data type.
         """
         ...
 
-    def cosh(self) -> CompatArray[float, DT]:
+    def cosh(self) -> CompatArray[type[float], DT]:
         """
         Computes the element-wise `hyperbolic cosine` of `self`.
         - `self` should have a floating-point data type.
         """
         ...
 
-    def divide(self, other: ArrayOrScalar, /) -> CompatArray[float, DT]:
+    def divide(self, other: ArrayOrScalar, /) -> CompatArray[type[float], DT]:
         """
         Computes the element-wise `division` of `self` by `other`.
         - `self` should have a numeric data type.
         """
         ...
 
-    def equal(self, other: ArrayOrAny, /) -> CompatArray[bool, DT]:
+    def equal(self, other: ArrayOrAny, /) -> CompatArray[type[bool], DT]:
         """
         Computes the element-wise truth value of `self == other`.
         """
         ...
 
-    def exp(self) -> CompatArray[float, DT]:
+    def exp(self) -> CompatArray[type[float], DT]:
         """
         Computes the element-wise `exponential` (`exp(x)`) of `self`.
         - `self` should have a floating-point data type.
         """
         ...
 
-    def expm1(self) -> CompatArray[float, DT]:
+    def expm1(self) -> CompatArray[type[float], DT]:
         """
         Computes the element-wise `exp(x) - 1` of `self`.
         - `self` should have a floating-point data type.
@@ -305,21 +305,21 @@ class CompatArray(Compat, Generic[TT, DT]):
         """
         ...
 
-    def greater(self, other: ArrayOrReal, /) -> CompatArray[bool, DT]:
+    def greater(self, other: ArrayOrReal, /) -> CompatArray[type[bool], DT]:
         """
         Computes the element-wise truth value of `self > other`.
         - `self` should have a real-valued data type.
         """
         ...
 
-    def greater_equal(self, other: ArrayOrReal, /) -> CompatArray[bool, DT]:
+    def greater_equal(self, other: ArrayOrReal, /) -> CompatArray[type[bool], DT]:
         """
         Computes the element-wise truth value of `self >= other`.
         - `self` should have a real-valued data type.
         """
         ...
 
-    def hypot(self, other: ArrayOrReal, /) -> CompatArray[float, DT]:
+    def hypot(self, other: ArrayOrReal, /) -> CompatArray[type[float], DT]:
         """
         Computes the element-wise `hypotenuse` of `self` and `other`.
         - `self` should have a real-valued floating-point data type.
@@ -327,77 +327,77 @@ class CompatArray(Compat, Generic[TT, DT]):
         """
         ...
 
-    def imag(self) -> CompatArray[float, DT]:
+    def imag(self) -> CompatArray[type[float], DT]:
         """
         Computes the element-wise `imaginary component` of `self`.
         - `self` should have a complex floating-point data type.
         """
         ...
 
-    def isfinite(self) -> CompatArray[bool, DT]:
+    def isfinite(self) -> CompatArray[type[bool], DT]:
         """
         Tests the element-wise `finiteness` of `self`.
         - `self` should have a numeric data type.
         """
         ...
 
-    def isinf(self) -> CompatArray[bool, DT]:
+    def isinf(self) -> CompatArray[type[bool], DT]:
         """
         Tests the element-wise `infinity` of `self`.
         - - `self` should have a numeric data type.
         """
         ...
 
-    def isnan(self) -> CompatArray[bool, DT]:
+    def isnan(self) -> CompatArray[type[bool], DT]:
         """
         Tests the element-wise `NaN` of `self`.
         - `self` should have a numeric data type.
         """
         ...
 
-    def less(self, other: ArrayOrReal, /) -> CompatArray[bool, DT]:
+    def less(self, other: ArrayOrReal, /) -> CompatArray[type[bool], DT]:
         """
         Computes the element-wise truth value of `self < other`.
         - `self` should have a real-valued data type.
         """
         ...
 
-    def less_equal(self, other: ArrayOrReal, /) -> CompatArray[bool, DT]:
+    def less_equal(self, other: ArrayOrReal, /) -> CompatArray[type[bool], DT]:
         """
         Computes the element-wise truth value of `self <= other`.
         - `self` should have a real-valued data type.
         """
         ...
 
-    def log(self) -> CompatArray[float, DT]:
+    def log(self) -> CompatArray[type[float], DT]:
         """
         Computes the element-wise `natural logarithm` (base `e`)  of `self`.
         - `self` should have a floating-point data type.
         """
         ...
 
-    def log1p(self) -> CompatArray[float, DT]:
+    def log1p(self) -> CompatArray[type[float], DT]:
         """
         Computes the element-wise `log(1 + x)` (base `e`) of `self`.
         - `self` should have a floating-point data type.
         """
         ...
 
-    def log2(self) -> CompatArray[float, DT]:
+    def log2(self) -> CompatArray[type[float], DT]:
         """
         Computes the element-wise `base-2 logarithm` of `self`.
         - `self` should have a floating-point data type.
         """
         ...
 
-    def log10(self) -> CompatArray[float, DT]:
+    def log10(self) -> CompatArray[type[float], DT]:
         """
         Computes the element-wise `base-10 logarithm` of `self`.
         - `self` should have a floating-point data type.
         """
         ...
 
-    def logaddexp(self, other: ArrayOrReal, /) -> CompatArray[float, DT]:
+    def logaddexp(self, other: ArrayOrReal, /) -> CompatArray[type[float], DT]:
         """
         Computes the element-wise `logaddexp` of `self` and `other`.
         - Equivalent to `log(exp(self) + exp(other))`.
@@ -405,28 +405,28 @@ class CompatArray(Compat, Generic[TT, DT]):
         """
         ...
 
-    def logical_and(self, other: ArrayOrbool, /) -> CompatArray[bool, DT]:
+    def logical_and(self, other: ArrayOrbool, /) -> CompatArray[type[bool], DT]:
         """
         Computes the element-wise `logical AND` of `self` and `other`.
         - `self` should have a boolean data type.
         """
         ...
 
-    def logical_not(self) -> CompatArray[bool, DT]:
+    def logical_not(self) -> CompatArray[type[bool], DT]:
         """
         Computes the element-wise `logical NOT` of `self`.
         - `self` should have a boolean data type.
         """
         ...
 
-    def logical_or(self, other: ArrayOrbool, /) -> CompatArray[bool, DT]:
+    def logical_or(self, other: ArrayOrbool, /) -> CompatArray[type[bool], DT]:
         """
         Computes the element-wise `logical OR` of `self` and `other`.
         - `self` should have a boolean data type.
         """
         ...
 
-    def logical_xor(self, other: ArrayOrbool, /) -> CompatArray[bool, DT]:
+    def logical_xor(self, other: ArrayOrbool, /) -> CompatArray[type[bool], DT]:
         """
         Computes the element-wise `logical XOR` of `self` and `other`.
         - `self` should have a boolean data type.
@@ -468,7 +468,7 @@ class CompatArray(Compat, Generic[TT, DT]):
         """
         ...
 
-    def not_equal(self, other: ArrayOrAny, /) -> CompatArray[bool, DT]:
+    def not_equal(self, other: ArrayOrAny, /) -> CompatArray[type[bool], DT]:
         """
         Computes the element-wise truth value of `self != other`.
         """
@@ -489,14 +489,14 @@ class CompatArray(Compat, Generic[TT, DT]):
         """
         ...
 
-    def real(self) -> CompatArray[float, DT]:
+    def real(self) -> CompatArray[type[float], DT]:
         """
         Computes the element-wise `real component` of `self`.
         - `self` should have a numeric data type.
         """
         ...
 
-    def reciprocal(self) -> CompatArray[float, DT]:
+    def reciprocal(self) -> CompatArray[type[float], DT]:
         """
         Computes the element-wise `reciprocal` of `self`.
         - `self` should have a floating-point data type.
@@ -524,7 +524,7 @@ class CompatArray(Compat, Generic[TT, DT]):
         """
         ...
 
-    def signbit(self) -> CompatArray[bool, DT]:
+    def signbit(self) -> CompatArray[type[bool], DT]:
         """
         Tests the element-wise `sign bit` of `self`.
         - Tests each element for whenever is either `-0`, `less than zero`, or a signed `NaN` (i.e., a NaN value whose sign bit is 1).
@@ -532,14 +532,14 @@ class CompatArray(Compat, Generic[TT, DT]):
         """
         ...
 
-    def sin(self) -> CompatArray[float, DT]:
+    def sin(self) -> CompatArray[type[float], DT]:
         """
         Computes the element-wise `sine` of `self`.
         - `self` should have a floating-point data type.
         """
         ...
 
-    def sinh(self) -> CompatArray[float, DT]:
+    def sinh(self) -> CompatArray[type[float], DT]:
         """
         Computes the element-wise `hyperbolic sine` of `self`.
         - `self` should have a floating-point data type.
@@ -553,7 +553,7 @@ class CompatArray(Compat, Generic[TT, DT]):
         """
         ...
 
-    def sqrt(self) -> CompatArray[float, DT]:
+    def sqrt(self) -> CompatArray[type[float], DT]:
         """
         Computes the element-wise `principal square root` of `self`.
         - `self` should have a floating-point data type.
@@ -567,14 +567,14 @@ class CompatArray(Compat, Generic[TT, DT]):
         """
         ...
 
-    def tan(self) -> CompatArray[float, DT]:
+    def tan(self) -> CompatArray[type[float], DT]:
         """
         Computes the element-wise `tangent` of `self`.
         - `self` should have a floating-point data type.
         """
         ...
 
-    def tanh(self) -> CompatArray[float, DT]:
+    def tanh(self) -> CompatArray[type[float], DT]:
         """
         Computes the element-wise `hyperbolic tangent` of `self`.
         - `self` should have a floating-point data type.
@@ -993,7 +993,7 @@ class CompatArray(Compat, Generic[TT, DT]):
         self, *,
         axis: Optional[int] = None,
         keepdims: bool = False
-    ) -> CompatArray[int, DT]:
+    ) -> CompatArray[type[int], DT]:
         """
         Returns the indices of the maximum values along a specified axis.
 
@@ -1026,7 +1026,7 @@ class CompatArray(Compat, Generic[TT, DT]):
         self, *,
         axis: Optional[int] = None,
         keepdims: bool = False
-    ) -> CompatArray[int, DT]:
+    ) -> CompatArray[type[int], DT]:
         """
         Returns the indices of the minimum values along a specified axis.
 
@@ -1055,13 +1055,13 @@ class CompatArray(Compat, Generic[TT, DT]):
         """
         ...
 
-    def nonzero(self) -> Tuple[CompatArray[int, DT], ...]: ...
+    def nonzero(self) -> Tuple[CompatArray[type[int], DT], ...]: ...
 
     def count_nonzero(
         self, *,
         axis: Optional[Union[int, Tuple[int, ...]]] = None,
         keepdims: bool = False
-    ) -> CompatArray[int, DT]:
+    ) -> CompatArray[type[int], DT]:
         """
         Counts the number of `self` elements which are non-zero.
 
@@ -1096,7 +1096,7 @@ class CompatArray(Compat, Generic[TT, DT]):
         /, *,
         side: Literal['left', 'right'] = "left",
         sorter: Optional[ArrayLike[Any]] = None
-    ) -> CompatArray[int, DT]:
+    ) -> CompatArray[type[int], DT]:
         """
         Finds the indices into `self` such that, if the corresponding elements in `other` were inserted before the indices, the order of `self`, when sorted in ascending order, would be preserved.
         - `self` must be a one-dimensional array. Should have a real-valued data type.
@@ -1187,7 +1187,7 @@ class CompatArray(Compat, Generic[TT, DT]):
         axis: int = -1,
         descending: bool = False,
         stable: bool = True
-    ) -> CompatArray[int, DT]:
+    ) -> CompatArray[type[int], DT]:
         """
         Returns the indices that sort `self` along a specified axis.
 
@@ -1633,7 +1633,7 @@ class CompatArray(Compat, Generic[TT, DT]):
         self, *,
         axis: Optional[Union[int, Tuple[int, ...]]] = None,
         keepdims: bool = False
-    ) -> CompatArray[bool, DT]:
+    ) -> CompatArray[type[bool], DT]:
         """
         Tests whether all `self` elements evaluate to `True` along a specified axis.
         - `Positive infinity`, `negative infinity`, and `NaN` must evaluate to `True`;
@@ -1666,7 +1666,7 @@ class CompatArray(Compat, Generic[TT, DT]):
         self, *,
         axis: Optional[Union[int, Tuple[int, ...]]] = None,
         keepdims: bool = False
-    ) -> CompatArray[bool, DT]:
+    ) -> CompatArray[type[bool], DT]:
         """
         Tests whether any `self` elements evaluate to `True` along a specified axis.
         - `Positive infinity`, `negative infinity`, and `NaN` must evaluate to `True`;
@@ -1778,22 +1778,22 @@ class CompatArray(Compat, Generic[TT, DT]):
     def __and__(self, other: ArrayOrIntLike, /) -> CompatArray[TT, DT]: ...
     def __bool__(self) -> bool: ...
     def __complex__(self) -> complex: ...
-    def __eq__(self, other: ArrayOrAny, /) -> CompatArray[bool, DT]: ...
+    def __eq__(self, other: ArrayOrAny, /) -> CompatArray[type[bool], DT]: ...
     def __float__(self) -> float: ...
     def __floordiv__(self, other: ArrayOrReal, /) -> CompatArray[TT, DT]: ...
-    def __ge__(self, other: ArrayOrReal, /) -> CompatArray[bool, DT]: ...
+    def __ge__(self, other: ArrayOrReal, /) -> CompatArray[type[bool], DT]: ...
     def __getitem__(self, key: Any, /) -> CompatArray[TT, DT]: ...
-    def __gt__(self, other: ArrayOrReal, /) -> CompatArray[bool, DT]: ...
+    def __gt__(self, other: ArrayOrReal, /) -> CompatArray[type[bool], DT]: ...
     def __index__(self) -> int: ...
     def __int__(self) -> int: ...
     def __invert__(self) -> CompatArray[TT, DT]: ...
-    def __le__(self, other: ArrayOrReal, /) -> CompatArray[bool, DT]: ...
+    def __le__(self, other: ArrayOrReal, /) -> CompatArray[type[bool], DT]: ...
     def __lshift__(self, other: ArrayOrInt, /) -> CompatArray[TT, DT]: ...
-    def __lt__(self, other: ArrayOrReal, /) -> CompatArray[bool, DT]: ...
+    def __lt__(self, other: ArrayOrReal, /) -> CompatArray[type[bool], DT]: ...
     def __matmul__(self, other: ArrayLike[Any], /) -> CompatArray[Any, DT]: ...
     def __mod__(self, other: ArrayOrReal, /) -> CompatArray[Any, DT]: ...
     def __mul__(self, other: ArrayOrScalar, /) -> CompatArray[Any, DT]: ...
-    def __ne__(self, other: ArrayOrAny, /) -> CompatArray[bool, DT]: ...
+    def __ne__(self, other: ArrayOrAny, /) -> CompatArray[type[bool], DT]: ...
     def __neg__(self) -> CompatArray[TT, DT]: ...
     def __or__(self, other: ArrayOrIntLike, /) -> CompatArray[TT, DT]: ...
     def __pos__(self) -> CompatArray[TT, DT]: ...
@@ -1801,7 +1801,7 @@ class CompatArray(Compat, Generic[TT, DT]):
     def __rshift__(self, other: ArrayOrInt, /) -> CompatArray[TT, DT]: ...
     def __setitem__(self, key: Any, value: Any, /): ...
     def __sub__(self, other: ArrayOrScalar, /) -> CompatArray[Any, DT]: ...
-    def __truediv__(self, other: ArrayOrScalar, /) -> CompatArray[float, DT]: ...
+    def __truediv__(self, other: ArrayOrScalar, /) -> CompatArray[type[float], DT]: ...
     def __xor__(self, other: ArrayOrIntLike, /) -> CompatArray[TT, DT]: ...
 
 

@@ -85,6 +85,15 @@ def test_unstack_and_nonzero():
 
     pieces = a.unstack(axis=0)
     nz = a.nonzero()
+    
+    ff = CompatArray(nz[0])
+    
+    fff = a.cxp.zeros((1,2))
+    
+    ff = CompatArray(fff)
+    
+    gg = a.argmax()
+    
 
     assert isinstance(pieces, tuple)
     assert len(pieces) == 2
