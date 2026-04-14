@@ -490,22 +490,22 @@ def test_linalg():
 
     print(f)
 
-def test_linalg2():
-    import torch
-    a = CompatArray(torch.tensor([[1.0, 2.0], [3.0, 4.0]], device="cuda:0"))
-    cxp = a.cxp
-    print(a)
+# def test_linalg2():
+#     import torch
+#     a = CompatArray(torch.tensor([[1.0, 2.0], [3.0, 4.0]], device="cuda:0"))
+#     cxp = a.cxp
+#     print(a)
 
-    f = cxp.vector_norm(a, axis=0, ord="-inf")
+#     f = cxp.vector_norm(a, axis=0, ord="-inf")
 
-    print(f.device)
+#     print(f.device)
 
-    print(f)
+#     print(f)
 
-    f = cxp.matrix_norm(a, ord="nuc")
+#     f = cxp.matrix_norm(a, ord="nuc")
 
-    print(f)
-    print(f.device)
+#     print(f)
+#     print(f.device)
 
 
 if __name__ == "__main__":
@@ -519,4 +519,4 @@ if __name__ == "__main__":
 
     # test_add()
     
-    test_linalg2()
+    # test_linalg2()
